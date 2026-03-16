@@ -2527,7 +2527,7 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
     { key:'pyq_mains',   label:'PYQ Mains', emoji:'📌' },
     { key:'revision1',   label:'Rev 1',     emoji:'🔁' },
     { key:'revision2',   label:'Rev 2',     emoji:'🔂' },
-    { key:'revision3',   label:'Rev 3',     emoji:'✅' },
+    { key:'revision3',   label:'Rev 3',     emoji:'📚' },
   ];
 
   async function toggleTask(subject, chapter, field, current) {
@@ -2648,7 +2648,7 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
                               alignItems:'center', gap:3
                             }}>
                             <span style={{ fontSize:15 }}>
-                              {busy ? '⏳' : done ? '✅' : t.emoji}
+                              {busy ? '⏳' : done ? '☑️' : t.emoji}
                             </span>
                             <span style={{ fontSize:10, fontWeight:600, lineHeight:1.2, textAlign:'center',
                               color: done ? '#fff' : '#6B7280' }}>
