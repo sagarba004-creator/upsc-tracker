@@ -2701,12 +2701,14 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
             {/* Subject pills */}
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {subjects.map(sub => (
-                <div key={sub.subject} style={{
-                  display:'flex', alignItems:'center', gap:5,
-                  background: sub.completion_pct>=70?col.bg: sub.completion_pct>=40?'#FFF3E0':'#F5F5F5',
-                  borderRadius:99, padding:'5px 12px',
-                  border:`1px solid ${sub.completion_pct>=70?col.bar: sub.completion_pct>=40?'#E65100':'#E0E6EF'}`
-                }}>
+                <div key={sub.subject}
+                  onClick={e => { e.stopPropagation(); setView({ gs_paper: paper, subject: sub.subject }); setOpenChapter(null); }}
+                  style={{
+                    display:'flex', alignItems:'center', gap:5,
+                    background: sub.completion_pct>=70?col.bg: sub.completion_pct>=40?'#FFF3E0':'#F5F5F5',
+                    borderRadius:99, padding:'5px 12px', cursor:'pointer',
+                    border:`1px solid ${sub.completion_pct>=70?col.bar: sub.completion_pct>=40?'#E65100':'#E0E6EF'}`
+                  }}>
                   <span style={{ fontSize:12, fontWeight:500,
                     color: sub.completion_pct>=70?col.text: sub.completion_pct>=40?'#E65100':'#6B7280' }}>
                     {sub.subject}
