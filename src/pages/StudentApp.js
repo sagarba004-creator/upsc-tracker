@@ -24,9 +24,9 @@ export default function StudentApp({ user, onLogout }) {
   const [consistency, setConsistency] = useState(null);
   const [loading, setLoading]   = useState(true);
 
-  const loadDashboard = useCallback(async () => {
+  const loadDashboard = useCallback(async (silent=false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const [dash, cons] = await Promise.all([
         api('getStudentDashboard', { phone: user.phone }),
         api('getConsistency', { phone: user.phone }),
@@ -34,7 +34,7 @@ export default function StudentApp({ user, onLogout }) {
       setDashboard(dash);
       setConsistency(cons);
     } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    finally { if (!silent) setLoading(false); }
   }, [user.phone]);
 
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
@@ -196,7 +196,7 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
 
     try {
       await api('updateProgress', { phone: user.phone, subject, chapter, field, value: newVal });
-      onUpdate().catch(()=>{});
+      onUpdate(true).catch(()=>{});
     } catch (e) {
       setLocalData(null);
       alert('Failed to save. Please try again.');
@@ -295,7 +295,7 @@ function DailyTab({ dashboard, user, onUpdate, consistency }) {
     setSaving(true);
     try {
       await api('logDailyTask', { phone: user.phone, ...vals });
-      await onUpdate();
+      await onUpdate(true);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) { alert('Failed to save'); }
