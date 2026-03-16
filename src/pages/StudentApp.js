@@ -156,11 +156,17 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
   const [openSubject, setOpenSubject] = useState(null);
   const [openChapter, setOpenChapter] = useState(null);
   const [saving, setSaving] = useState('');
+  const [localData, setLocalData] = useState(null);
 
-  if (!dashboard) return null;
+  React.useEffect(() => {
+    if (dashboard) setLocalData(JSON.parse(JSON.stringify(dashboard)));
+  }, [dashboard]);
+
+  const data = localData || dashboard;
+  if (!data) return null;
 
   const grouped = {};
-  dashboard.subjects.forEach(s => {
+  data.subjects.forEach(s => {
     if (!grouped[s.gs_paper]) grouped[s.gs_paper] = [];
     grouped[s.gs_paper].push(s);
   });
@@ -169,11 +175,32 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
     const newVal = current === 'Done' ? 'Not Done' : 'Done';
     const key = `${subject}||${chapter}||${field}`;
     setSaving(key);
+
+    // Optimistic update — instant UI change
+    setLocalData(prev => {
+      if (!prev) return prev;
+      const updated = JSON.parse(JSON.stringify(prev));
+      const subj = updated.subjects.find(s => s.subject === subject);
+      if (!subj) return prev;
+      const ch = subj.chapters.find(c => c.chapter === chapter);
+      if (!ch) return prev;
+      ch[field] = newVal;
+      const fixedW = { reading:0.20, short_notes:0.20, pyq_prelims:0.15,
+        pyq_mains:0.15, revision1:0.10, revision2:0.10, revision3:0.10 };
+      ch.score = Object.entries(fixedW).reduce((s,[k,w]) => s+(ch[k]==='Done'?w:0),0);
+      const totalWt = subj.chapters.reduce((s,c)=>s+c.weightage,0);
+      const earned  = subj.chapters.reduce((s,c)=>s+c.weightage*c.score,0);
+      subj.completion_pct = totalWt>0 ? Math.round((earned/totalWt)*100) : 0;
+      return updated;
+    });
+
     try {
       await api('updateProgress', { phone: user.phone, subject, chapter, field, value: newVal });
-      await onUpdate();
-    } catch (e) { alert('Failed to save. Please try again.'); }
-    finally { setSaving(''); }
+      onUpdate().catch(()=>{});
+    } catch (e) {
+      setLocalData(null);
+      alert('Failed to save. Please try again.');
+    } finally { setSaving(''); }
   }
 
   return (
