@@ -1425,6 +1425,820 @@ const TESTS_MASTER = {
       "questions": 20.0,
       "type": "EDGE"
     }
+  ],
+  "cmt_gs": [
+    {
+      "code": "CMT-Indus Valley Civiliz",
+      "name": "Indus Valley Civilization",
+      "subject": "1. Ancient History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Vedic Age",
+      "name": "Vedic Age",
+      "subject": "1. Ancient History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Buddhism and Jainism",
+      "name": "Buddhism and Jainism",
+      "subject": "1. Ancient History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Mauryas",
+      "name": "Mauryas",
+      "subject": "1. Ancient History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Sangam Literature",
+      "name": "Sangam Literature",
+      "subject": "1. Ancient History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Gupta Literature",
+      "name": "Gupta Literature",
+      "subject": "1. Ancient History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Early medieval Regio",
+      "name": "Early medieval Regional configuration (600-1200 CE)",
+      "subject": "2. Medieval History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Delhi Sultanate admi",
+      "name": "Delhi Sultanate administration and keywords with society",
+      "subject": "2. Medieval History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Vijayanagar culture ",
+      "name": "Vijayanagar culture and rulers",
+      "subject": "2. Medieval History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Bahamani culture onl",
+      "name": "Bahamani culture only",
+      "subject": "2. Medieval History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Mughals policies and",
+      "name": "Mughals policies and culture",
+      "subject": "2. Medieval History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Bhakti and Sufi",
+      "name": "Bhakti and Sufi",
+      "subject": "2. Medieval History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Indian Architecture",
+      "name": "Indian Architecture",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Sculpture",
+      "name": "Sculpture",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Coins in Ancient and",
+      "name": "Coins in Ancient and Med India",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Paintings",
+      "name": "Paintings",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Dance forms",
+      "name": "Dance forms",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Music",
+      "name": "Music",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Religion and Philoso",
+      "name": "Religion and Philosophy",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Literature",
+      "name": "Literature",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Language",
+      "name": "Language",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Theatre and Puppetry",
+      "name": "Theatre and Puppetry",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Circus and Martial A",
+      "name": "Circus and Martial Arts",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Handicrafts",
+      "name": "Handicrafts",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Cinema",
+      "name": "Cinema",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Fairs and Festivals",
+      "name": "Fairs and Festivals",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Science and technolo",
+      "name": "Science and technology",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Awards and Instituti",
+      "name": "Awards and Institutions",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Law and Culture",
+      "name": "Law and Culture",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-UNESCO list",
+      "name": "UNESCO list",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-India through the ey",
+      "name": "India through the eyes of Travellers",
+      "subject": "3. Art & Culture",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Advent of Europeans",
+      "name": "Advent of Europeans",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Expansion and Consol",
+      "name": "Expansion and Consolidation of British Rule in India",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Resentments against ",
+      "name": "Resentments against British Rule",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Revolt of 1857",
+      "name": "Revolt of 1857",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Socio-Religious Refo",
+      "name": "Socio-Religious Reforms",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Revenue Policies of ",
+      "name": "Revenue Policies of British Rule",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-INC : foundation and",
+      "name": "INC : foundation and moderate phase",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Partition of Bengal ",
+      "name": "Partition of Bengal and Extremist phase",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Revolutionary Nation",
+      "name": "Revolutionary Nationalism PHASE 1 (1907-1917)",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-First World War and ",
+      "name": "First World War and Nationalist response",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Emergence of Gandhi",
+      "name": "Emergence of Gandhi",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Non Cooperation and ",
+      "name": "Non Cooperation and Khilafat Movement",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Emergence of new for",
+      "name": "Emergence of new forces (Swarajists, Socialist, Revolutionary etc)",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Simon Commission and",
+      "name": "Simon Commission and Nehru report",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Civil Disobedience a",
+      "name": "Civil Disobedience and RTC",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-GOI Act 1935 and Con",
+      "name": "GOI Act 1935 and Congress rule in provinces",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-WW 2, Quit India, IN",
+      "name": "WW 2, Quit India, INA",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Post War",
+      "name": "Post War",
+      "subject": "4. Modern History",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Interior of Earth",
+      "name": "Interior of Earth",
+      "subject": "5. Geography",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Geomorphic processes",
+      "name": "Geomorphic processes",
+      "subject": "5. Geography",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Atmosphere , Heat ba",
+      "name": "Atmosphere , Heat balance, circulation",
+      "subject": "5. Geography",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-World climate",
+      "name": "World climate",
+      "subject": "5. Geography",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Oceanography",
+      "name": "Oceanography",
+      "subject": "5. Geography",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Location, Physiograp",
+      "name": "Location, Physiography",
+      "subject": "5. Geography",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Drainage",
+      "name": "Drainage",
+      "subject": "5. Geography",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Climate",
+      "name": "Climate",
+      "subject": "5. Geography",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Soil",
+      "name": "Soil",
+      "subject": "5. Geography",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Minerals: Critical ,",
+      "name": "Minerals: Critical , Rare earth, Distribution in India",
+      "subject": "5. Geography",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Historical Backgroun",
+      "name": "Historical Background",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Making of Indian Con",
+      "name": "Making of Indian Constitution",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Salient Features",
+      "name": "Salient Features",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Preamble",
+      "name": "Preamble",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Union and its territ",
+      "name": "Union and its territories",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Citizenship",
+      "name": "Citizenship",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Fundamental Rights",
+      "name": "Fundamental Rights",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Amendment",
+      "name": "Amendment",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Basic Structure",
+      "name": "Basic Structure",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Parliamentary system",
+      "name": "Parliamentary system",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Federal system",
+      "name": "Federal system",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Centre-State relatio",
+      "name": "Centre-State relations",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Inter-State relation",
+      "name": "Inter-State relations",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Emergency",
+      "name": "Emergency",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-President",
+      "name": "President",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Vice-President",
+      "name": "Vice-President",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Prime Minister",
+      "name": "Prime Minister",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Council of Ministers",
+      "name": "Council of Ministers and Cabinet Committees",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Parliament and its c",
+      "name": "Parliament and its committees",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Judiciary",
+      "name": "Judiciary",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Governor and State G",
+      "name": "Governor and State Gov",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Local Gov- Panchayat",
+      "name": "Local Gov- Panchayat , Municipalities",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Constitutional bodie",
+      "name": "Constitutional bodies",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Non constitutional b",
+      "name": "Non constitutional bodies",
+      "subject": "6. Indian Polity",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Basics and Features ",
+      "name": "Basics and Features of Indian Economy",
+      "subject": "7. Indian Economy",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-National Income Acco",
+      "name": "National Income Accounting",
+      "subject": "7. Indian Economy",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Money and Banking in",
+      "name": "Money and Banking in India",
+      "subject": "7. Indian Economy",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Financial Market in ",
+      "name": "Financial Market in India",
+      "subject": "7. Indian Economy",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Budget / Public Fina",
+      "name": "Budget / Public Finance in India",
+      "subject": "7. Indian Economy",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Inflation",
+      "name": "Inflation",
+      "subject": "7. Indian Economy",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Agriculture and alli",
+      "name": "Agriculture and allied activities",
+      "subject": "7. Indian Economy",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-External Sector and ",
+      "name": "External Sector and International Trade",
+      "subject": "7. Indian Economy",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Ecology basics",
+      "name": "Ecology basics",
+      "subject": "8. Environment",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Pollution",
+      "name": "Pollution",
+      "subject": "8. Environment",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Energy",
+      "name": "Energy",
+      "subject": "8. Environment",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Climate change and I",
+      "name": "Climate change and International Institutions/conventions, Laws",
+      "subject": "8. Environment",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Wildlife ,Biodiversi",
+      "name": "Wildlife ,Biodiversity, protected areas, species, National Laws",
+      "subject": "8. Environment",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-General Science",
+      "name": "General Science",
+      "subject": "9. Science & Tech",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Biotechnology",
+      "name": "Biotechnology",
+      "subject": "9. Science & Tech",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Health and diseases",
+      "name": "Health and diseases",
+      "subject": "9. Science & Tech",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-ICT",
+      "name": "ICT",
+      "subject": "9. Science & Tech",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Space technology",
+      "name": "Space technology",
+      "subject": "9. Science & Tech",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Defence technology",
+      "name": "Defence technology",
+      "subject": "9. Science & Tech",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Energy (New and rene",
+      "name": "Energy (New and renewables)",
+      "subject": "9. Science & Tech",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Misc eg, nobel prize",
+      "name": "Misc eg, nobel prizes",
+      "subject": "9. Science & Tech",
+      "type": "CMT"
+    }
+  ],
+  "cmt_csat": [
+    {
+      "code": "CMT-Percentage",
+      "name": "Percentage",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Ratio and Proportion",
+      "name": "Ratio and Proportion",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Profit and Loss",
+      "name": "Profit and Loss",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Compound Interest",
+      "name": "Compound Interest",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Data Interpretation",
+      "name": "Data Interpretation",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Age and Partnership",
+      "name": "Age and Partnership",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Time and Work",
+      "name": "Time and Work",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Time, Speed, and Dis",
+      "name": "Time, Speed, and Distance",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Pipes and Cistern",
+      "name": "Pipes and Cistern",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Boats and Stream",
+      "name": "Boats and Stream",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Probability",
+      "name": "Probability",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Mixtures and Allegat",
+      "name": "Mixtures and Allegations",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Number System",
+      "name": "Number System",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Average",
+      "name": "Average",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Mensuration",
+      "name": "Mensuration",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-HCF and LCM",
+      "name": "HCF and LCM",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Alphanumeric Series",
+      "name": "Alphanumeric Series",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Coding and Decoding",
+      "name": "Coding and Decoding",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Continuous Letter Se",
+      "name": "Continuous Letter Series",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Analogy",
+      "name": "Analogy",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Direction Sense",
+      "name": "Direction Sense",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Blood Relation",
+      "name": "Blood Relation",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Ranking and Order",
+      "name": "Ranking and Order",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Syllogism",
+      "name": "Syllogism",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Sitting Arrangement ",
+      "name": "Sitting Arrangement Puzzles",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Clock",
+      "name": "Clock",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Calendar",
+      "name": "Calendar",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Dice",
+      "name": "Dice",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Counting Figures",
+      "name": "Counting Figures",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Images",
+      "name": "Images",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    },
+    {
+      "code": "CMT-Analytical Reasoning",
+      "name": "Analytical Reasoning",
+      "subject": "10. CSAT",
+      "type": "CMT"
+    }
   ]
 };
 
@@ -1848,7 +2662,8 @@ function TestsTab({ user }) {
   async function saveTest(e) {
     e.preventDefault(); setSaving(true);
     try {
-      await api('logTestScore', { phone: user.phone, test_type: adding.category, ...form });
+      const testType = adding.series === 'CMT' ? 'cmt' : adding.category;
+      await api('logTestScore', { phone: user.phone, test_type: testType, ...form });
       await loadScores(); setAdding(null); setForm({});
     } catch { alert('Failed to save. Please try again.'); }
     finally { setSaving(false); }
@@ -1857,17 +2672,16 @@ function TestsTab({ user }) {
   if (loading) return <div style={{ textAlign:'center', padding:60 }}><div className="spinner spinner-dark" style={{ width:30, height:30, margin:'0 auto' }}/></div>;
 
   const SECTIONS = [
-    { key:'cmt',          label:'🧪 Concept Mastery Tests', scoreKey:'cmt',     isCMT:true  },
-    { key:'gs_prelims',   label:'📝 GS Prelims Tests',      scoreKey:'prelims', isCMT:false },
-    { key:'csat_prelims', label:'📝 CSAT Prelims Tests',    scoreKey:'csat',    isCMT:false },
-    { key:'mains',        label:'📋 Mains Tests',           scoreKey:'mains',   isCMT:false },
+    { key:'gs_prelims',   label:'📝 GS Prelims Tests',      scoreKey:'prelims', hasCMT:true,  cmtKey:'cmt_gs'   },
+    { key:'csat_prelims', label:'📝 CSAT Prelims Tests',    scoreKey:'csat',    hasCMT:true,  cmtKey:'cmt_csat' },
+    { key:'mains',        label:'📋 Mains Tests',           scoreKey:'mains',   hasCMT:false, cmtKey:null       },
   ];
 
   return (
     <>
       {SECTIONS.map(sec => (
         <TestSection key={sec.key} section={sec} scores={scores}
-          onAdd={(series) => { setAdding({ category: sec.key, series }); setForm({}); }} />
+          onAdd={(series) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm({}); }} />
       ))}
 
       {adding && (
@@ -1879,7 +2693,7 @@ function TestsTab({ user }) {
               <div style={{ flex:1, fontWeight:700, fontSize:16 }}>
                 {adding.category==='cmt' ? 'Add CMT Entry' : 'Add Score'}
               </div>
-              {adding.category !== 'cmt' && (
+              {adding.series !== 'CMT' && (
                 <span style={{ background: adding.series==='LEEP'?'#E3F0FF':'#E8F5E9',
                   color: adding.series==='LEEP'?'#1565C0':'#2E7D32',
                   padding:'4px 12px', borderRadius:99, fontSize:13, fontWeight:700 }}>
@@ -1889,12 +2703,19 @@ function TestsTab({ user }) {
             </div>
 
             <form onSubmit={saveTest}>
-              {adding.category === 'cmt' && (
+              {adding.series === 'CMT' && (
                 <>
                   <div className="input-group">
-                    <label>Chapter Name</label>
-                    <input className="input-field" type="text" required placeholder="e.g. Indus Valley Civilization"
-                      value={form.chapter||''} onChange={e => setForm(f => ({ ...f, chapter: e.target.value }))} />
+                    <label>Select Chapter</label>
+                    <select className="input-field" required value={form.chapter||''}
+                      onChange={e => setForm(f => ({ ...f, chapter: e.target.value }))}>
+                      <option value="">— Choose a chapter —</option>
+                      {(TESTS_MASTER[adding.cmtKey]||[]).map(c => (
+                        <option key={c.name} value={c.name}>
+                          {c.subject ? `[${c.subject.replace(/^\d+\.\s*/,'')}] ` : ''}{c.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="input-group">
                     <label>Mastery Status</label>
@@ -1909,7 +2730,7 @@ function TestsTab({ user }) {
                 </>
               )}
 
-              {adding.category !== 'cmt' && (
+              {adding.series !== 'CMT' && (
                 <>
                   <div className="input-group">
                     <label>Select Test</label>
@@ -1929,7 +2750,7 @@ function TestsTab({ user }) {
                       <span style={{ opacity:0.8 }}>Total: {form.marks_total}</span>
                     </div>
                   )}
-                  {adding.category !== 'mains' ? (
+                  {adding.category !== 'mains' && adding.series !== 'CMT' ? (
                     <div className="input-group">
                       <label>Marks Scored (out of {form.marks_total||'?'})</label>
                       <input className="input-field" type="number" min="0" max={form.marks_total||9999} required
@@ -1965,14 +2786,20 @@ function TestsTab({ user }) {
 // ── Test Section Component ────────────────────────────────────
 function TestSection({ section, scores, onAdd }) {
   const [activeSeries, setActiveSeries] = useState('LEEP');
+  const series = section.hasCMT ? ['LEEP','EDGE','CMT'] : ['LEEP','EDGE'];
 
   const allEntries = scores?.[section.scoreKey] || [];
-  const filtered   = allEntries.filter(r => {
-    // match by test_label or by code prefix
-    if (r.test_label) return r.test_label === activeSeries;
-    if (activeSeries === 'EDGE') return String(r.test_code||'').startsWith('ES');
-    return !String(r.test_code||'').startsWith('ES');
-  });
+  const cmtEntries = scores?.cmt || [];
+  const filtered = activeSeries === 'CMT'
+    ? cmtEntries.filter(r => {
+        const cmtList = TESTS_MASTER[section.cmtKey] || [];
+        return cmtList.some(c => c.name === r.chapter);
+      })
+    : allEntries.filter(r => {
+        if (r.test_label) return r.test_label === activeSeries;
+        if (activeSeries === 'EDGE') return String(r.test_code||'').startsWith('ES');
+        return !String(r.test_code||'').startsWith('ES');
+      });
 
   return (
     <div className="card">
@@ -2002,16 +2829,20 @@ function TestSection({ section, scores, onAdd }) {
         <>
           {/* LEEP / EDGE toggle */}
           <div style={{ display:'flex', gap:6, marginBottom:12 }}>
-            {['LEEP','EDGE'].map(s => (
-              <button key={s} onClick={() => setActiveSeries(s)}
-                style={{ padding:'5px 14px', borderRadius:99, border:'1.5px solid',
-                  borderColor: activeSeries===s ? (s==='LEEP'?'#1565C0':'#2E7D32') : '#E0E6EF',
-                  background: activeSeries===s ? (s==='LEEP'?'#1565C0':'#2E7D32') : '#fff',
-                  color: activeSeries===s ? '#fff' : '#6B7280',
-                  fontWeight:600, fontSize:12, cursor:'pointer' }}>
-                {s}
-              </button>
-            ))}
+            {series.map(s => {
+              const colors = { LEEP:'#1565C0', EDGE:'#2E7D32', CMT:'#6A1B9A' };
+              const active = activeSeries === s;
+              return (
+                <button key={s} onClick={() => setActiveSeries(s)}
+                  style={{ padding:'5px 14px', borderRadius:99, border:'1.5px solid',
+                    borderColor: active ? colors[s] : '#E0E6EF',
+                    background: active ? colors[s] : '#fff',
+                    color: active ? '#fff' : '#6B7280',
+                    fontWeight:600, fontSize:12, cursor:'pointer' }}>
+                  {s}
+                </button>
+              );
+            })}
             <button className="btn btn-sm btn-saffron" style={{ marginLeft:'auto' }}
               onClick={() => onAdd(activeSeries)}>
               + Add
@@ -2022,11 +2853,19 @@ function TestSection({ section, scores, onAdd }) {
           {filtered.length ? filtered.map((r, i) => (
             <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <div>
-                  <div style={{ fontSize:14, fontWeight:500 }}>{r.test_code}</div>
-                  <div style={{ fontSize:11, color:'#6B7280', marginTop:1 }}>{r.test_name}</div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:14, fontWeight:500 }}>
+                    {activeSeries === 'CMT' ? r.chapter : r.test_code}
+                  </div>
+                  {activeSeries !== 'CMT' && (
+                    <div style={{ fontSize:11, color:'#6B7280', marginTop:1 }}>{r.test_name}</div>
+                  )}
                 </div>
-                {section.hasScore ? (
+                {activeSeries === 'CMT' ? (
+                  <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>
+                    {r.mastery_status}
+                  </span>
+                ) : section.hasScore ? (
                   <div style={{ textAlign:'right' }}>
                     <div style={{ fontSize:16, fontWeight:700, color:'#1B3A6B' }}>
                       {r.marks_scored}<span style={{ fontSize:11, color:'#6B7280' }}>/{r.marks_total}</span>
