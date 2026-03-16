@@ -1,6 +1,1433 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../utils/api';
 
+
+// ── Tests Master Data ─────────────────────────────────────────
+const TESTS_MASTER = {
+  "gs_prelims": [
+    {
+      "code": "PT-2101",
+      "name": "Polity Sectional Test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2102",
+      "name": "Polity Sectional Test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2103",
+      "name": "Geography Sectional Test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2104",
+      "name": "Geography Sectional Test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2105",
+      "name": "Polity Full length Test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2106",
+      "name": "Geography Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2107",
+      "name": "Economy Sectional test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2109",
+      "name": "Economy Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2110",
+      "name": "Environment Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CAPT-2112",
+      "name": "June CA Test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2113",
+      "name": "Ancient History Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2115",
+      "name": "Medieval History Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2116",
+      "name": "Art and Culture Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2118",
+      "name": "Modern History Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2119",
+      "name": "History Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CAPT-2121",
+      "name": "Polity + Geo Revision test + July CA",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2122",
+      "name": "Anc & Med + Art & Culture + Economy Revision test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2124",
+      "name": "Environment + History Revision test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2125",
+      "name": "Polity + Geography + Economy Revision test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CAPT-2127",
+      "name": "August 2025+Sept 2025 CA",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2128",
+      "name": "Prelims Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CAPT-2130",
+      "name": "Oct 2025+ Nov 2025 CA",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2131",
+      "name": "Prelims Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CAPT-2132",
+      "name": "Dec 2025+ Jan 2025 CA test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2133",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2135",
+      "name": "Prelims GS  Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2136",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2138",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2140",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2141",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2143",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2144",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2146",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2147",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2148",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2149",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2150",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2151",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "PT-2152",
+      "name": "Prelims GS Full length test with CA till date",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "<35/100",
+      "name": "0.33",
+      "marks": "Need to Work",
+      "type": "LEEP"
+    },
+    {
+      "code": "<50/100",
+      "name": "0.5",
+      "marks": "Average",
+      "type": "LEEP"
+    },
+    {
+      "code": ">50/100",
+      "name": "0.75",
+      "marks": "Good",
+      "type": "LEEP"
+    },
+    {
+      "code": ">60/100",
+      "name": "1.0",
+      "marks": "Excellent",
+      "type": "LEEP"
+    },
+    {
+      "code": "ES GSPT-01",
+      "name": "Indian Economy till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-02",
+      "name": "Ancient India till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-03",
+      "name": "Indian Economy till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-04",
+      "name": "Ancient India till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-05",
+      "name": "Entire Week Targets including May CA (No CSAT)",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-06",
+      "name": "Ancient India till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-07",
+      "name": "Indian Economy till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-08",
+      "name": "Indian Economy till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-09",
+      "name": "Medieval India till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-10",
+      "name": "Entire Week Targets including June CA (No CSAT)",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-11",
+      "name": "Medieval India till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-12",
+      "name": "Medieval India till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-13",
+      "name": "Indian Polity till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-14",
+      "name": "Art and Culture till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-15",
+      "name": "Entire Week Targets including July CA",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-17",
+      "name": "Indian Polity till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-18",
+      "name": "Art and Culture till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-19",
+      "name": "Indian Polity till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-20",
+      "name": "Art and Culture till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-21",
+      "name": "Indian Polity till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-22",
+      "name": "Entire Week Targets including August CA",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-24",
+      "name": "Indian Polity till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-25",
+      "name": "Art and Culture till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-26",
+      "name": "Indian Polity till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-27",
+      "name": "Art and Culture till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-28",
+      "name": "Entire Week Targets including September CA",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-30",
+      "name": "Indian Polity till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-31",
+      "name": "Modern India Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-32",
+      "name": "Geography Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-33",
+      "name": "Modern India Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-34",
+      "name": "Geography Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-35",
+      "name": "Entire Week Targets including October CA",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-37",
+      "name": "Modern India Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-38",
+      "name": "Geography Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-39",
+      "name": "Modern India Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-40",
+      "name": "Geography Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-41",
+      "name": "Entire Week Targets including November CA",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-43",
+      "name": "Geography Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-44",
+      "name": "Environment Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-45",
+      "name": "Geography Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-46",
+      "name": "Environment Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-47",
+      "name": "Entire Week Targets including December CA",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-49",
+      "name": "Geography Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-50",
+      "name": "Environment Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-51",
+      "name": "Environment Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-52",
+      "name": "Indian Economy till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-53",
+      "name": "Entire Week Targets including January CA",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-55",
+      "name": "Indian Economy Survey and Budget",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-56",
+      "name": "CSAT till completed targets so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-57",
+      "name": "Entire Week Targets including February CA",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-59",
+      "name": "Complete Ancient History",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-60",
+      "name": "Complete Medieval History",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-61",
+      "name": "Entire Week Targets including CA (May 24 + June 24)",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-63",
+      "name": "Complete Indian Polity",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-64",
+      "name": "Complete Indian Polity",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-65",
+      "name": "Geography Previous Day Targets",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-66",
+      "name": "Science and Technology Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-67",
+      "name": "Geography Previous Day Targets",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-68",
+      "name": "Entire Week Targets including CA (July 24 + August 24)",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-69",
+      "name": "Geography Previous Day Targets",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-70",
+      "name": "Complete Geography",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-71",
+      "name": "Indian Economy Previous Day Targets",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-72",
+      "name": "Indian Economy Previous Day Targets",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-73",
+      "name": "Entire Week Targets including CA (September 24 + October 24)",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-75",
+      "name": "Art & Culture Previous Day Targets",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-76",
+      "name": "Complete Art & Culture",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-77",
+      "name": "Environment Previous Day Targets",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-78",
+      "name": "Environment Previous Day Targets",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-79",
+      "name": "GS FLT including CA (November 24 + December 24)",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-81",
+      "name": "Complete Environment",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-82",
+      "name": "Modern History Previous Day Targets",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-83",
+      "name": "Complete Modern India",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-84",
+      "name": "GS FLT including CA (January 25 + February 2025)",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-87",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-88",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-90",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-92",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-93",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-95",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-96",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-97",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-98",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-100",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-101",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-103",
+      "name": "GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-105",
+      "name": "Bonus GS FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    }
+  ],
+  "csat_prelims": [
+    {
+      "code": "CSPT-2108",
+      "name": "CSAT topics of the week based test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT-2111",
+      "name": "CSAT topics of the week based test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT-2114",
+      "name": "CSAT topics of the week based test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT-2117",
+      "name": "CSAT topics of the week based test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT-2120",
+      "name": "CSAT topics of the week based test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT-2123",
+      "name": "CSAT topics of the week based test",
+      "marks": 100.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT-2126",
+      "name": "CSAT Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT-2129",
+      "name": "CSAT Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT-2134",
+      "name": "CSAT Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT- 2137",
+      "name": "CSAT Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT- 2139",
+      "name": "CSAT Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT-2142",
+      "name": "CSAT Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "CSPT-2145",
+      "name": "CSAT Full length test",
+      "marks": 200.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "ES CSPT-16",
+      "name": "CSAT Targets Completed So Far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-23",
+      "name": "CSAT Targets Completed So Far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-29",
+      "name": "CSAT Targets Completed So Far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-36",
+      "name": "CSAT Targets Completed So Far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-42",
+      "name": "CSAT Targets Completed So Far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES GSPT-43",
+      "name": "Geography Targets completed so far",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-48",
+      "name": "CSAT Targets Completed So Far",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-54",
+      "name": "CSAT Targets Completed So Far",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-62",
+      "name": "CSAT Targets Completed So Far",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-74",
+      "name": "CSAT Targets completed so far",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-80",
+      "name": "CSAT - Targets of Previous Day",
+      "marks": 100.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-85",
+      "name": "CSAT FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-86",
+      "name": "CSAT FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-89",
+      "name": "CSAT FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-91",
+      "name": "CSAT FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-94",
+      "name": "CSAT FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-99",
+      "name": "CSAT FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-102",
+      "name": "CSAT FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-104",
+      "name": "CSAT FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ES CSPT-106",
+      "name": "Bonus CSAT FLT",
+      "marks": 200.0,
+      "type": "EDGE"
+    }
+  ],
+  "mains": [
+    {
+      "code": "MT2101",
+      "name": "Polity Sectional Test",
+      "questions": 10.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2102",
+      "name": "Polity Sectional Test",
+      "questions": 10.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2103",
+      "name": "Geography sectional test",
+      "questions": 10.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2104",
+      "name": "Geography test",
+      "questions": 10.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2105",
+      "name": "Economy test",
+      "questions": 10.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2106",
+      "name": "Post- Independent India test",
+      "questions": 10.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2107",
+      "name": "Environment test",
+      "questions": 10.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2108",
+      "name": "Art & Culture + Modern History",
+      "questions": 10.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2109",
+      "name": "Environment+ History+ Society",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2110",
+      "name": "World History + Polity + Governance",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2111",
+      "name": "GS II",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2112",
+      "name": "GS III",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT2113",
+      "name": "GS IV",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2114",
+      "name": "Indian Constitution-I",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2115",
+      "name": "Complete Geography",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2116",
+      "name": "Essay I",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2117",
+      "name": "Complete History, Society",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2118",
+      "name": "Governance, Social Justice, International Relations",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2119",
+      "name": "Essay 2",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2120",
+      "name": "Economy, Agriculture, Infrastructure, Investment",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2121",
+      "name": "Science and Technology, Internal Security, Disaster Management",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2122",
+      "name": "Ethics, Intergrity & Aptitude- Part A",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2123",
+      "name": "Essay 3",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2124",
+      "name": "Ethics, Intergrity & Aptitude- Part B",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2125",
+      "name": "Essay 4",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2126",
+      "name": "GS 1 Complete",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2127",
+      "name": "GS 2 Complete",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2128",
+      "name": "Essay 5",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2129",
+      "name": "GS 3 Complete",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2130",
+      "name": "GS 4 Complete",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2131",
+      "name": "Essay 6",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2132",
+      "name": "GS 1",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2133",
+      "name": "GS 2",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2134",
+      "name": "GS 3",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "MT-2135",
+      "name": "GS 4",
+      "questions": 20.0,
+      "type": "LEEP"
+    },
+    {
+      "code": "ESMT 01",
+      "name": "Art & Culture",
+      "questions": 10.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 02",
+      "name": "Modern History",
+      "questions": 10.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 03",
+      "name": "Art & Culture + History( Modern, Post Independence + World)",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 04",
+      "name": "Society",
+      "questions": 10.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 05",
+      "name": "Geography",
+      "questions": 10.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 06",
+      "name": "Society + Geography",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 07",
+      "name": "Mentioned Syllabus",
+      "questions": 10.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 08",
+      "name": "Polity + Governance",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 09",
+      "name": "GS 1",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 10",
+      "name": "Mentioned Syllabus",
+      "questions": 10.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 11",
+      "name": "Social Justice + Internaional Relations",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 12",
+      "name": "GS 1",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 13",
+      "name": "Mentioned Syllabus",
+      "questions": 10.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 14",
+      "name": "Indian Economy",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 15",
+      "name": "GS 2",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 16",
+      "name": "Mentioned Syllabus",
+      "questions": 10.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 17",
+      "name": "Science & Tech + Environment",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 18",
+      "name": "Essay",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 19",
+      "name": "Mentioned Syllabus",
+      "questions": 10.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 20",
+      "name": "GS 2",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 21",
+      "name": "GS 3 (ISC & DM)",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 22",
+      "name": "Mentioned Syllabus",
+      "questions": 10.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 23",
+      "name": "GS 4 Part A",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 24",
+      "name": "GS 4 Part B",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 25",
+      "name": "GS 1",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 26",
+      "name": "Essay",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 27",
+      "name": "GS 2",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 28",
+      "name": "GS 3",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 29",
+      "name": "GS 4",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 30",
+      "name": "Essay",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 31",
+      "name": "GS 1",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 32",
+      "name": "Essay",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 33",
+      "name": "GS 2",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 34",
+      "name": "GS 3",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 35",
+      "name": "Essay",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 36",
+      "name": "GS 1",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 37",
+      "name": "GS 2",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 38",
+      "name": "GS 3",
+      "questions": 20.0,
+      "type": "EDGE"
+    },
+    {
+      "code": "ESMT 39",
+      "name": "GS 4",
+      "questions": 20.0,
+      "type": "EDGE"
+    }
+  ]
+};
+
 const GS_COLORS = {
   'GS Paper 1': { bg: '#E8F5E9', text: '#2E7D32', bar: '#2E7D32' },
   'GS Paper 2': { bg: '#E3F0FF', text: '#1565C0', bar: '#1565C0' },
@@ -400,126 +1827,187 @@ function DailyTab({ dashboard, user, onUpdate, consistency }) {
 
 // ── Tests Tab ─────────────────────────────────────────────────
 function TestsTab({ user }) {
-  const [scores, setScores]     = useState(null);
-  const [loading, setLoading]   = useState(true);
-  const [adding, setAdding]     = useState(null); // 'cmt'|'prelims'|'mains'
-  const [form, setForm]         = useState({});
-  const [saving, setSaving]     = useState(false);
+  const [scores, setScores]   = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding]   = useState(null);
+  const [form, setForm]       = useState({});
+  const [saving, setSaving]   = useState(false);
+  const [activeType, setActiveType] = useState('all'); // LEEP | EDGE | all
 
-  useEffect(() => {
+  const loadScores = () =>
     api('getTestScores', { phone: user.phone })
       .then(setScores).catch(console.error).finally(() => setLoading(false));
-  }, [user.phone]);
+
+  useEffect(() => { loadScores(); }, [user.phone]);
 
   async function saveTest(e) {
     e.preventDefault();
     setSaving(true);
     try {
       await api('logTestScore', { phone: user.phone, test_type: adding, ...form });
-      const updated = await api('getTestScores', { phone: user.phone });
-      setScores(updated); setAdding(null); setForm({});
+      await loadScores();
+      setAdding(null); setForm({});
     } catch (err) { alert('Failed to save'); }
     finally { setSaving(false); }
   }
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 60 }}><div className="spinner spinner-dark" style={{ width: 30, height: 30, margin: '0 auto' }} /></div>;
+  function selectTest(category, code) {
+    const list = TESTS_MASTER[category] || [];
+    const found = list.find(t => t.code === code);
+    if (found) {
+      setForm(f => ({
+        ...f,
+        test_code: found.code,
+        test_name: found.name,
+        marks_total: found.marks || found.questions || '',
+        test_type: found.type,
+      }));
+    }
+  }
+
+  if (loading) return (
+    <div style={{ textAlign:'center', padding:60 }}>
+      <div className="spinner spinner-dark" style={{ width:30, height:30, margin:'0 auto' }} />
+    </div>
+  );
+
+  const filterTests = (list) => !list ? [] :
+    activeType === 'all' ? list : list.filter(t => t.test_type === activeType);
 
   return (
     <>
-      {/* CMT */}
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div className="card-title" style={{ marginBottom: 0 }}>🧪 Concept Mastery Tests</div>
-          <button className="btn btn-sm btn-saffron" onClick={() => { setAdding('cmt'); setForm({}); }}>+ Add</button>
-        </div>
-        {scores?.cmt?.length ? scores.cmt.map((r, i) => (
-          <div key={i} style={{ borderBottom: '1px solid #F0F0F0', padding: '8px 0', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 14 }}>{r.chapter}</span>
-            <span className={`pill ${r.mastery_status === 'Mastered' ? 'pill-green' : 'pill-orange'}`}>{r.mastery_status}</span>
-          </div>
-        )) : <div style={{ color: '#6B7280', fontSize: 13 }}>No entries yet</div>}
+      {/* Filter pills */}
+      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+        {['all','LEEP','EDGE'].map(t => (
+          <button key={t} onClick={() => setActiveType(t)}
+            style={{ padding:'6px 16px', borderRadius:99, border:'1.5px solid',
+              borderColor: activeType===t ? '#1B3A6B' : '#E0E6EF',
+              background: activeType===t ? '#1B3A6B' : '#fff',
+              color: activeType===t ? '#fff' : '#6B7280',
+              fontWeight:600, fontSize:13, cursor:'pointer' }}>
+            {t === 'all' ? 'All' : t}
+          </button>
+        ))}
       </div>
 
-      {/* Prelims */}
+      {/* GS Prelims */}
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div className="card-title" style={{ marginBottom: 0 }}>📝 Prelims Tests</div>
-          <button className="btn btn-sm btn-saffron" onClick={() => { setAdding('prelims'); setForm({}); }}>+ Add</button>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+          <div className="card-title" style={{ marginBottom:0 }}>📝 GS Prelims Tests</div>
+          <button className="btn btn-sm btn-saffron" onClick={() => { setAdding('gs_prelims'); setForm({}); }}>+ Add</button>
         </div>
-        {scores?.prelims?.length ? scores.prelims.map((r, i) => (
-          <div key={i} style={{ borderBottom: '1px solid #F0F0F0', padding: '8px 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 14, fontWeight: 500 }}>{r.test_code} — {r.test_name}</span>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#1B3A6B' }}>{r.marks_scored}/{r.marks_total}</span>
+        {filterTests(scores?.prelims)?.length ? filterTests(scores.prelims).map((r,i) => (
+          <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0' }}>
+            <div style={{ display:'flex', justifyContent:'space-between' }}>
+              <span style={{ fontSize:14, fontWeight:500 }}>{r.test_code}</span>
+              <span style={{ fontSize:14, fontWeight:700, color:'#1B3A6B' }}>
+                {r.marks_scored}/{r.marks_total}
+              </span>
             </div>
-            <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{r.test_type}</div>
+            <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{r.test_name} · {r.test_type}</div>
           </div>
-        )) : <div style={{ color: '#6B7280', fontSize: 13 }}>No entries yet</div>}
+        )) : <div style={{ color:'#6B7280', fontSize:13 }}>No entries yet</div>}
+      </div>
+
+      {/* CSAT Prelims */}
+      <div className="card">
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+          <div className="card-title" style={{ marginBottom:0 }}>📝 CSAT Prelims Tests</div>
+          <button className="btn btn-sm btn-saffron" onClick={() => { setAdding('csat_prelims'); setForm({}); }}>+ Add</button>
+        </div>
+        {filterTests(scores?.csat)?.length ? filterTests(scores.csat).map((r,i) => (
+          <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0' }}>
+            <div style={{ display:'flex', justifyContent:'space-between' }}>
+              <span style={{ fontSize:14, fontWeight:500 }}>{r.test_code}</span>
+              <span style={{ fontSize:14, fontWeight:700, color:'#1B3A6B' }}>
+                {r.marks_scored}/{r.marks_total}
+              </span>
+            </div>
+            <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{r.test_name} · {r.test_type}</div>
+          </div>
+        )) : <div style={{ color:'#6B7280', fontSize:13 }}>No entries yet</div>}
       </div>
 
       {/* Mains */}
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div className="card-title" style={{ marginBottom: 0 }}>📋 Mains Tests</div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+          <div className="card-title" style={{ marginBottom:0 }}>📋 Mains Tests</div>
           <button className="btn btn-sm btn-saffron" onClick={() => { setAdding('mains'); setForm({}); }}>+ Add</button>
         </div>
-        {scores?.mains?.length ? scores.mains.map((r, i) => (
-          <div key={i} style={{ borderBottom: '1px solid #F0F0F0', padding: '8px 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 14, fontWeight: 500 }}>{r.test_code} — {r.test_name}</span>
-              <span className={`pill ${r.attempted === 'Yes' ? 'pill-green' : 'pill-orange'}`}>{r.attempted === 'Yes' ? 'Attempted' : 'Not Done'}</span>
+        {filterTests(scores?.mains)?.length ? filterTests(scores.mains).map((r,i) => (
+          <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0' }}>
+            <div style={{ display:'flex', justifyContent:'space-between' }}>
+              <span style={{ fontSize:14, fontWeight:500 }}>{r.test_code}</span>
+              <span className={`pill ${r.attempted==='Yes'?'pill-green':'pill-orange'}`}>
+                {r.attempted==='Yes'?'Done':'Not Done'}
+              </span>
             </div>
-            <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{r.no_of_questions} questions</div>
+            <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{r.test_name} · {r.no_of_questions}Q</div>
           </div>
-        )) : <div style={{ color: '#6B7280', fontSize: 13 }}>No entries yet</div>}
+        )) : <div style={{ color:'#6B7280', fontSize:13 }}>No entries yet</div>}
       </div>
 
       {/* Add form modal */}
       {adding && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}>
-          <div style={{ background: '#fff', borderRadius: '18px 18px 0 0', padding: 24, width: '100%', maxWidth: 480, margin: '0 auto' }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>
-              Add {adding === 'cmt' ? 'CMT' : adding === 'prelims' ? 'Prelims' : 'Mains'} Entry
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200,
+          display:'flex', alignItems:'flex-end' }} onClick={e => e.target===e.currentTarget && setAdding(null)}>
+          <div style={{ background:'#fff', borderRadius:'18px 18px 0 0', padding:24,
+            width:'100%', maxWidth:480, margin:'0 auto', maxHeight:'85vh', overflowY:'auto' }}>
+
+            <div style={{ fontWeight:700, fontSize:16, marginBottom:16 }}>
+              Add {adding==='gs_prelims'?'GS Prelims': adding==='csat_prelims'?'CSAT Prelims':'Mains'} Score
             </div>
+
             <form onSubmit={saveTest}>
-              {adding === 'cmt' && <>
-                <div className="input-group"><label>Chapter</label>
-                  <input className="input-field" placeholder="Chapter name" onChange={e => setForm(f => ({ ...f, chapter: e.target.value }))} required /></div>
-                <div className="input-group"><label>Mastery Status</label>
-                  <select className="input-field" onChange={e => setForm(f => ({ ...f, mastery_status: e.target.value }))} required>
-                    <option value="">Select</option>
-                    <option>Mastered</option><option>Concerned</option><option>Not Attempted</option>
-                  </select></div>
-              </>}
-              {adding === 'prelims' && <>
-                <div className="input-group"><label>Test Code</label>
-                  <input className="input-field" placeholder="e.g. PT-2101" onChange={e => setForm(f => ({ ...f, test_code: e.target.value }))} required /></div>
-                <div className="input-group"><label>Test Name</label>
-                  <input className="input-field" placeholder="e.g. Polity Sectional Test" onChange={e => setForm(f => ({ ...f, test_name: e.target.value }))} /></div>
-                <div className="input-group"><label>Type</label>
-                  <select className="input-field" onChange={e => setForm(f => ({ ...f, test_type: e.target.value }))}>
-                    <option>LEEP</option><option>EDGE</option>
-                  </select></div>
-                <div className="input-group"><label>Total Marks</label>
-                  <input className="input-field" type="number" onChange={e => setForm(f => ({ ...f, marks_total: e.target.value }))} required /></div>
-                <div className="input-group"><label>Scored</label>
-                  <input className="input-field" type="number" onChange={e => setForm(f => ({ ...f, marks_scored: e.target.value }))} required /></div>
-              </>}
-              {adding === 'mains' && <>
-                <div className="input-group"><label>Test Code</label>
-                  <input className="input-field" placeholder="e.g. MT2101" onChange={e => setForm(f => ({ ...f, test_code: e.target.value }))} required /></div>
-                <div className="input-group"><label>Test Name</label>
-                  <input className="input-field" onChange={e => setForm(f => ({ ...f, test_name: e.target.value }))} /></div>
-                <div className="input-group"><label>No. of Questions</label>
-                  <input className="input-field" type="number" onChange={e => setForm(f => ({ ...f, no_of_questions: e.target.value }))} /></div>
-                <div className="input-group"><label>Attempted?</label>
-                  <select className="input-field" onChange={e => setForm(f => ({ ...f, attempted: e.target.value }))}>
-                    <option>Yes</option><option>Not Done</option>
-                  </select></div>
-              </>}
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button type="button" className="btn btn-outline" onClick={() => setAdding(null)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
+              {/* Test selector dropdown */}
+              <div className="input-group">
+                <label>Select Test</label>
+                <select className="input-field" required
+                  value={form.test_code || ''}
+                  onChange={e => selectTest(adding, e.target.value)}>
+                  <option value="">— Choose a test —</option>
+                  {(TESTS_MASTER[adding] || []).map(t => (
+                    <option key={t.code} value={t.code}>
+                      {t.code} — {t.name.length > 40 ? t.name.slice(0,40)+'…' : t.name} ({t.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Show selected test info */}
+              {form.test_code && (
+                <div style={{ background:'#EAF2FB', borderRadius:10, padding:'10px 14px',
+                  marginBottom:14, fontSize:13, color:'#1565C0' }}>
+                  <strong>{form.test_code}</strong> · {form.test_name}<br/>
+                  <span style={{ opacity:0.8 }}>Total marks: {form.marks_total}</span>
+                </div>
+              )}
+
+              {/* Score/attempted based on test type */}
+              {adding !== 'mains' ? (
+                <div className="input-group">
+                  <label>Marks Scored (out of {form.marks_total || '?'})</label>
+                  <input className="input-field" type="number" min="0"
+                    max={form.marks_total || 999} required
+                    value={form.marks_scored || ''}
+                    onChange={e => setForm(f => ({ ...f, marks_scored: e.target.value }))} />
+                </div>
+              ) : (
+                <div className="input-group">
+                  <label>Attempted?</label>
+                  <select className="input-field"
+                    value={form.attempted || 'Yes'}
+                    onChange={e => setForm(f => ({ ...f, attempted: e.target.value }))}>
+                    <option value="Yes">Yes — Attempted</option>
+                    <option value="Not Done">Not Done</option>
+                  </select>
+                </div>
+              )}
+
+              <div style={{ display:'flex', gap:10 }}>
+                <button type="button" className="btn btn-outline"
+                  onClick={() => { setAdding(null); setForm({}); }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={saving || !form.test_code}>
                   {saving ? <span className="spinner" /> : 'Save'}
                 </button>
               </div>
@@ -530,3 +2018,4 @@ function TestsTab({ user }) {
     </>
   );
 }
+
