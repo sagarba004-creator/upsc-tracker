@@ -1827,12 +1827,11 @@ function DailyTab({ dashboard, user, onUpdate, consistency }) {
 
 // ── Tests Tab ─────────────────────────────────────────────────
 function TestsTab({ user }) {
-  const [scores, setScores]   = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [adding, setAdding]   = useState(null);
-  const [form, setForm]       = useState({});
-  const [saving, setSaving]   = useState(false);
-  const [activeType, setActiveType] = useState('all'); // LEEP | EDGE | all
+  const [scores, setScores]     = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [adding, setAdding]     = useState(null); // { category, series }
+  const [form, setForm]         = useState({});
+  const [saving, setSaving]     = useState(false);
 
   const loadScores = () =>
     api('getTestScores', { phone: user.phone })
@@ -1844,23 +1843,27 @@ function TestsTab({ user }) {
     e.preventDefault();
     setSaving(true);
     try {
-      await api('logTestScore', { phone: user.phone, test_type: adding, ...form });
+      await api('logTestScore', {
+        phone: user.phone,
+        test_type: adding.category,
+        ...form,
+      });
       await loadScores();
       setAdding(null); setForm({});
-    } catch (err) { alert('Failed to save'); }
+    } catch (err) { alert('Failed to save. Please try again.'); }
     finally { setSaving(false); }
   }
 
-  function selectTest(category, code) {
-    const list = TESTS_MASTER[category] || [];
-    const found = list.find(t => t.code === code);
+  function selectTest(code) {
+    const list = TESTS_MASTER[adding.category] || [];
+    const found = list.find(t => t.code === code && t.type === adding.series);
     if (found) {
       setForm(f => ({
         ...f,
         test_code: found.code,
         test_name: found.name,
         marks_total: found.marks || found.questions || '',
-        test_type: found.type,
+        test_label: found.type,
       }));
     }
   }
@@ -1871,124 +1874,75 @@ function TestsTab({ user }) {
     </div>
   );
 
-  const filterTests = (list) => !list ? [] :
-    activeType === 'all' ? list : list.filter(t => t.test_type === activeType);
+  // Sections config
+  const SECTIONS = [
+    { key: 'gs_prelims',   label: '📝 GS Prelims Tests',   scoreKey: 'prelims', hasScore: true },
+    { key: 'csat_prelims', label: '📝 CSAT Prelims Tests',  scoreKey: 'csat',    hasScore: true },
+    { key: 'mains',        label: '📋 Mains Tests',         scoreKey: 'mains',   hasScore: false },
+  ];
 
   return (
     <>
-      {/* Filter pills */}
-      <div style={{ display:'flex', gap:8, marginBottom:14 }}>
-        {['all','LEEP','EDGE'].map(t => (
-          <button key={t} onClick={() => setActiveType(t)}
-            style={{ padding:'6px 16px', borderRadius:99, border:'1.5px solid',
-              borderColor: activeType===t ? '#1B3A6B' : '#E0E6EF',
-              background: activeType===t ? '#1B3A6B' : '#fff',
-              color: activeType===t ? '#fff' : '#6B7280',
-              fontWeight:600, fontSize:13, cursor:'pointer' }}>
-            {t === 'all' ? 'All' : t}
-          </button>
-        ))}
-      </div>
-
-      {/* GS Prelims */}
-      <div className="card">
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-          <div className="card-title" style={{ marginBottom:0 }}>📝 GS Prelims Tests</div>
-          <button className="btn btn-sm btn-saffron" onClick={() => { setAdding('gs_prelims'); setForm({}); }}>+ Add</button>
-        </div>
-        {filterTests(scores?.prelims)?.length ? filterTests(scores.prelims).map((r,i) => (
-          <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0' }}>
-            <div style={{ display:'flex', justifyContent:'space-between' }}>
-              <span style={{ fontSize:14, fontWeight:500 }}>{r.test_code}</span>
-              <span style={{ fontSize:14, fontWeight:700, color:'#1B3A6B' }}>
-                {r.marks_scored}/{r.marks_total}
-              </span>
-            </div>
-            <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{r.test_name} · {r.test_type}</div>
-          </div>
-        )) : <div style={{ color:'#6B7280', fontSize:13 }}>No entries yet</div>}
-      </div>
-
-      {/* CSAT Prelims */}
-      <div className="card">
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-          <div className="card-title" style={{ marginBottom:0 }}>📝 CSAT Prelims Tests</div>
-          <button className="btn btn-sm btn-saffron" onClick={() => { setAdding('csat_prelims'); setForm({}); }}>+ Add</button>
-        </div>
-        {filterTests(scores?.csat)?.length ? filterTests(scores.csat).map((r,i) => (
-          <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0' }}>
-            <div style={{ display:'flex', justifyContent:'space-between' }}>
-              <span style={{ fontSize:14, fontWeight:500 }}>{r.test_code}</span>
-              <span style={{ fontSize:14, fontWeight:700, color:'#1B3A6B' }}>
-                {r.marks_scored}/{r.marks_total}
-              </span>
-            </div>
-            <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{r.test_name} · {r.test_type}</div>
-          </div>
-        )) : <div style={{ color:'#6B7280', fontSize:13 }}>No entries yet</div>}
-      </div>
-
-      {/* Mains */}
-      <div className="card">
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-          <div className="card-title" style={{ marginBottom:0 }}>📋 Mains Tests</div>
-          <button className="btn btn-sm btn-saffron" onClick={() => { setAdding('mains'); setForm({}); }}>+ Add</button>
-        </div>
-        {filterTests(scores?.mains)?.length ? filterTests(scores.mains).map((r,i) => (
-          <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0' }}>
-            <div style={{ display:'flex', justifyContent:'space-between' }}>
-              <span style={{ fontSize:14, fontWeight:500 }}>{r.test_code}</span>
-              <span className={`pill ${r.attempted==='Yes'?'pill-green':'pill-orange'}`}>
-                {r.attempted==='Yes'?'Done':'Not Done'}
-              </span>
-            </div>
-            <div style={{ fontSize:12, color:'#6B7280', marginTop:2 }}>{r.test_name} · {r.no_of_questions}Q</div>
-          </div>
-        )) : <div style={{ color:'#6B7280', fontSize:13 }}>No entries yet</div>}
-      </div>
+      {SECTIONS.map(sec => (
+        <TestSection
+          key={sec.key}
+          section={sec}
+          scores={scores}
+          onAdd={(series) => { setAdding({ category: sec.key, series }); setForm({}); }}
+        />
+      ))}
 
       {/* Add form modal */}
       {adding && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200,
-          display:'flex', alignItems:'flex-end' }} onClick={e => e.target===e.currentTarget && setAdding(null)}>
+          display:'flex', alignItems:'flex-end' }}
+          onClick={e => e.target === e.currentTarget && setAdding(null)}>
           <div style={{ background:'#fff', borderRadius:'18px 18px 0 0', padding:24,
             width:'100%', maxWidth:480, margin:'0 auto', maxHeight:'85vh', overflowY:'auto' }}>
 
-            <div style={{ fontWeight:700, fontSize:16, marginBottom:16 }}>
-              Add {adding==='gs_prelims'?'GS Prelims': adding==='csat_prelims'?'CSAT Prelims':'Mains'} Score
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
+              <div style={{ flex:1, fontWeight:700, fontSize:16 }}>
+                Add Score
+              </div>
+              <span style={{ background: adding.series==='LEEP'?'#E3F0FF':'#E8F5E9',
+                color: adding.series==='LEEP'?'#1565C0':'#2E7D32',
+                padding:'4px 12px', borderRadius:99, fontSize:13, fontWeight:700 }}>
+                {adding.series}
+              </span>
             </div>
 
             <form onSubmit={saveTest}>
-              {/* Test selector dropdown */}
               <div className="input-group">
                 <label>Select Test</label>
                 <select className="input-field" required
                   value={form.test_code || ''}
-                  onChange={e => selectTest(adding, e.target.value)}>
+                  onChange={e => selectTest(e.target.value)}>
                   <option value="">— Choose a test —</option>
-                  {(TESTS_MASTER[adding] || []).map(t => (
-                    <option key={t.code} value={t.code}>
-                      {t.code} — {t.name.length > 40 ? t.name.slice(0,40)+'…' : t.name} ({t.type})
-                    </option>
-                  ))}
+                  {(TESTS_MASTER[adding.category] || [])
+                    .filter(t => t.type === adding.series)
+                    .map(t => (
+                      <option key={t.code} value={t.code}>
+                        {t.code} — {t.name.length > 45 ? t.name.slice(0,45)+'…' : t.name}
+                      </option>
+                    ))}
                 </select>
               </div>
 
-              {/* Show selected test info */}
               {form.test_code && (
                 <div style={{ background:'#EAF2FB', borderRadius:10, padding:'10px 14px',
                   marginBottom:14, fontSize:13, color:'#1565C0' }}>
-                  <strong>{form.test_code}</strong> · {form.test_name}<br/>
-                  <span style={{ opacity:0.8 }}>Total marks: {form.marks_total}</span>
+                  <strong>{form.test_code}</strong> — {form.test_name}<br/>
+                  <span style={{ opacity:0.8 }}>
+                    {adding.key !== 'mains' ? `Total marks: ${form.marks_total}` : `Questions: ${form.marks_total}`}
+                  </span>
                 </div>
               )}
 
-              {/* Score/attempted based on test type */}
-              {adding !== 'mains' ? (
+              {adding.category !== 'mains' ? (
                 <div className="input-group">
                   <label>Marks Scored (out of {form.marks_total || '?'})</label>
                   <input className="input-field" type="number" min="0"
-                    max={form.marks_total || 999} required
+                    max={form.marks_total || 9999} required
                     value={form.marks_scored || ''}
                     onChange={e => setForm(f => ({ ...f, marks_scored: e.target.value }))} />
                 </div>
@@ -2007,7 +1961,8 @@ function TestsTab({ user }) {
               <div style={{ display:'flex', gap:10 }}>
                 <button type="button" className="btn btn-outline"
                   onClick={() => { setAdding(null); setForm({}); }}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={saving || !form.test_code}>
+                <button type="submit" className="btn btn-primary"
+                  disabled={saving || !form.test_code}>
                   {saving ? <span className="spinner" /> : 'Save'}
                 </button>
               </div>
@@ -2018,4 +1973,83 @@ function TestsTab({ user }) {
     </>
   );
 }
+
+// ── Test Section Component ────────────────────────────────────
+function TestSection({ section, scores, onAdd }) {
+  const [activeSeries, setActiveSeries] = useState('LEEP');
+
+  const allEntries = scores?.[section.scoreKey] || [];
+  const filtered   = allEntries.filter(r => {
+    // match by test_label or by code prefix
+    if (r.test_label) return r.test_label === activeSeries;
+    if (activeSeries === 'EDGE') return String(r.test_code||'').startsWith('ES');
+    return !String(r.test_code||'').startsWith('ES');
+  });
+
+  return (
+    <div className="card">
+      {/* Header */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+        <div className="card-title" style={{ marginBottom:0 }}>{section.label}</div>
+      </div>
+
+      {/* LEEP / EDGE toggle */}
+      <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+        {['LEEP','EDGE'].map(s => (
+          <button key={s} onClick={() => setActiveSeries(s)}
+            style={{ padding:'5px 14px', borderRadius:99, border:'1.5px solid',
+              borderColor: activeSeries===s ? (s==='LEEP'?'#1565C0':'#2E7D32') : '#E0E6EF',
+              background: activeSeries===s ? (s==='LEEP'?'#1565C0':'#2E7D32') : '#fff',
+              color: activeSeries===s ? '#fff' : '#6B7280',
+              fontWeight:600, fontSize:12, cursor:'pointer' }}>
+            {s}
+          </button>
+        ))}
+        <button className="btn btn-sm btn-saffron" style={{ marginLeft:'auto' }}
+          onClick={() => onAdd(activeSeries)}>
+          + Add
+        </button>
+      </div>
+
+      {/* Entries */}
+      {filtered.length ? filtered.map((r, i) => (
+        <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div>
+              <div style={{ fontSize:14, fontWeight:500 }}>{r.test_code}</div>
+              <div style={{ fontSize:11, color:'#6B7280', marginTop:1 }}>{r.test_name}</div>
+            </div>
+            {section.hasScore ? (
+              <div style={{ textAlign:'right' }}>
+                <div style={{ fontSize:16, fontWeight:700, color:'#1B3A6B' }}>
+                  {r.marks_scored}<span style={{ fontSize:11, color:'#6B7280' }}>/{r.marks_total}</span>
+                </div>
+                <div style={{ fontSize:11, color: getScoreColor(r.marks_scored, r.marks_total) }}>
+                  {r.marks_total > 0 ? Math.round(r.marks_scored/r.marks_total*100) : 0}%
+                </div>
+              </div>
+            ) : (
+              <span className={`pill ${r.attempted==='Yes'?'pill-green':'pill-orange'}`}>
+                {r.attempted==='Yes'?'Done':'Not Done'}
+              </span>
+            )}
+          </div>
+        </div>
+      )) : (
+        <div style={{ color:'#6B7280', fontSize:13, padding:'8px 0' }}>
+          No {activeSeries} entries yet
+        </div>
+      )}
+    </div>
+  );
+}
+
+function getScoreColor(scored, total) {
+  if (!total) return '#6B7280';
+  const pct = (scored / total) * 100;
+  if (pct >= 60) return '#2E7D32';
+  if (pct >= 40) return '#E65100';
+  return '#B00020';
+}
+
 
