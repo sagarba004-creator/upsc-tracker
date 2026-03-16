@@ -2239,6 +2239,98 @@ const TESTS_MASTER = {
       "subject": "10. CSAT",
       "type": "CMT"
     }
+  ],
+  "awp": [
+    {
+      "code": "AWP-Art and Culture",
+      "name": "Art and Culture",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Modern History",
+      "name": "Modern History",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Post-Independence",
+      "name": "Post-Independence",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-World History",
+      "name": "World History",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Geography",
+      "name": "Geography",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Society",
+      "name": "Society",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Polity",
+      "name": "Polity",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Governance",
+      "name": "Governance",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-International Relati",
+      "name": "International Relations",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Economy",
+      "name": "Economy",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Social Justice",
+      "name": "Social Justice",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Environment",
+      "name": "Environment",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Internal Security",
+      "name": "Internal Security",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Disaster Management",
+      "name": "Disaster Management",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Science and Tech",
+      "name": "Science and Tech",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Ethics",
+      "name": "Ethics",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Ethics Case studies",
+      "name": "Ethics Case studies",
+      "type": "AWP"
+    },
+    {
+      "code": "AWP-Essay",
+      "name": "Essay",
+      "type": "AWP"
+    }
   ]
 };
 
@@ -2662,7 +2754,7 @@ function TestsTab({ user }) {
   async function saveTest(e) {
     e.preventDefault(); setSaving(true);
     try {
-      const testType = adding.series === 'CMT' ? 'cmt' : adding.category;
+      const testType = adding.series === 'CMT' ? 'cmt' : adding.series === 'AWP' ? 'awp' : adding.category;
       await api('logTestScore', { phone: user.phone, test_type: testType, ...form });
       await loadScores(); setAdding(null); setForm({});
     } catch { alert('Failed to save. Please try again.'); }
@@ -2674,7 +2766,7 @@ function TestsTab({ user }) {
   const SECTIONS = [
     { key:'gs_prelims',   label:'📝 GS Prelims Tests',      scoreKey:'prelims', hasCMT:true,  cmtKey:'cmt_gs'   },
     { key:'csat_prelims', label:'📝 CSAT Prelims Tests',    scoreKey:'csat',    hasCMT:true,  cmtKey:'cmt_csat' },
-    { key:'mains',        label:'📋 Mains Tests',           scoreKey:'mains',   hasCMT:false, cmtKey:null       },
+    { key:'mains',        label:'📋 Mains Tests',           scoreKey:'mains',   hasCMT:false, cmtKey:null, hasAWP:true },
   ];
 
   return (
@@ -2693,7 +2785,33 @@ function TestsTab({ user }) {
               <div style={{ flex:1, fontWeight:700, fontSize:16 }}>
                 {adding.category==='cmt' ? 'Add CMT Entry' : 'Add Score'}
               </div>
-              {adding.series !== 'CMT' && (
+              {adding.series === 'AWP' && (
+                <>
+                  <div className="input-group">
+                    <label>Select Subject</label>
+                    <select className="input-field" required value={form.subject_name||''}
+                      onChange={e => setForm(f => ({ ...f, subject_name: e.target.value }))}>
+                      <option value="">— Choose a subject —</option>
+                      {(TESTS_MASTER.awp||[]).map(s => (
+                        <option key={s.name} value={s.name}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="input-group">
+                    <label>Questions Attempted</label>
+                    <select className="input-field" required value={form.questions_attempted||''}
+                      onChange={e => setForm(f => ({ ...f, questions_attempted: Number(e.target.value) }))}>
+                      <option value="">— Select —</option>
+                      <option value="10">10 Questions (10% Mastery)</option>
+                      <option value="20">20 Questions (30% Mastery)</option>
+                      <option value="30">30 Questions (70% Mastery)</option>
+                      <option value="40">40 Questions (100% Mastery)</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {adding.series !== 'CMT' && adding.series !== 'AWP' && (
                 <span style={{ background: adding.series==='LEEP'?'#E3F0FF':'#E8F5E9',
                   color: adding.series==='LEEP'?'#1565C0':'#2E7D32',
                   padding:'4px 12px', borderRadius:99, fontSize:13, fontWeight:700 }}>
@@ -2730,7 +2848,33 @@ function TestsTab({ user }) {
                 </>
               )}
 
-              {adding.series !== 'CMT' && (
+              {adding.series === 'AWP' && (
+                <>
+                  <div className="input-group">
+                    <label>Select Subject</label>
+                    <select className="input-field" required value={form.subject_name||''}
+                      onChange={e => setForm(f => ({ ...f, subject_name: e.target.value }))}>
+                      <option value="">— Choose a subject —</option>
+                      {(TESTS_MASTER.awp||[]).map(s => (
+                        <option key={s.name} value={s.name}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="input-group">
+                    <label>Questions Attempted</label>
+                    <select className="input-field" required value={form.questions_attempted||''}
+                      onChange={e => setForm(f => ({ ...f, questions_attempted: Number(e.target.value) }))}>
+                      <option value="">— Select —</option>
+                      <option value="10">10 Questions (10% Mastery)</option>
+                      <option value="20">20 Questions (30% Mastery)</option>
+                      <option value="30">30 Questions (70% Mastery)</option>
+                      <option value="40">40 Questions (100% Mastery)</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {adding.series !== 'CMT' && adding.series !== 'AWP' && (
                 <>
                   <div className="input-group">
                     <label>Select Test</label>
@@ -2750,7 +2894,7 @@ function TestsTab({ user }) {
                       <span style={{ opacity:0.8 }}>Total: {form.marks_total}</span>
                     </div>
                   )}
-                  {adding.category !== 'mains' && adding.series !== 'CMT' ? (
+                  {adding.category !== 'mains' && adding.series !== 'CMT' && adding.series !== 'AWP' ? (
                     <div className="input-group">
                       <label>Marks Scored (out of {form.marks_total||'?'})</label>
                       <input className="input-field" type="number" min="0" max={form.marks_total||9999} required
@@ -2786,15 +2930,18 @@ function TestsTab({ user }) {
 // ── Test Section Component ────────────────────────────────────
 function TestSection({ section, scores, onAdd }) {
   const [activeSeries, setActiveSeries] = useState('LEEP');
-  const series = section.hasCMT ? ['LEEP','EDGE','CMT'] : ['LEEP','EDGE'];
+  const series = section.hasAWP ? ['LEEP','EDGE','AWP'] : section.hasCMT ? ['LEEP','EDGE','CMT'] : ['LEEP','EDGE'];
 
   const allEntries = scores?.[section.scoreKey] || [];
   const cmtEntries = scores?.cmt || [];
+  const awpEntries = scores?.awp || [];
   const filtered = activeSeries === 'CMT'
     ? cmtEntries.filter(r => {
         const cmtList = TESTS_MASTER[section.cmtKey] || [];
         return cmtList.some(c => c.name === r.chapter);
       })
+    : activeSeries === 'AWP'
+    ? awpEntries
     : allEntries.filter(r => {
         if (r.test_label) return r.test_label === activeSeries;
         if (activeSeries === 'EDGE') return String(r.test_code||'').startsWith('ES');
@@ -2830,7 +2977,7 @@ function TestSection({ section, scores, onAdd }) {
           {/* LEEP / EDGE toggle */}
           <div style={{ display:'flex', gap:6, marginBottom:12 }}>
             {series.map(s => {
-              const colors = { LEEP:'#1565C0', EDGE:'#2E7D32', CMT:'#6A1B9A' };
+              const colors = { LEEP:'#1565C0', EDGE:'#2E7D32', CMT:'#6A1B9A', AWP:'#E65100' };
               const active = activeSeries === s;
               return (
                 <button key={s} onClick={() => setActiveSeries(s)}
@@ -2855,9 +3002,9 @@ function TestSection({ section, scores, onAdd }) {
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:14, fontWeight:500 }}>
-                    {activeSeries === 'CMT' ? r.chapter : r.test_code}
+                    {activeSeries === 'CMT' ? r.chapter : activeSeries === 'AWP' ? r.subject_name : r.test_code}
                   </div>
-                  {activeSeries !== 'CMT' && (
+                  {activeSeries !== 'CMT' && activeSeries !== 'AWP' && (
                     <div style={{ fontSize:11, color:'#6B7280', marginTop:1 }}>{r.test_name}</div>
                   )}
                 </div>
@@ -2865,6 +3012,13 @@ function TestSection({ section, scores, onAdd }) {
                   <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>
                     {r.mastery_status}
                   </span>
+                ) : activeSeries === 'AWP' ? (
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ fontSize:15, fontWeight:700, color:'#E65100' }}>{r.questions_attempted}Q</div>
+                    <div style={{ fontSize:11, color:'#6B7280' }}>
+                      {r.questions_attempted>=40?'100%':r.questions_attempted>=30?'70%':r.questions_attempted>=20?'30%':r.questions_attempted>=10?'10%':'0%'}
+                    </div>
+                  </div>
                 ) : section.hasScore ? (
                   <div style={{ textAlign:'right' }}>
                     <div style={{ fontSize:16, fontWeight:700, color:'#1B3A6B' }}>
