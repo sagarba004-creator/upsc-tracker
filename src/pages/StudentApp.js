@@ -2488,8 +2488,8 @@ function HomeTab({ dashboard, consistency, user }) {
 function SubjectsTab({ dashboard, user, onUpdate }) {
   const [localData, setLocalData] = useState(null);
   const [saving, setSaving]       = useState('');
-  // drill state: null | { gs_paper } | { gs_paper, subject } | { gs_paper, subject, chapter }
-  const [drill, setDrill]         = useState(null);
+  const [view, setView]           = useState(null); // null | { gs_paper } | { gs_paper, subject }
+  const [openChapter, setOpenChapter] = useState(null);
 
   React.useEffect(() => {
     if (dashboard) setLocalData(JSON.parse(JSON.stringify(dashboard)));
@@ -2497,6 +2497,23 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
 
   const data = localData || dashboard;
   if (!data) return null;
+
+  const GS_COL = {
+    'GS Paper 1': { bg:'#E8F5E9', text:'#2E7D32', bar:'#2E7D32' },
+    'GS Paper 2': { bg:'#E3F0FF', text:'#1565C0', bar:'#1565C0' },
+    'GS Paper 3': { bg:'#FFF3E0', text:'#E65100', bar:'#E65100' },
+    'GS Paper 4': { bg:'#F3E5FF', text:'#6A1B9A', bar:'#6A1B9A' },
+  };
+
+  const TASKS = [
+    { key:'reading',     label:'Reading',   wt:0.20 },
+    { key:'short_notes', label:'Notes',     wt:0.20 },
+    { key:'pyq_prelims', label:'PYQ Pre',   wt:0.15 },
+    { key:'pyq_mains',   label:'PYQ Mains', wt:0.15 },
+    { key:'revision1',   label:'Rev 1',     wt:0.10 },
+    { key:'revision2',   label:'Rev 2',     wt:0.10 },
+    { key:'revision3',   label:'Rev 3',     wt:0.10 },
+  ];
 
   async function toggleTask(subject, chapter, field, current) {
     const newVal = current === 'Done' ? 'Not Done' : 'Done';
@@ -2527,134 +2544,87 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
     } finally { setSaving(''); }
   }
 
-  const GS_COLORS = {
-    'GS Paper 1': { bg:'#E8F5E9', text:'#2E7D32', bar:'#2E7D32', light:'#F1FBF2' },
-    'GS Paper 2': { bg:'#E3F0FF', text:'#1565C0', bar:'#1565C0', light:'#EEF6FF' },
-    'GS Paper 3': { bg:'#FFF3E0', text:'#E65100', bar:'#E65100', light:'#FFF8F0' },
-    'GS Paper 4': { bg:'#F3E5FF', text:'#6A1B9A', bar:'#6A1B9A', light:'#FAF0FF' },
-  };
-
-  // Group subjects by GS paper
   const grouped = {};
   data.subjects.forEach(s => {
     if (!grouped[s.gs_paper]) grouped[s.gs_paper] = [];
     grouped[s.gs_paper].push(s);
   });
 
-  // ── Level 3: Task toggles for a chapter ──
-  if (drill?.chapter) {
-    const col  = GS_COLORS[drill.gs_paper] || GS_COLORS['GS Paper 1'];
-    const subj = data.subjects.find(s => s.subject === drill.subject);
-    const ch   = subj?.chapters.find(c => c.chapter === drill.chapter);
-    if (!ch) return null;
-
-    const TASKS = [
-      { key:'reading',     label:'Reading',    wt:'20%' },
-      { key:'short_notes', label:'Notes',      wt:'20%' },
-      { key:'pyq_prelims', label:'PYQ Pre',    wt:'15%' },
-      { key:'pyq_mains',   label:'PYQ Mains',  wt:'15%' },
-      { key:'revision1',   label:'Revision 1', wt:'10%' },
-      { key:'revision2',   label:'Revision 2', wt:'10%' },
-      { key:'revision3',   label:'Revision 3', wt:'10%' },
-    ];
-
-    return (
-      <div>
-        <BreadCrumb items={[drill.gs_paper, drill.subject, drill.chapter]}
-          onBack={(level) => {
-            if (level === 0) setDrill(null);
-            else if (level === 1) setDrill({ gs_paper: drill.gs_paper });
-            else setDrill({ gs_paper: drill.gs_paper, subject: drill.subject });
-          }}
-          color={col.text} />
-
-        <div className="card">
-          <div style={{ marginBottom:12 }}>
-            <div style={{ fontSize:16, fontWeight:700 }}>{ch.chapter}</div>
-            <div style={{ fontSize:13, color:col.text, fontWeight:600, marginTop:4 }}>
-              {Math.round(ch.score*100)}% complete
-            </div>
-            <div className="progress-bar-wrap" style={{ marginTop:6 }}>
-              <div className="progress-bar-fill" style={{ width:`${ch.score*100}%`, background:col.bar }} />
-            </div>
-          </div>
-
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:16 }}>
-            {TASKS.map(t => {
-              const val = ch[t.key];
-              const done = val === 'Done';
-              const key  = `${drill.subject}||${ch.chapter}||${t.key}`;
-              const busy = saving === key;
-              return (
-                <button key={t.key}
-                  onClick={() => toggleTask(drill.subject, ch.chapter, t.key, val)}
-                  disabled={busy}
-                  style={{
-                    padding:'12px 10px', borderRadius:12,
-                    border:`2px solid ${done ? col.bar : '#E0E6EF'}`,
-                    background: done ? col.bg : '#FAFAFA',
-                    cursor:'pointer', transition:'all 0.15s',
-                    display:'flex', flexDirection:'column', alignItems:'center', gap:4
-                  }}>
-                  <span style={{ fontSize:18 }}>{done ? '✅' : '⭕'}</span>
-                  <span style={{ fontSize:12, fontWeight:600, color: done ? col.text : '#6B7280' }}>
-                    {busy ? '...' : t.label}
-                  </span>
-                  <span style={{ fontSize:10, color:'#9CA3AF' }}>{t.wt}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Level 2: Chapter pills inside a subject ──
-  if (drill?.subject) {
-    const col  = GS_COLORS[drill.gs_paper] || GS_COLORS['GS Paper 1'];
-    const subj = data.subjects.find(s => s.subject === drill.subject);
+  // ── Subject view: chapters + inline task toggles ──
+  if (view?.subject) {
+    const col  = GS_COL[view.gs_paper] || GS_COL['GS Paper 1'];
+    const subj = data.subjects.find(s => s.subject === view.subject);
     if (!subj) return null;
 
     return (
       <div>
-        <BreadCrumb items={[drill.gs_paper, drill.subject]}
-          onBack={(level) => {
-            if (level === 0) setDrill(null);
-            else setDrill({ gs_paper: drill.gs_paper });
-          }}
-          color={col.text} />
-
-        <div style={{ marginBottom:12 }}>
-          <div style={{ fontSize:13, color:col.text, fontWeight:700 }}>
-            {subj.completion_pct}% overall · {subj.chapters.length} chapters
+        {/* Back nav */}
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
+          <button onClick={() => { setView({ gs_paper: view.gs_paper }); setOpenChapter(null); }}
+            style={{ background:'none', border:'none', color:col.text, fontSize:22, cursor:'pointer', padding:0, lineHeight:1 }}>←</button>
+          <div>
+            <div style={{ fontSize:11, color:'#9CA3AF' }}>{view.gs_paper}</div>
+            <div style={{ fontSize:16, fontWeight:700 }}>{view.subject}</div>
           </div>
-          <div className="progress-bar-wrap" style={{ marginTop:6 }}>
-            <div className="progress-bar-fill" style={{ width:`${subj.completion_pct}%`, background:col.bar }} />
+          <div style={{ marginLeft:'auto', background:col.bg, color:col.text,
+            padding:'4px 12px', borderRadius:99, fontSize:13, fontWeight:700 }}>
+            {subj.completion_pct}%
           </div>
         </div>
 
+        {/* Chapter list */}
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           {subj.chapters.map(ch => {
-            const pct = Math.round(ch.score * 100);
+            const pct    = Math.round(ch.score * 100);
+            const isOpen = openChapter === ch.chapter;
             return (
-              <div key={ch.chapter}
-                onClick={() => setDrill({ gs_paper:drill.gs_paper, subject:drill.subject, chapter:ch.chapter })}
-                style={{
-                  background:'#fff', borderRadius:12, padding:'12px 14px',
-                  boxShadow:'0 1px 6px rgba(0,0,0,0.07)', cursor:'pointer',
-                  border:`1.5px solid ${pct===100 ? col.bar : '#F0F0F0'}`,
-                  transition:'box-shadow 0.15s'
-                }}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
-                  <span style={{ fontSize:14, fontWeight:500, flex:1, marginRight:10 }}>{ch.chapter}</span>
-                  <span style={{ fontSize:14, fontWeight:700, color: pct>=70?col.text: pct>=40?'#E65100':'#9CA3AF', flexShrink:0 }}>
-                    {pct}%
-                  </span>
+              <div key={ch.chapter} style={{
+                background:'#fff', borderRadius:12,
+                border:`1.5px solid ${isOpen ? col.bar : '#F0F0F0'}`,
+                overflow:'hidden', boxShadow:'0 1px 4px rgba(0,0,0,0.06)'
+              }}>
+                {/* Chapter header — tap to expand */}
+                <div onClick={() => setOpenChapter(isOpen ? null : ch.chapter)}
+                  style={{ display:'flex', alignItems:'center', padding:'12px 14px', cursor:'pointer', gap:10 }}>
+                  <div style={{ flex:1, fontSize:14, fontWeight:500 }}>{ch.chapter}</div>
+                  <span style={{
+                    background: pct>=70?col.bg: pct>=40?'#FFF3E0':'#F5F5F5',
+                    color: pct>=70?col.text: pct>=40?'#E65100':'#9CA3AF',
+                    padding:'3px 10px', borderRadius:99, fontSize:12, fontWeight:700, flexShrink:0
+                  }}>{pct}%</span>
+                  <span style={{ color:'#D1D5DB', fontSize:11, transform: isOpen?'rotate(180deg)':'none', transition:'transform 0.2s' }}>▼</span>
                 </div>
-                <div className="progress-bar-wrap" style={{ height:5 }}>
-                  <div className="progress-bar-fill" style={{ width:`${pct}%`, background: pct>=70?col.bar: pct>=40?'#E65100':'#D1D5DB' }} />
-                </div>
+
+                {/* Inline task toggles */}
+                {isOpen && (
+                  <div style={{ borderTop:`1px solid ${col.bg}`, padding:'12px 14px', background:col.bg+'44' }}>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>
+                      {TASKS.map(t => {
+                        const val  = ch[t.key];
+                        const done = val === 'Done';
+                        const busy = saving === `${subj.subject}||${ch.chapter}||${t.key}`;
+                        return (
+                          <button key={t.key}
+                            onClick={() => toggleTask(subj.subject, ch.chapter, t.key, val)}
+                            disabled={busy}
+                            style={{
+                              padding:'8px 4px', borderRadius:10,
+                              border:`1.5px solid ${done ? col.bar : '#E0E6EF'}`,
+                              background: done ? col.bar : '#fff',
+                              cursor:'pointer', transition:'all 0.15s',
+                              display:'flex', flexDirection:'column', alignItems:'center', gap:3
+                            }}>
+                            <span style={{ fontSize:14 }}>{done ? '✓' : '○'}</span>
+                            <span style={{ fontSize:10, fontWeight:600,
+                              color: done ? '#fff' : '#6B7280', textAlign:'center', lineHeight:1.2 }}>
+                              {busy ? '...' : t.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -2663,42 +2633,38 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
     );
   }
 
-  // ── Level 1: Subject pills inside a GS paper ──
-  if (drill?.gs_paper) {
-    const col      = GS_COLORS[drill.gs_paper] || GS_COLORS['GS Paper 1'];
-    const subjects = grouped[drill.gs_paper] || [];
+  // ── GS Paper view: subject pills ──
+  if (view?.gs_paper) {
+    const col      = GS_COL[view.gs_paper] || GS_COL['GS Paper 1'];
+    const subjects = grouped[view.gs_paper] || [];
 
     return (
       <div>
-        <BreadCrumb items={[drill.gs_paper]}
-          onBack={() => setDrill(null)}
-          color={col.text} />
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
+          <button onClick={() => setView(null)}
+            style={{ background:'none', border:'none', color:col.text, fontSize:22, cursor:'pointer', padding:0, lineHeight:1 }}>←</button>
+          <div style={{ fontSize:16, fontWeight:700, color:col.text }}>{view.gs_paper}</div>
+        </div>
 
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           {subjects.map(subj => (
             <div key={subj.subject}
-              onClick={() => setDrill({ gs_paper:drill.gs_paper, subject:subj.subject })}
+              onClick={() => { setView({ gs_paper:view.gs_paper, subject:subj.subject }); setOpenChapter(null); }}
               style={{
                 background:'#fff', borderRadius:12, padding:'14px 16px',
                 boxShadow:'0 1px 6px rgba(0,0,0,0.07)', cursor:'pointer',
-                borderLeft:`4px solid ${col.bar}`, transition:'box-shadow 0.15s'
+                borderLeft:`4px solid ${subj.completion_pct>=70?col.bar:subj.completion_pct>=40?'#E65100':'#D1D5DB'}`
               }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <div>
                   <div style={{ fontSize:15, fontWeight:600 }}>{subj.subject}</div>
-                  <div style={{ fontSize:11, color:'#9CA3AF', marginTop:1 }}>{subj.chapters.length} chapters</div>
+                  <div style={{ fontSize:11, color:'#9CA3AF', marginTop:2 }}>{subj.chapters.length} chapters</div>
                 </div>
-                <div style={{ textAlign:'right' }}>
-                  <div style={{ fontSize:18, fontWeight:800, color: subj.completion_pct>=70?col.text: subj.completion_pct>=40?'#E65100':'#9CA3AF' }}>
-                    {subj.completion_pct}%
-                  </div>
-                </div>
-              </div>
-              <div className="progress-bar-wrap" style={{ height:6 }}>
-                <div className="progress-bar-fill" style={{
-                  width:`${subj.completion_pct}%`,
-                  background: subj.completion_pct>=70?col.bar: subj.completion_pct>=40?'#E65100':'#D1D5DB'
-                }} />
+                <span style={{
+                  background: subj.completion_pct>=70?col.bg: subj.completion_pct>=40?'#FFF3E0':'#F5F5F5',
+                  color: subj.completion_pct>=70?col.text: subj.completion_pct>=40?'#E65100':'#9CA3AF',
+                  padding:'5px 14px', borderRadius:99, fontSize:15, fontWeight:800
+                }}>{subj.completion_pct}%</span>
               </div>
             </div>
           ))}
@@ -2707,53 +2673,48 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
     );
   }
 
-  // ── Level 0: GS Paper pills ──
+  // ── Home: GS Paper cards with subject pills ──
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
       {Object.entries(grouped).map(([paper, subjects]) => {
-        const col     = GS_COLORS[paper] || GS_COLORS['GS Paper 1'];
+        const col     = GS_COL[paper] || GS_COL['GS Paper 1'];
         const overall = subjects.length
           ? Math.round(subjects.reduce((s,sub) => s+sub.completion_pct, 0) / subjects.length)
           : 0;
-        const totalChapters = subjects.reduce((s,sub) => s+sub.chapters.length, 0);
 
         return (
-          <div key={paper}
-            onClick={() => setDrill({ gs_paper: paper })}
+          <div key={paper} onClick={() => setView({ gs_paper: paper })}
             style={{
-              background:'#fff', borderRadius:14, padding:'16px 18px',
+              background:'#fff', borderRadius:14, padding:'16px',
               boxShadow:'0 2px 10px rgba(0,0,0,0.08)', cursor:'pointer',
               borderTop:`4px solid ${col.bar}`
             }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
-              <div>
-                <div style={{ fontSize:16, fontWeight:700, color:col.text }}>{paper}</div>
-                <div style={{ fontSize:12, color:'#9CA3AF', marginTop:2 }}>
-                  {subjects.length} subjects · {totalChapters} chapters
-                </div>
-              </div>
-              <div style={{ textAlign:'right' }}>
-                <div style={{ fontSize:26, fontWeight:800, color: overall>=70?col.text: overall>=40?'#E65100':'#9CA3AF', lineHeight:1 }}>
-                  {overall}%
-                </div>
-                <div style={{ fontSize:11, color:'#9CA3AF', marginTop:2 }}>overall</div>
-              </div>
+            {/* Paper header */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+              <div style={{ fontSize:15, fontWeight:700, color:col.text }}>{paper}</div>
+              <span style={{
+                background:col.bg, color:col.text,
+                padding:'4px 14px', borderRadius:99, fontSize:15, fontWeight:800
+              }}>{overall}%</span>
             </div>
-            <div className="progress-bar-wrap" style={{ height:8 }}>
-              <div className="progress-bar-fill" style={{ width:`${overall}%`, background: overall>=70?col.bar: overall>=40?'#E65100':'#D1D5DB' }} />
-            </div>
-            {/* Subject mini-pills */}
-            <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:12 }}>
+
+            {/* Subject pills */}
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {subjects.map(sub => (
                 <div key={sub.subject} style={{
-                  background: col.bg, borderRadius:99, padding:'4px 10px',
-                  fontSize:11, fontWeight:600, color:col.text,
-                  display:'flex', alignItems:'center', gap:5
+                  display:'flex', alignItems:'center', gap:5,
+                  background: sub.completion_pct>=70?col.bg: sub.completion_pct>=40?'#FFF3E0':'#F5F5F5',
+                  borderRadius:99, padding:'5px 12px',
+                  border:`1px solid ${sub.completion_pct>=70?col.bar: sub.completion_pct>=40?'#E65100':'#E0E6EF'}`
                 }}>
-                  <span>{sub.subject.split(' ').slice(0,2).join(' ')}</span>
-                  <span style={{ background:col.bar, color:'#fff', borderRadius:99, padding:'1px 6px', fontSize:10 }}>
-                    {sub.completion_pct}%
+                  <span style={{ fontSize:12, fontWeight:500,
+                    color: sub.completion_pct>=70?col.text: sub.completion_pct>=40?'#E65100':'#6B7280' }}>
+                    {sub.subject}
                   </span>
+                  <span style={{
+                    background: sub.completion_pct>=70?col.bar: sub.completion_pct>=40?'#E65100':'#D1D5DB',
+                    color:'#fff', borderRadius:99, padding:'1px 7px', fontSize:11, fontWeight:700
+                  }}>{sub.completion_pct}%</span>
                 </div>
               ))}
             </div>
@@ -2763,6 +2724,7 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
     </div>
   );
 }
+
 
 // ── BreadCrumb ────────────────────────────────────────────────
 function BreadCrumb({ items, onBack, color }) {
