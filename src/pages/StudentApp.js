@@ -2488,7 +2488,7 @@ function HomeTab({ dashboard, consistency, user }) {
 function SubjectsTab({ dashboard, user, onUpdate }) {
   const [localData, setLocalData] = useState(null);
   const [saving, setSaving]       = useState('');
-  const [view, setView]           = useState(null); // null | { gs_paper } | { gs_paper, subject }
+  const [view, setView]           = useState(null); // null | { paper } | { paper, subject }
   const [openChapter, setOpenChapter] = useState(null);
 
   React.useEffect(() => {
@@ -2498,21 +2498,36 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
   const data = localData || dashboard;
   if (!data) return null;
 
-  const GS_COL = {
-    'GS Paper 1': { bg:'#E8F5E9', text:'#2E7D32', bar:'#2E7D32' },
-    'GS Paper 2': { bg:'#E3F0FF', text:'#1565C0', bar:'#1565C0' },
-    'GS Paper 3': { bg:'#FFF3E0', text:'#E65100', bar:'#E65100' },
-    'GS Paper 4': { bg:'#F3E5FF', text:'#6A1B9A', bar:'#6A1B9A' },
+  // Paper color palette
+  const PAPER_COL = {
+    'GS Paper 1': { top:'#2E7D32', bg:'#E8F5E9', text:'#2E7D32', pill:'#43A047', light:'#F1FBF2' },
+    'GS Paper 2': { top:'#1565C0', bg:'#E3F0FF', text:'#1565C0', pill:'#1976D2', light:'#EEF6FF' },
+    'GS Paper 3': { top:'#E65100', bg:'#FFF3E0', text:'#E65100', pill:'#F57C00', light:'#FFF8F0' },
+    'GS Paper 4': { top:'#6A1B9A', bg:'#F3E5FF', text:'#6A1B9A', pill:'#7B1FA2', light:'#FAF0FF' },
+    'Essay':      { top:'#00838F', bg:'#E0F7FA', text:'#00838F', pill:'#00ACC1', light:'#F0FDFF' },
+    'CSAT':       { top:'#C62828', bg:'#FFEBEE', text:'#C62828', pill:'#E53935', light:'#FFF5F5' },
   };
 
+  // Subject pill colors — cycle through vibrant palette
+  const SUBJ_COLORS = [
+    { bg:'#E3F2FD', text:'#1565C0', dot:'#1976D2' },
+    { bg:'#E8F5E9', text:'#2E7D32', dot:'#388E3C' },
+    { bg:'#FFF3E0', text:'#E65100', dot:'#F57C00' },
+    { bg:'#F3E5F5', text:'#6A1B9A', dot:'#7B1FA2' },
+    { bg:'#FCE4EC', text:'#AD1457', dot:'#C2185B' },
+    { bg:'#E0F2F1', text:'#00695C', dot:'#00796B' },
+    { bg:'#FFF9C4', text:'#F57F17', dot:'#F9A825' },
+    { bg:'#EDE7F6', text:'#4527A0', dot:'#512DA8' },
+  ];
+
   const TASKS = [
-    { key:'reading',     label:'Reading',   wt:0.20 },
-    { key:'short_notes', label:'Notes',     wt:0.20 },
-    { key:'pyq_prelims', label:'PYQ Pre',   wt:0.15 },
-    { key:'pyq_mains',   label:'PYQ Mains', wt:0.15 },
-    { key:'revision1',   label:'Rev 1',     wt:0.10 },
-    { key:'revision2',   label:'Rev 2',     wt:0.10 },
-    { key:'revision3',   label:'Rev 3',     wt:0.10 },
+    { key:'reading',     label:'Reading',   emoji:'📖' },
+    { key:'short_notes', label:'Notes',     emoji:'📝' },
+    { key:'pyq_prelims', label:'PYQ Pre',   emoji:'📋' },
+    { key:'pyq_mains',   label:'PYQ Mains', emoji:'📌' },
+    { key:'revision1',   label:'Rev 1',     emoji:'🔁' },
+    { key:'revision2',   label:'Rev 2',     emoji:'🔂' },
+    { key:'revision3',   label:'Rev 3',     emoji:'✅' },
   ];
 
   async function toggleTask(subject, chapter, field, current) {
@@ -2544,60 +2559,77 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
     } finally { setSaving(''); }
   }
 
+  // Group by gs_paper
   const grouped = {};
   data.subjects.forEach(s => {
     if (!grouped[s.gs_paper]) grouped[s.gs_paper] = [];
     grouped[s.gs_paper].push(s);
   });
 
-  // ── Subject view: chapters + inline task toggles ──
+  const paperOrder = ['GS Paper 1','GS Paper 2','GS Paper 3','GS Paper 4','Essay','CSAT'];
+
+  // ── Subject view: chapter pills + inline tasks ──
   if (view?.subject) {
-    const col  = GS_COL[view.gs_paper] || GS_COL['GS Paper 1'];
+    const col  = PAPER_COL[view.paper] || PAPER_COL['GS Paper 1'];
     const subj = data.subjects.find(s => s.subject === view.subject);
     if (!subj) return null;
 
     return (
       <div>
-        {/* Back nav */}
-        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
-          <button onClick={() => { setView({ gs_paper: view.gs_paper }); setOpenChapter(null); }}
-            style={{ background:'none', border:'none', color:col.text, fontSize:22, cursor:'pointer', padding:0, lineHeight:1 }}>←</button>
-          <div>
-            <div style={{ fontSize:11, color:'#9CA3AF' }}>{view.gs_paper}</div>
-            <div style={{ fontSize:16, fontWeight:700 }}>{view.subject}</div>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16,
+          background:col.bg, borderRadius:12, padding:'12px 14px' }}>
+          <button onClick={() => { setView({ paper: view.paper }); setOpenChapter(null); }}
+            style={{ background:'none', border:'none', color:col.text, fontSize:22,
+              cursor:'pointer', padding:0, lineHeight:1, flexShrink:0 }}>←</button>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:11, color:col.text, opacity:0.7, fontWeight:500 }}>{view.paper}</div>
+            <div style={{ fontSize:16, fontWeight:700, color:col.text }}>{view.subject}</div>
           </div>
-          <div style={{ marginLeft:'auto', background:col.bg, color:col.text,
-            padding:'4px 12px', borderRadius:99, fontSize:13, fontWeight:700 }}>
+          <div style={{ background:col.pill, color:'#fff',
+            padding:'6px 14px', borderRadius:99, fontSize:15, fontWeight:800 }}>
             {subj.completion_pct}%
           </div>
         </div>
 
-        {/* Chapter list */}
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          {subj.chapters.map(ch => {
+        {/* Chapter pills grid */}
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {subj.chapters.map((ch, idx) => {
             const pct    = Math.round(ch.score * 100);
             const isOpen = openChapter === ch.chapter;
+            const dotCol = pct>=70 ? col.pill : pct>=40 ? '#F57C00' : '#BDBDBD';
             return (
-              <div key={ch.chapter} style={{
-                background:'#fff', borderRadius:12,
-                border:`1.5px solid ${isOpen ? col.bar : '#F0F0F0'}`,
-                overflow:'hidden', boxShadow:'0 1px 4px rgba(0,0,0,0.06)'
-              }}>
-                {/* Chapter header — tap to expand */}
+              <div key={ch.chapter}>
+                {/* Chapter pill */}
                 <div onClick={() => setOpenChapter(isOpen ? null : ch.chapter)}
-                  style={{ display:'flex', alignItems:'center', padding:'12px 14px', cursor:'pointer', gap:10 }}>
-                  <div style={{ flex:1, fontSize:14, fontWeight:500 }}>{ch.chapter}</div>
+                  style={{
+                    display:'flex', alignItems:'center', gap:10,
+                    background: isOpen ? col.bg : '#fff',
+                    border:`1.5px solid ${isOpen ? col.pill : '#E8E8E8'}`,
+                    borderRadius: isOpen ? '12px 12px 0 0' : 12,
+                    padding:'10px 14px', cursor:'pointer',
+                    transition:'all 0.15s'
+                  }}>
+                  <div style={{ width:10, height:10, borderRadius:'50%',
+                    background:dotCol, flexShrink:0 }} />
+                  <span style={{ flex:1, fontSize:14, fontWeight:500 }}>{ch.chapter}</span>
                   <span style={{
                     background: pct>=70?col.bg: pct>=40?'#FFF3E0':'#F5F5F5',
                     color: pct>=70?col.text: pct>=40?'#E65100':'#9CA3AF',
+                    border:`1px solid ${pct>=70?col.pill: pct>=40?'#FB8C00':'#E0E0E0'}`,
                     padding:'3px 10px', borderRadius:99, fontSize:12, fontWeight:700, flexShrink:0
                   }}>{pct}%</span>
-                  <span style={{ color:'#D1D5DB', fontSize:11, transform: isOpen?'rotate(180deg)':'none', transition:'transform 0.2s' }}>▼</span>
+                  <span style={{ color: isOpen?col.text:'#D1D5DB', fontSize:11,
+                    transform: isOpen?'rotate(180deg)':'none', transition:'transform 0.2s' }}>▼</span>
                 </div>
 
-                {/* Inline task toggles */}
+                {/* Inline tasks */}
                 {isOpen && (
-                  <div style={{ borderTop:`1px solid ${col.bg}`, padding:'12px 14px', background:col.bg+'44' }}>
+                  <div style={{
+                    border:`1.5px solid ${col.pill}`, borderTop:'none',
+                    borderRadius:'0 0 12px 12px',
+                    background: col.light, padding:'12px'
+                  }}>
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>
                       {TASKS.map(t => {
                         const val  = ch[t.key];
@@ -2609,15 +2641,18 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
                             disabled={busy}
                             style={{
                               padding:'8px 4px', borderRadius:10,
-                              border:`1.5px solid ${done ? col.bar : '#E0E6EF'}`,
-                              background: done ? col.bar : '#fff',
+                              border:`1.5px solid ${done ? col.pill : '#E0E6EF'}`,
+                              background: done ? col.pill : '#fff',
                               cursor:'pointer', transition:'all 0.15s',
-                              display:'flex', flexDirection:'column', alignItems:'center', gap:3
+                              display:'flex', flexDirection:'column',
+                              alignItems:'center', gap:3
                             }}>
-                            <span style={{ fontSize:14 }}>{done ? '✓' : '○'}</span>
-                            <span style={{ fontSize:10, fontWeight:600,
-                              color: done ? '#fff' : '#6B7280', textAlign:'center', lineHeight:1.2 }}>
-                              {busy ? '...' : t.label}
+                            <span style={{ fontSize:15 }}>
+                              {busy ? '⏳' : done ? '✅' : t.emoji}
+                            </span>
+                            <span style={{ fontSize:10, fontWeight:600, lineHeight:1.2, textAlign:'center',
+                              color: done ? '#fff' : '#6B7280' }}>
+                              {t.label}
                             </span>
                           </button>
                         );
@@ -2633,92 +2668,107 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
     );
   }
 
-  // ── GS Paper view: subject pills ──
-  if (view?.gs_paper) {
-    const col      = GS_COL[view.gs_paper] || GS_COL['GS Paper 1'];
-    const subjects = grouped[view.gs_paper] || [];
+  // ── Paper view: subject pills ──
+  if (view?.paper) {
+    const col      = PAPER_COL[view.paper] || PAPER_COL['GS Paper 1'];
+    const subjects = grouped[view.paper] || [];
 
     return (
       <div>
-        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:14 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16,
+          background:col.bg, borderRadius:12, padding:'12px 14px' }}>
           <button onClick={() => setView(null)}
-            style={{ background:'none', border:'none', color:col.text, fontSize:22, cursor:'pointer', padding:0, lineHeight:1 }}>←</button>
-          <div style={{ fontSize:16, fontWeight:700, color:col.text }}>{view.gs_paper}</div>
+            style={{ background:'none', border:'none', color:col.text,
+              fontSize:22, cursor:'pointer', padding:0, lineHeight:1 }}>←</button>
+          <div style={{ fontSize:17, fontWeight:800, color:col.text }}>{view.paper}</div>
         </div>
 
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          {subjects.map(subj => (
-            <div key={subj.subject}
-              onClick={() => { setView({ gs_paper:view.gs_paper, subject:subj.subject }); setOpenChapter(null); }}
-              style={{
-                background:'#fff', borderRadius:12, padding:'14px 16px',
-                boxShadow:'0 1px 6px rgba(0,0,0,0.07)', cursor:'pointer',
-                borderLeft:`4px solid ${subj.completion_pct>=70?col.bar:subj.completion_pct>=40?'#E65100':'#D1D5DB'}`
-              }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <div>
-                  <div style={{ fontSize:15, fontWeight:600 }}>{subj.subject}</div>
-                  <div style={{ fontSize:11, color:'#9CA3AF', marginTop:2 }}>{subj.chapters.length} chapters</div>
+        {/* Subject pills — colourful grid */}
+        <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
+          {subjects.map((subj, idx) => {
+            const sc  = SUBJ_COLORS[idx % SUBJ_COLORS.length];
+            const pct = subj.completion_pct;
+            return (
+              <div key={subj.subject}
+                onClick={() => { setView({ paper:view.paper, subject:subj.subject }); setOpenChapter(null); }}
+                style={{
+                  background: sc.bg,
+                  border:`1.5px solid ${sc.dot}`,
+                  borderRadius:12, padding:'12px 16px',
+                  cursor:'pointer', minWidth:140, flex:'1 1 140px',
+                  transition:'box-shadow 0.15s',
+                  boxShadow:'0 2px 6px rgba(0,0,0,0.08)'
+                }}>
+                <div style={{ fontSize:14, fontWeight:700, color:sc.text, marginBottom:8 }}>
+                  {subj.subject}
                 </div>
-                <span style={{
-                  background: subj.completion_pct>=70?col.bg: subj.completion_pct>=40?'#FFF3E0':'#F5F5F5',
-                  color: subj.completion_pct>=70?col.text: subj.completion_pct>=40?'#E65100':'#9CA3AF',
-                  padding:'5px 14px', borderRadius:99, fontSize:15, fontWeight:800
-                }}>{subj.completion_pct}%</span>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontSize:11, color:sc.text, opacity:0.7 }}>
+                    {subj.chapters.length} chapters
+                  </span>
+                  <span style={{
+                    background: sc.dot, color:'#fff',
+                    padding:'3px 10px', borderRadius:99,
+                    fontSize:13, fontWeight:800
+                  }}>{pct}%</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
   }
 
-  // ── Home: GS Paper cards with subject pills ──
+  // ── Home: Paper cards ──
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-      {Object.entries(grouped).map(([paper, subjects]) => {
-        const col     = GS_COL[paper] || GS_COL['GS Paper 1'];
-        const overall = subjects.length
+      {paperOrder.filter(p => grouped[p]).map(paper => {
+        const col     = PAPER_COL[paper] || PAPER_COL['GS Paper 1'];
+        const subjects = grouped[paper] || [];
+        const overall  = subjects.length
           ? Math.round(subjects.reduce((s,sub) => s+sub.completion_pct, 0) / subjects.length)
           : 0;
 
         return (
-          <div key={paper} onClick={() => setView({ gs_paper: paper })}
+          <div key={paper} onClick={() => setView({ paper })}
             style={{
               background:'#fff', borderRadius:14, padding:'16px',
               boxShadow:'0 2px 10px rgba(0,0,0,0.08)', cursor:'pointer',
-              borderTop:`4px solid ${col.bar}`
+              borderLeft:`5px solid ${col.top}`
             }}>
             {/* Paper header */}
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-              <div style={{ fontSize:15, fontWeight:700, color:col.text }}>{paper}</div>
+              <div style={{ fontSize:16, fontWeight:800, color:col.top }}>{paper}</div>
               <span style={{
                 background:col.bg, color:col.text,
-                padding:'4px 14px', borderRadius:99, fontSize:15, fontWeight:800
+                border:`1.5px solid ${col.pill}`,
+                padding:'5px 16px', borderRadius:99, fontSize:16, fontWeight:800
               }}>{overall}%</span>
             </div>
 
             {/* Subject pills */}
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-              {subjects.map(sub => (
-                <div key={sub.subject}
-                  onClick={e => { e.stopPropagation(); setView({ gs_paper: paper, subject: sub.subject }); setOpenChapter(null); }}
-                  style={{
-                    display:'flex', alignItems:'center', gap:5,
-                    background: sub.completion_pct>=70?col.bg: sub.completion_pct>=40?'#FFF3E0':'#F5F5F5',
-                    borderRadius:99, padding:'5px 12px', cursor:'pointer',
-                    border:`1px solid ${sub.completion_pct>=70?col.bar: sub.completion_pct>=40?'#E65100':'#E0E6EF'}`
-                  }}>
-                  <span style={{ fontSize:12, fontWeight:500,
-                    color: sub.completion_pct>=70?col.text: sub.completion_pct>=40?'#E65100':'#6B7280' }}>
-                    {sub.subject}
-                  </span>
-                  <span style={{
-                    background: sub.completion_pct>=70?col.bar: sub.completion_pct>=40?'#E65100':'#D1D5DB',
-                    color:'#fff', borderRadius:99, padding:'1px 7px', fontSize:11, fontWeight:700
-                  }}>{sub.completion_pct}%</span>
-                </div>
-              ))}
+              {subjects.map((sub, idx) => {
+                const sc  = SUBJ_COLORS[idx % SUBJ_COLORS.length];
+                const pct = sub.completion_pct;
+                return (
+                  <div key={sub.subject}
+                    onClick={e => { e.stopPropagation(); setView({ paper, subject: sub.subject }); setOpenChapter(null); }}
+                    style={{
+                      display:'flex', alignItems:'center', gap:6,
+                      background: sc.bg, border:`1.5px solid ${sc.dot}`,
+                      borderRadius:99, padding:'5px 12px', cursor:'pointer'
+                    }}>
+                    <span style={{ fontSize:12, fontWeight:600, color:sc.text }}>{sub.subject}</span>
+                    <span style={{
+                      background:sc.dot, color:'#fff',
+                      borderRadius:99, padding:'1px 8px',
+                      fontSize:11, fontWeight:800
+                    }}>{pct}%</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         );
