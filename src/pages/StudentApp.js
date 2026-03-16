@@ -2486,10 +2486,10 @@ function HomeTab({ dashboard, consistency, user }) {
 
 // ── Subjects Tab ──────────────────────────────────────────────
 function SubjectsTab({ dashboard, user, onUpdate }) {
-  const [openSubject, setOpenSubject] = useState(null);
-  const [openChapter, setOpenChapter] = useState(null);
-  const [saving, setSaving] = useState('');
   const [localData, setLocalData] = useState(null);
+  const [saving, setSaving]       = useState('');
+  // drill state: null | { gs_paper } | { gs_paper, subject } | { gs_paper, subject, chapter }
+  const [drill, setDrill]         = useState(null);
 
   React.useEffect(() => {
     if (dashboard) setLocalData(JSON.parse(JSON.stringify(dashboard)));
@@ -2498,18 +2498,10 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
   const data = localData || dashboard;
   if (!data) return null;
 
-  const grouped = {};
-  data.subjects.forEach(s => {
-    if (!grouped[s.gs_paper]) grouped[s.gs_paper] = [];
-    grouped[s.gs_paper].push(s);
-  });
-
   async function toggleTask(subject, chapter, field, current) {
     const newVal = current === 'Done' ? 'Not Done' : 'Done';
     const key = `${subject}||${chapter}||${field}`;
     setSaving(key);
-
-    // Optimistic update — instant UI change
     setLocalData(prev => {
       if (!prev) return prev;
       const updated = JSON.parse(JSON.stringify(prev));
@@ -2520,89 +2512,284 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
       ch[field] = newVal;
       const fixedW = { reading:0.20, short_notes:0.20, pyq_prelims:0.15,
         pyq_mains:0.15, revision1:0.10, revision2:0.10, revision3:0.10 };
-      ch.score = Object.entries(fixedW).reduce((s,[k,w]) => s+(ch[k]==='Done'?w:0),0);
-      const totalWt = subj.chapters.reduce((s,c)=>s+c.weightage,0);
-      const earned  = subj.chapters.reduce((s,c)=>s+c.weightage*c.score,0);
+      ch.score = Object.entries(fixedW).reduce((s,[k,w]) => s+(ch[k]==='Done'?w:0), 0);
+      const totalWt = subj.chapters.reduce((s,c) => s+c.weightage, 0);
+      const earned  = subj.chapters.reduce((s,c) => s+c.weightage*c.score, 0);
       subj.completion_pct = totalWt>0 ? Math.round((earned/totalWt)*100) : 0;
       return updated;
     });
-
     try {
       await api('updateProgress', { phone: user.phone, subject, chapter, field, value: newVal });
       onUpdate(true).catch(()=>{});
-    } catch (e) {
+    } catch {
       setLocalData(null);
       alert('Failed to save. Please try again.');
     } finally { setSaving(''); }
   }
 
-  return (
-    <>
-      {Object.entries(grouped).map(([paper, subjects]) => {
-        const col = GS_COLORS[paper] || { bg: '#F5F5F5', text: '#333', bar: '#333' };
-        return (
-          <div key={paper}>
-            <div style={{ background: col.bg, borderRadius: 10, padding: '8px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 700, color: col.text, fontSize: 14 }}>{paper}</span>
-            </div>
-            {subjects.map(subj => (
-              <div key={subj.subject} className="card" style={{ marginBottom: 10 }}>
-                <div className="accordion-header" onClick={() => setOpenSubject(openSubject === subj.subject ? null : subj.subject)}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 15 }}>{subj.subject}</div>
-                    <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>{subj.chapters.length} chapters</div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontWeight: 700, color: col.text, fontSize: 16 }}>{subj.completion_pct}%</span>
-                    <span className="accordion-arrow" style={openSubject === subj.subject ? { display: 'inline-block', transform: 'rotate(180deg)' } : {}}>▼</span>
-                  </div>
-                </div>
-                <div style={{ marginTop: 8 }}>
-                  <div className="progress-bar-wrap">
-                    <div className="progress-bar-fill" style={{ width: `${subj.completion_pct}%`, background: col.bar }} />
-                  </div>
-                </div>
+  const GS_COLORS = {
+    'GS Paper 1': { bg:'#E8F5E9', text:'#2E7D32', bar:'#2E7D32', light:'#F1FBF2' },
+    'GS Paper 2': { bg:'#E3F0FF', text:'#1565C0', bar:'#1565C0', light:'#EEF6FF' },
+    'GS Paper 3': { bg:'#FFF3E0', text:'#E65100', bar:'#E65100', light:'#FFF8F0' },
+    'GS Paper 4': { bg:'#F3E5FF', text:'#6A1B9A', bar:'#6A1B9A', light:'#FAF0FF' },
+  };
 
-                {openSubject === subj.subject && (
-                  <div style={{ marginTop: 12 }}>
-                    {subj.chapters.map(ch => (
-                      <div key={ch.chapter} className="chapter-row">
-                        <div className="accordion-header" onClick={() => setOpenChapter(openChapter === ch.chapter ? null : ch.chapter)}>
-                          <span className="chapter-name" style={{ marginBottom: 0 }}>{ch.chapter}</span>
-                          <span style={{ fontSize: 12, color: col.text, fontWeight: 600 }}>
-                            {Math.round(ch.score * 100)}%
-                          </span>
-                        </div>
-                        {openChapter === ch.chapter && (
-                          <div className="task-grid" style={{ marginTop: 8 }}>
-                            {TASKS.map(t => {
-                              const val = ch[t.key];
-                              const key = `${subj.subject}||${ch.chapter}||${t.key}`;
-                              return (
-                                <button
-                                  key={t.key}
-                                  className={`toggle-btn ${val === 'Done' ? 'done' : ''}`}
-                                  onClick={() => toggleTask(subj.subject, ch.chapter, t.key, val)}
-                                  disabled={saving === key}
-                                >
-                                  {saving === key ? '...' : (val === 'Done' ? '✓ ' : '') + t.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+  // Group subjects by GS paper
+  const grouped = {};
+  data.subjects.forEach(s => {
+    if (!grouped[s.gs_paper]) grouped[s.gs_paper] = [];
+    grouped[s.gs_paper].push(s);
+  });
+
+  // ── Level 3: Task toggles for a chapter ──
+  if (drill?.chapter) {
+    const col  = GS_COLORS[drill.gs_paper] || GS_COLORS['GS Paper 1'];
+    const subj = data.subjects.find(s => s.subject === drill.subject);
+    const ch   = subj?.chapters.find(c => c.chapter === drill.chapter);
+    if (!ch) return null;
+
+    const TASKS = [
+      { key:'reading',     label:'Reading',    wt:'20%' },
+      { key:'short_notes', label:'Notes',      wt:'20%' },
+      { key:'pyq_prelims', label:'PYQ Pre',    wt:'15%' },
+      { key:'pyq_mains',   label:'PYQ Mains',  wt:'15%' },
+      { key:'revision1',   label:'Revision 1', wt:'10%' },
+      { key:'revision2',   label:'Revision 2', wt:'10%' },
+      { key:'revision3',   label:'Revision 3', wt:'10%' },
+    ];
+
+    return (
+      <div>
+        <BreadCrumb items={[drill.gs_paper, drill.subject, drill.chapter]}
+          onBack={(level) => {
+            if (level === 0) setDrill(null);
+            else if (level === 1) setDrill({ gs_paper: drill.gs_paper });
+            else setDrill({ gs_paper: drill.gs_paper, subject: drill.subject });
+          }}
+          color={col.text} />
+
+        <div className="card">
+          <div style={{ marginBottom:12 }}>
+            <div style={{ fontSize:16, fontWeight:700 }}>{ch.chapter}</div>
+            <div style={{ fontSize:13, color:col.text, fontWeight:600, marginTop:4 }}>
+              {Math.round(ch.score*100)}% complete
+            </div>
+            <div className="progress-bar-wrap" style={{ marginTop:6 }}>
+              <div className="progress-bar-fill" style={{ width:`${ch.score*100}%`, background:col.bar }} />
+            </div>
+          </div>
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginTop:16 }}>
+            {TASKS.map(t => {
+              const val = ch[t.key];
+              const done = val === 'Done';
+              const key  = `${drill.subject}||${ch.chapter}||${t.key}`;
+              const busy = saving === key;
+              return (
+                <button key={t.key}
+                  onClick={() => toggleTask(drill.subject, ch.chapter, t.key, val)}
+                  disabled={busy}
+                  style={{
+                    padding:'12px 10px', borderRadius:12,
+                    border:`2px solid ${done ? col.bar : '#E0E6EF'}`,
+                    background: done ? col.bg : '#FAFAFA',
+                    cursor:'pointer', transition:'all 0.15s',
+                    display:'flex', flexDirection:'column', alignItems:'center', gap:4
+                  }}>
+                  <span style={{ fontSize:18 }}>{done ? '✅' : '⭕'}</span>
+                  <span style={{ fontSize:12, fontWeight:600, color: done ? col.text : '#6B7280' }}>
+                    {busy ? '...' : t.label}
+                  </span>
+                  <span style={{ fontSize:10, color:'#9CA3AF' }}>{t.wt}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Level 2: Chapter pills inside a subject ──
+  if (drill?.subject) {
+    const col  = GS_COLORS[drill.gs_paper] || GS_COLORS['GS Paper 1'];
+    const subj = data.subjects.find(s => s.subject === drill.subject);
+    if (!subj) return null;
+
+    return (
+      <div>
+        <BreadCrumb items={[drill.gs_paper, drill.subject]}
+          onBack={(level) => {
+            if (level === 0) setDrill(null);
+            else setDrill({ gs_paper: drill.gs_paper });
+          }}
+          color={col.text} />
+
+        <div style={{ marginBottom:12 }}>
+          <div style={{ fontSize:13, color:col.text, fontWeight:700 }}>
+            {subj.completion_pct}% overall · {subj.chapters.length} chapters
+          </div>
+          <div className="progress-bar-wrap" style={{ marginTop:6 }}>
+            <div className="progress-bar-fill" style={{ width:`${subj.completion_pct}%`, background:col.bar }} />
+          </div>
+        </div>
+
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          {subj.chapters.map(ch => {
+            const pct = Math.round(ch.score * 100);
+            return (
+              <div key={ch.chapter}
+                onClick={() => setDrill({ gs_paper:drill.gs_paper, subject:drill.subject, chapter:ch.chapter })}
+                style={{
+                  background:'#fff', borderRadius:12, padding:'12px 14px',
+                  boxShadow:'0 1px 6px rgba(0,0,0,0.07)', cursor:'pointer',
+                  border:`1.5px solid ${pct===100 ? col.bar : '#F0F0F0'}`,
+                  transition:'box-shadow 0.15s'
+                }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                  <span style={{ fontSize:14, fontWeight:500, flex:1, marginRight:10 }}>{ch.chapter}</span>
+                  <span style={{ fontSize:14, fontWeight:700, color: pct>=70?col.text: pct>=40?'#E65100':'#9CA3AF', flexShrink:0 }}>
+                    {pct}%
+                  </span>
+                </div>
+                <div className="progress-bar-wrap" style={{ height:5 }}>
+                  <div className="progress-bar-fill" style={{ width:`${pct}%`, background: pct>=70?col.bar: pct>=40?'#E65100':'#D1D5DB' }} />
+                </div>
               </div>
-            ))}
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Level 1: Subject pills inside a GS paper ──
+  if (drill?.gs_paper) {
+    const col      = GS_COLORS[drill.gs_paper] || GS_COLORS['GS Paper 1'];
+    const subjects = grouped[drill.gs_paper] || [];
+
+    return (
+      <div>
+        <BreadCrumb items={[drill.gs_paper]}
+          onBack={() => setDrill(null)}
+          color={col.text} />
+
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          {subjects.map(subj => (
+            <div key={subj.subject}
+              onClick={() => setDrill({ gs_paper:drill.gs_paper, subject:subj.subject })}
+              style={{
+                background:'#fff', borderRadius:12, padding:'14px 16px',
+                boxShadow:'0 1px 6px rgba(0,0,0,0.07)', cursor:'pointer',
+                borderLeft:`4px solid ${col.bar}`, transition:'box-shadow 0.15s'
+              }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+                <div>
+                  <div style={{ fontSize:15, fontWeight:600 }}>{subj.subject}</div>
+                  <div style={{ fontSize:11, color:'#9CA3AF', marginTop:1 }}>{subj.chapters.length} chapters</div>
+                </div>
+                <div style={{ textAlign:'right' }}>
+                  <div style={{ fontSize:18, fontWeight:800, color: subj.completion_pct>=70?col.text: subj.completion_pct>=40?'#E65100':'#9CA3AF' }}>
+                    {subj.completion_pct}%
+                  </div>
+                </div>
+              </div>
+              <div className="progress-bar-wrap" style={{ height:6 }}>
+                <div className="progress-bar-fill" style={{
+                  width:`${subj.completion_pct}%`,
+                  background: subj.completion_pct>=70?col.bar: subj.completion_pct>=40?'#E65100':'#D1D5DB'
+                }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Level 0: GS Paper pills ──
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+      {Object.entries(grouped).map(([paper, subjects]) => {
+        const col     = GS_COLORS[paper] || GS_COLORS['GS Paper 1'];
+        const overall = subjects.length
+          ? Math.round(subjects.reduce((s,sub) => s+sub.completion_pct, 0) / subjects.length)
+          : 0;
+        const totalChapters = subjects.reduce((s,sub) => s+sub.chapters.length, 0);
+
+        return (
+          <div key={paper}
+            onClick={() => setDrill({ gs_paper: paper })}
+            style={{
+              background:'#fff', borderRadius:14, padding:'16px 18px',
+              boxShadow:'0 2px 10px rgba(0,0,0,0.08)', cursor:'pointer',
+              borderTop:`4px solid ${col.bar}`
+            }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
+              <div>
+                <div style={{ fontSize:16, fontWeight:700, color:col.text }}>{paper}</div>
+                <div style={{ fontSize:12, color:'#9CA3AF', marginTop:2 }}>
+                  {subjects.length} subjects · {totalChapters} chapters
+                </div>
+              </div>
+              <div style={{ textAlign:'right' }}>
+                <div style={{ fontSize:26, fontWeight:800, color: overall>=70?col.text: overall>=40?'#E65100':'#9CA3AF', lineHeight:1 }}>
+                  {overall}%
+                </div>
+                <div style={{ fontSize:11, color:'#9CA3AF', marginTop:2 }}>overall</div>
+              </div>
+            </div>
+            <div className="progress-bar-wrap" style={{ height:8 }}>
+              <div className="progress-bar-fill" style={{ width:`${overall}%`, background: overall>=70?col.bar: overall>=40?'#E65100':'#D1D5DB' }} />
+            </div>
+            {/* Subject mini-pills */}
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:12 }}>
+              {subjects.map(sub => (
+                <div key={sub.subject} style={{
+                  background: col.bg, borderRadius:99, padding:'4px 10px',
+                  fontSize:11, fontWeight:600, color:col.text,
+                  display:'flex', alignItems:'center', gap:5
+                }}>
+                  <span>{sub.subject.split(' ').slice(0,2).join(' ')}</span>
+                  <span style={{ background:col.bar, color:'#fff', borderRadius:99, padding:'1px 6px', fontSize:10 }}>
+                    {sub.completion_pct}%
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         );
       })}
-    </>
+    </div>
   );
 }
+
+// ── BreadCrumb ────────────────────────────────────────────────
+function BreadCrumb({ items, onBack, color }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:14, flexWrap:'wrap' }}>
+      <button onClick={() => onBack(0)}
+        style={{ background:'none', border:'none', color:'#6B7280', fontSize:13, cursor:'pointer', padding:0 }}>
+        Subjects
+      </button>
+      {items.map((item, i) => (
+        <React.Fragment key={i}>
+          <span style={{ color:'#D1D5DB', fontSize:12 }}>›</span>
+          <button onClick={() => i < items.length-1 ? onBack(i+1) : null}
+            style={{
+              background:'none', border:'none', cursor: i < items.length-1 ? 'pointer' : 'default',
+              color: i === items.length-1 ? color : '#6B7280',
+              fontWeight: i === items.length-1 ? 700 : 400,
+              fontSize:13, padding:0
+            }}>
+            {item.length > 22 ? item.slice(0,22)+'…' : item}
+          </button>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
 
 // ── Daily Tab ─────────────────────────────────────────────────
 function DailyTab({ dashboard, user, onUpdate, consistency }) {
