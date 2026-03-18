@@ -2416,73 +2416,194 @@ export default function StudentApp({ user, onLogout }) {
   );
 }
 
-// ── Home Tab ──────────────────────────────────────────────────
+// ── Home Tab ──────────────────────────────────────────────
 function HomeTab({ dashboard, consistency, user }) {
   if (!dashboard) return null;
-  const overall = dashboard.gs_summary.reduce((s, g) => s + g.pct, 0) / (dashboard.gs_summary.length || 1);
+
+  const proficiency  = dashboard.proficiency_score  || 0;
+  const readiness    = dashboard.exam_readiness      || 0;
+  const consistency_score = consistency?.overall?.consistency_score || 0;
+
+  // Success Probability = weighted average of all 3
+  const successProb = Math.round(
+    proficiency    * 0.40 +
+    readiness      * 0.35 +
+    consistency_score * 0.25
+  );
+
+  const GS_COL = {
+    'GS Paper 1': '#2E7D32', 'GS Paper 2': '#1565C0',
+    'GS Paper 3': '#E65100', 'GS Paper 4': '#6A1B9A',
+    'Essay': '#00838F', 'CSAT': '#C62828', 'Optional': '#37474F',
+  };
+
+  function meterColor(pct) {
+    if (pct >= 70) return '#2E7D32';
+    if (pct >= 50) return '#F57C00';
+    if (pct >= 30) return '#E65100';
+    return '#C62828';
+  }
+
+  function PillarCard({ title, score, color, icon, children }) {
+    return (
+      <div style={{ background:'#fff', borderRadius:14, padding:'14px 16px',
+        boxShadow:'0 2px 10px rgba(0,0,0,0.07)', borderTop:`4px solid ${color}` }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize:18 }}>{icon}</span>
+            <span style={{ fontSize:14, fontWeight:700, color:'#1A1A2E' }}>{title}</span>
+          </div>
+          <span style={{ fontSize:22, fontWeight:800, color }}>
+            {score}<span style={{ fontSize:12, fontWeight:500, color:'#9CA3AF' }}>%</span>
+          </span>
+        </div>
+        <div className="progress-bar-wrap" style={{ height:8, marginBottom: children ? 12 : 0 }}>
+          <div className="progress-bar-fill" style={{ width:`${score}%`, background:color, borderRadius:99 }} />
+        </div>
+        {children}
+      </div>
+    );
+  }
+
+  // Group subjects by paper for proficiency breakdown
+  const paperMap = {};
+  dashboard.gs_summary?.forEach(g => { paperMap[g.gs_paper] = g.pct; });
 
   return (
     <>
-      {/* Overall */}
-      <div className="card" style={{ background: 'linear-gradient(135deg, #1B3A6B, #0D2040)', color: '#fff' }}>
-        <div style={{ fontSize: 13, opacity: 0.75, marginBottom: 6 }}>Overall Progress</div>
-        <div style={{ fontSize: 42, fontWeight: 800, lineHeight: 1 }}>{Math.round(overall)}%</div>
-        <div style={{ marginTop: 12 }}>
-          <div className="progress-bar-wrap" style={{ background: 'rgba(255,255,255,0.2)', height: 10 }}>
-            <div className="progress-bar-fill" style={{ width: `${overall}%`, background: '#F5A623' }} />
+      {/* ── Success Probability Meter ── */}
+      <div style={{
+        background: `linear-gradient(135deg, ${meterColor(successProb)}, ${meterColor(successProb)}CC)`,
+        borderRadius:16, padding:'20px', marginBottom:14, color:'#fff',
+        boxShadow:'0 4px 20px rgba(0,0,0,0.15)'
+      }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+          <div>
+            <div style={{ fontSize:12, opacity:0.85, marginBottom:4, fontWeight:500 }}>
+              🎯 Success Probability
+            </div>
+            <div style={{ fontSize:52, fontWeight:900, lineHeight:1 }}>
+              {successProb}<span style={{ fontSize:22 }}>%</span>
+            </div>
+            <div style={{ fontSize:12, opacity:0.8, marginTop:6 }}>
+              {successProb >= 70 ? '🔥 Excellent trajectory' :
+               successProb >= 50 ? '📈 Good progress' :
+               successProb >= 30 ? '⚠️ Needs more effort' : '🚨 Critical — take action'}
+            </div>
           </div>
-        </div>
-        <div style={{ marginTop: 10, fontSize: 12, opacity: 0.65 }}>
-          Target Year: {user.target_year || '—'} · Optional: {user.optional || '—'}
-        </div>
-      </div>
-
-      {/* GS Papers */}
-      <div className="card">
-        <div className="card-title">GS Papers</div>
-        {dashboard.gs_summary.map(g => {
-          const col = GS_COLORS[g.gs_paper] || { bg: '#F5F5F5', text: '#333', bar: '#333' };
-          return (
-            <div key={g.gs_paper} style={{ marginBottom: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                <span style={{ fontSize: 14, fontWeight: 600, color: col.text }}>{g.gs_paper}</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: col.text }}>{g.pct}%</span>
-              </div>
-              <div className="progress-bar-wrap">
-                <div className="progress-bar-fill" style={{ width: `${g.pct}%`, background: col.bar }} />
-              </div>
+          <div style={{ textAlign:'right' }}>
+            <div style={{ fontSize:11, opacity:0.75, marginBottom:4 }}>
+              {user.name}
             </div>
-          );
-        })}
-      </div>
-
-      {/* Consistency snapshot */}
-      {consistency && (
-        <div className="card">
-          <div className="card-title">Consistency</div>
-          <div className="stat-grid">
-            <div className="stat-box">
-              <div className="val">{consistency.weekly.consistency_pct}%</div>
-              <div className="lbl">This Week</div>
+            <div style={{ fontSize:11, opacity:0.75 }}>
+              Target: {user.target_year || '—'}
             </div>
-            <div className="stat-box">
-              <div className="val">{consistency.monthly.consistency_pct}%</div>
-              <div className="lbl">This Month</div>
-            </div>
-            <div className="stat-box">
-              <div className="val">{consistency.overall.consistency_pct}%</div>
-              <div className="lbl">Overall</div>
-            </div>
-            <div className="stat-box">
-              <div className="val">{consistency.overall.avg_score}</div>
-              <div className="lbl">Avg Score</div>
+            <div style={{ fontSize:11, opacity:0.75, marginTop:2 }}>
+              Batch: {user.batch || '—'}
             </div>
           </div>
         </div>
-      )}
+
+        {/* 3 pillars breakdown */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginTop:16 }}>
+          {[
+            { label:'Proficiency', val:proficiency,       wt:'40%' },
+            { label:'Readiness',   val:readiness,         wt:'35%' },
+            { label:'Consistency', val:consistency_score, wt:'25%' },
+          ].map(p => (
+            <div key={p.label} style={{
+              background:'rgba(255,255,255,0.2)', borderRadius:10,
+              padding:'10px 8px', textAlign:'center'
+            }}>
+              <div style={{ fontSize:20, fontWeight:800 }}>{p.val}%</div>
+              <div style={{ fontSize:10, opacity:0.9, marginTop:2 }}>{p.label}</div>
+              <div style={{ fontSize:9, opacity:0.7 }}>weight: {p.wt}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Subject Proficiency ── */}
+      <PillarCard title="Subject Proficiency" score={proficiency} color="#1B3A6B" icon="📚">
+        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {Object.entries(GS_COL).map(([paper, color]) => {
+            const pct = paperMap[paper] ?? null;
+            if (pct === null) return null;
+            return (
+              <div key={paper}>
+                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+                  <span style={{ fontSize:12, color:'#4B5563' }}>{paper}</span>
+                  <span style={{ fontSize:12, fontWeight:700, color }}>{pct}%</span>
+                </div>
+                <div className="progress-bar-wrap" style={{ height:5 }}>
+                  <div className="progress-bar-fill" style={{ width:`${pct}%`, background:color }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </PillarCard>
+
+      {/* ── Exam Readiness ── */}
+      <PillarCard title="Exam Readiness" score={readiness} color="#E65100" icon="📝">
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+          {[
+            { label:'LEEP Prelims', wt:'15%', color:'#1565C0' },
+            { label:'EDGE Prelims', wt:'22.5%', color:'#2E7D32' },
+            { label:'LEEP Mains',   wt:'15%', color:'#1565C0' },
+            { label:'EDGE Mains',   wt:'22.5%', color:'#2E7D32' },
+            { label:'CMTs',         wt:'5%',  color:'#6A1B9A' },
+            { label:'AWP',          wt:'20%', color:'#E65100' },
+          ].map(t => (
+            <div key={t.label} style={{
+              background:`${t.color}15`, borderRadius:8, padding:'8px 10px',
+              border:`1px solid ${t.color}30`
+            }}>
+              <div style={{ fontSize:12, fontWeight:600, color:t.color }}>{t.label}</div>
+              <div style={{ fontSize:10, color:'#9CA3AF', marginTop:1 }}>Weight: {t.wt}</div>
+            </div>
+          ))}
+        </div>
+      </PillarCard>
+
+      {/* ── Consistency Score ── */}
+      <PillarCard title="Consistency Score" score={consistency_score} color="#00838F" icon="🔥">
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+          {[
+            { label:'This Week',    val: consistency?.weekly?.consistency_score  || 0, sub: `${consistency?.weekly?.consistency_pct||0}% days` },
+            { label:'This Month',   val: consistency?.monthly?.consistency_score || 0, sub: `${consistency?.monthly?.consistency_pct||0}% days` },
+            { label:'Overall',      val: consistency?.overall?.consistency_score || 0, sub: `${consistency?.overall?.logged_days||0} days` },
+          ].map(c => (
+            <div key={c.label} style={{ textAlign:'center', background:'#F0FDFD', borderRadius:10, padding:'10px 6px' }}>
+              <div style={{ fontSize:20, fontWeight:800, color:'#00838F' }}>{c.val}%</div>
+              <div style={{ fontSize:10, color:'#4B5563', fontWeight:600, marginTop:2 }}>{c.label}</div>
+              <div style={{ fontSize:9, color:'#9CA3AF', marginTop:1 }}>{c.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* 30-day heatmap mini */}
+        {consistency?.heatmap && (
+          <div style={{ marginTop:12 }}>
+            <div style={{ fontSize:11, color:'#6B7280', marginBottom:6 }}>30-day activity</div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>
+              {consistency.heatmap.map(d => {
+                const s  = d.score;
+                const bg = s === null ? '#F0F0F0' : s >= 70 ? '#00695C' : s >= 40 ? '#4DB6AC' : '#B2DFDB';
+                return (
+                  <div key={d.date} style={{
+                    width:14, height:14, borderRadius:3, background:bg
+                  }} title={`${d.date}: ${s !== null ? s+'%' : 'No log'}`} />
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </PillarCard>
     </>
   );
 }
+
 
 // ── Subjects Tab ──────────────────────────────────────────────
 function SubjectsTab({ dashboard, user, onUpdate }) {
