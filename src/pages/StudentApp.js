@@ -2432,10 +2432,15 @@ function HomeTab({ dashboard, consistency, user }) {
   );
 
   const GS_COL = {
-    'GS Paper 1': '#2E7D32', 'GS Paper 2': '#1565C0',
-    'GS Paper 3': '#E65100', 'GS Paper 4': '#6A1B9A',
-    'Essay': '#00838F', 'CSAT': '#C62828', 'Optional': '#37474F',
+    'GS Paper 1': '#2E7D32',
+    'GS Paper 2': '#1565C0',
+    'GS Paper 3': '#E65100',
+    'GS Paper 4': '#6A1B9A',
+    'Essay':      '#00838F',
+    'CSAT':       '#C62828',
+    'Optional':   '#37474F',
   };
+  const PAPER_ORDER = ['GS Paper 1','GS Paper 2','GS Paper 3','GS Paper 4','Essay','CSAT','Optional'];
 
   function meterColor(pct) {
     if (pct >= 70) return '#2E7D32';
@@ -2526,9 +2531,9 @@ function HomeTab({ dashboard, consistency, user }) {
       {/* ── Subject Proficiency ── */}
       <PillarCard title="Subject Proficiency" score={proficiency} color="#1B3A6B" icon="📚">
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-          {Object.entries(GS_COL).map(([paper, color]) => {
-            const pct = paperMap[paper] ?? null;
-            if (pct === null) return null;
+          {PAPER_ORDER.map(paper => {
+            const color = GS_COL[paper] || '#666';
+            const pct = paperMap[paper] ?? 0;
             return (
               <div key={paper}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
