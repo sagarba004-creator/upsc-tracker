@@ -2925,8 +2925,9 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
 
 // ── Micro Topic Heatmap ──────────────────────────────────────
 function MicroTopicHeatmap({ subject, chapter }) {
-  const [topics, setTopics] = useState(null);
+  const [topics, setTopics]   = useState(null);
   const [loading, setLoading] = useState(true);
+  const [open, setOpen]       = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -2941,18 +2942,6 @@ function MicroTopicHeatmap({ subject, chapter }) {
       .finally(() => setLoading(false));
   }, [subject, chapter]);
 
-  if (loading) return (
-    <div style={{ fontSize:11, color:'#9CA3AF', textAlign:'center', padding:'6px 0' }}>
-      ⏳ Loading micro-topics...
-    </div>
-  );
-
-  if (!topics || topics.length === 0) return (
-    <div style={{ fontSize:11, color:'#9CA3AF', fontStyle:'italic', padding:'4px 0' }}>
-      No micro-topics defined for this chapter yet
-    </div>
-  );
-
   const priorityConfig = {
     'High':     { bg:'#C62828', color:'#fff', label:'HIGH' },
     'Med-High': { bg:'#D97706', color:'#fff', label:'MED-H' },
@@ -2960,44 +2949,65 @@ function MicroTopicHeatmap({ subject, chapter }) {
     'Low':      { bg:'#388E3C', color:'#fff', label:'LOW' },
   };
 
+  const count = topics?.length || 0;
+
   return (
-    <div>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
-        <span style={{ fontSize:11, fontWeight:700, color:'#4B5563' }}>🔥 PYQ Micro-Topics</span>
-        <div style={{ display:'flex', gap:4 }}>
-          {['High','Med-High','Medium','Low'].map(p => {
-            const cfg = priorityConfig[p];
-            return (
-              <span key={p} style={{
-                background:cfg.bg, color:cfg.color,
-                fontSize:8, fontWeight:700, padding:'2px 5px', borderRadius:3
-              }}>{cfg.label}</span>
-            );
-          })}
-        </div>
-      </div>
-      <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
-        {topics.map((t, i) => {
-          const cfg = priorityConfig[t.pyq_priority] || priorityConfig['Medium'];
-          return (
-            <div key={i} style={{
-              background:`${cfg.bg}20`,
-              border:`1.5px solid ${cfg.bg}`,
-              borderLeft:`4px solid ${cfg.bg}`,
-              borderRadius:6, padding:'5px 8px',
-              fontSize:11, color:'#1A1A2E', lineHeight:1.4,
-              flex:'1 1 180px', maxWidth:'100%'
-            }}>
-              <span style={{
-                display:'inline-block', background:cfg.bg, color:cfg.color,
-                fontSize:8, fontWeight:700, padding:'1px 4px',
-                borderRadius:3, marginRight:5, verticalAlign:'middle'
-              }}>{cfg.label}</span>
-              {t.micro_topic}
+    <div style={{ marginTop:4 }}>
+      {/* Dropdown toggle */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width:'100%', display:'flex', alignItems:'center',
+          justifyContent:'space-between', padding:'8px 10px',
+          background:'#F8F9FA', border:'1.5px solid #E0E6EF',
+          borderRadius: open ? '8px 8px 0 0' : 8,
+          cursor:'pointer', transition:'all 0.2s'
+        }}>
+        <span style={{ fontSize:12, fontWeight:700, color:'#4B5563' }}>
+          🔥 Heatmap {!loading && count > 0 ? `(${count})` : ''}
+        </span>
+        <span style={{ fontSize:11, color:'#9CA3AF', transform: open ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}>▼</span>
+      </button>
+
+      {/* Dropdown content */}
+      {open && (
+        <div style={{
+          border:'1.5px solid #E0E6EF', borderTop:'none',
+          borderRadius:'0 0 8px 8px', padding:'10px',
+          background:'#FAFAFA'
+        }}>
+          {loading ? (
+            <div style={{ fontSize:11, color:'#9CA3AF', textAlign:'center', padding:'8px' }}>⏳ Loading...</div>
+          ) : !topics || count === 0 ? (
+            <div style={{ fontSize:11, color:'#9CA3AF', fontStyle:'italic', padding:'4px' }}>
+              No micro-topics defined yet
             </div>
-          );
-        })}
-      </div>
+          ) : (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+              {topics.map((t, i) => {
+                const cfg = priorityConfig[t.pyq_priority] || priorityConfig['Medium'];
+                return (
+                  <div key={i} style={{
+                    background:`${cfg.bg}18`,
+                    border:`1.5px solid ${cfg.bg}`,
+                    borderLeft:`4px solid ${cfg.bg}`,
+                    borderRadius:6, padding:'5px 8px',
+                    fontSize:11, color:'#1A1A2E', lineHeight:1.4,
+                    flex:'1 1 160px', maxWidth:'100%'
+                  }}>
+                    <span style={{
+                      display:'inline-block', background:cfg.bg, color:cfg.color,
+                      fontSize:8, fontWeight:700, padding:'1px 4px',
+                      borderRadius:3, marginRight:5, verticalAlign:'middle'
+                    }}>{cfg.label}</span>
+                    {t.micro_topic}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
