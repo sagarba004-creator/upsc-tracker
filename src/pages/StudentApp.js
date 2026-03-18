@@ -2749,14 +2749,15 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
                     transform: isOpen?'rotate(180deg)':'none', transition:'transform 0.2s' }}>▼</span>
                 </div>
 
-                {/* Inline tasks */}
+                {/* Inline tasks + micro-topic heatmap */}
                 {isOpen && (
                   <div style={{
                     border:`1.5px solid ${col.pill}`, borderTop:'none',
                     borderRadius:'0 0 12px 12px',
                     background: col.light, padding:'12px'
                   }}>
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>
+                    {/* Task toggles */}
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6, marginBottom:12 }}>
                       {TASKS.map(t => {
                         const val  = ch[t.key];
                         const done = val === 'Done';
@@ -2784,6 +2785,8 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
                         );
                       })}
                     </div>
+                    {/* Micro-topic heatmap */}
+                    <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} />
                   </div>
                 )}
               </div>
@@ -2903,6 +2906,74 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
   );
 }
 
+
+// ── Micro Topic Heatmap ──────────────────────────────────────
+function MicroTopicHeatmap({ subject, chapter }) {
+  const [topics, setTopics] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api('getMicroTopics', { subject, chapter })
+      .then(setTopics).catch(() => setTopics([]))
+      .finally(() => setLoading(false));
+  }, [subject, chapter]);
+
+  if (loading) return (
+    <div style={{ fontSize:11, color:'#9CA3AF', textAlign:'center', padding:'8px 0' }}>
+      Loading micro-topics...
+    </div>
+  );
+
+  if (!topics || topics.length === 0) return null;
+
+  const priorityConfig = {
+    'High':     { bg:'#C62828', color:'#fff', label:'HIGH' },
+    'Med-High': { bg:'#D97706', color:'#fff', label:'MED-H' },
+    'Medium':   { bg:'#A08000', color:'#fff', label:'MED' },
+    'Low':      { bg:'#388E3C', color:'#fff', label:'LOW' },
+  };
+
+  return (
+    <div>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
+        <span style={{ fontSize:11, fontWeight:700, color:'#4B5563' }}>🔥 PYQ Micro-Topics</span>
+        <div style={{ display:'flex', gap:4 }}>
+          {['High','Med-High','Medium','Low'].map(p => {
+            const cfg = priorityConfig[p];
+            return (
+              <span key={p} style={{
+                background:cfg.bg, color:cfg.color,
+                fontSize:8, fontWeight:700, padding:'2px 5px', borderRadius:3
+              }}>{cfg.label}</span>
+            );
+          })}
+        </div>
+      </div>
+      <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+        {topics.map((t, i) => {
+          const cfg = priorityConfig[t.pyq_priority] || priorityConfig['Medium'];
+          return (
+            <div key={i} style={{
+              background:`${cfg.bg}20`,
+              border:`1.5px solid ${cfg.bg}`,
+              borderLeft:`4px solid ${cfg.bg}`,
+              borderRadius:6, padding:'5px 8px',
+              fontSize:11, color:'#1A1A2E', lineHeight:1.4,
+              flex:'1 1 180px', maxWidth:'100%'
+            }}>
+              <span style={{
+                display:'inline-block', background:cfg.bg, color:cfg.color,
+                fontSize:8, fontWeight:700, padding:'1px 4px',
+                borderRadius:3, marginRight:5, verticalAlign:'middle'
+              }}>{cfg.label}</span>
+              {t.micro_topic}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 // ── BreadCrumb ────────────────────────────────────────────────
 function BreadCrumb({ items, onBack, color }) {
