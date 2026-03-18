@@ -2929,9 +2929,15 @@ function MicroTopicHeatmap({ subject, chapter }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
+    setTopics(null);
     api('getMicroTopics', { subject, chapter })
-      .then(data => setTopics(Array.isArray(data) ? data : []))
-      .catch(() => setTopics([]))
+      .then(data => {
+        if (Array.isArray(data)) setTopics(data);
+        else if (data && typeof data === 'object') setTopics(Object.values(data));
+        else setTopics([]);
+      })
+      .catch(err => { console.error('Micro-topics error:', err); setTopics([]); })
       .finally(() => setLoading(false));
   }, [subject, chapter]);
 
