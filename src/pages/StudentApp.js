@@ -2646,15 +2646,21 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
     { bg:'#EDE7F6', text:'#4527A0', dot:'#512DA8' },
   ];
 
-  const TASKS = [
-    { key:'reading',     label:'Reading',   emoji:'📖' },
-    { key:'short_notes', label:'Notes',     emoji:'📝' },
-    { key:'pyq_prelims', label:'PYQ Pre',   emoji:'📋' },
-    { key:'pyq_mains',   label:'PYQ Mains', emoji:'📌' },
-    { key:'revision1',   label:'Rev 1',     emoji:'🔁' },
-    { key:'revision2',   label:'Rev 2',     emoji:'🔂' },
-    { key:'revision3',   label:'Rev 3',     emoji:'📚' },
+  // Task definitions — labels and emoji per key
+  const TASK_DEFS = [
+    { key:'reading',     label:'Study/Reading', emoji:'📖', wtKey:'reading_wt'    },
+    { key:'short_notes', label:'Short Notes',   emoji:'📝', wtKey:'notes_wt'      },
+    { key:'pyq_prelims', label:'PYQ Pre',       emoji:'📋', wtKey:'pyq_pre_wt'    },
+    { key:'pyq_mains',   label:'PYQ Mains',     emoji:'📌', wtKey:'pyq_mains_wt'  },
+    { key:'revision1',   label:'Revision 1',    emoji:'🔁', wtKey:'rev1_wt'       },
+    { key:'revision2',   label:'Revision 2',    emoji:'🔂', wtKey:'rev2_wt'       },
+    { key:'revision3',   label:'Revision 3',    emoji:'📚', wtKey:'rev3_wt'       },
   ];
+
+  // Get active tasks for a chapter — only show tasks with weight > 0
+  function getChapterTasks(ch) {
+    return TASK_DEFS.filter(t => Number(ch[t.wtKey] || 0) > 0);
+  }
 
   async function toggleTask(subject, chapter, field, current) {
     const newVal = current === 'Done' ? 'Not Done' : 'Done';
@@ -2757,34 +2763,44 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
                     background: col.light, padding:'12px'
                   }}>
                     {/* Task toggles */}
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6, marginBottom:12 }}>
-                      {TASKS.map(t => {
-                        const val  = ch[t.key];
-                        const done = val === 'Done';
-                        const busy = saving === `${subj.subject}||${ch.chapter}||${t.key}`;
-                        return (
-                          <button key={t.key}
-                            onClick={() => toggleTask(subj.subject, ch.chapter, t.key, val)}
-                            disabled={busy}
-                            style={{
-                              padding:'8px 4px', borderRadius:10,
-                              border:`1.5px solid ${done ? col.pill : '#E0E6EF'}`,
-                              background: done ? col.pill : '#fff',
-                              cursor:'pointer', transition:'all 0.15s',
-                              display:'flex', flexDirection:'column',
-                              alignItems:'center', gap:3
-                            }}>
-                            <span style={{ fontSize:15 }}>
-                              {busy ? '⏳' : done ? '☑️' : t.emoji}
-                            </span>
-                            <span style={{ fontSize:10, fontWeight:600, lineHeight:1.2, textAlign:'center',
-                              color: done ? '#fff' : '#6B7280' }}>
-                              {t.label}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    {(() => {
+                      const activeTasks = getChapterTasks(ch);
+                      const cols = activeTasks.length <= 4 ? activeTasks.length : 4;
+                      return (
+                        <div style={{ display:'grid', gridTemplateColumns:`repeat(${cols},1fr)`, gap:6, marginBottom:12 }}>
+                          {activeTasks.map(t => {
+                            const val  = ch[t.key];
+                            const done = val === 'Done';
+                            const wt   = Math.round(Number(ch[t.wtKey] || 0) * 100);
+                            const busy = saving === `${subj.subject}||${ch.chapter}||${t.key}`;
+                            return (
+                              <button key={t.key}
+                                onClick={() => toggleTask(subj.subject, ch.chapter, t.key, val)}
+                                disabled={busy}
+                                style={{
+                                  padding:'8px 4px', borderRadius:10,
+                                  border:`1.5px solid ${done ? col.pill : '#E0E6EF'}`,
+                                  background: done ? col.pill : '#fff',
+                                  cursor:'pointer', transition:'all 0.15s',
+                                  display:'flex', flexDirection:'column',
+                                  alignItems:'center', gap:2
+                                }}>
+                                <span style={{ fontSize:15 }}>
+                                  {busy ? '⏳' : done ? '☑️' : t.emoji}
+                                </span>
+                                <span style={{ fontSize:10, fontWeight:600, lineHeight:1.2, textAlign:'center',
+                                  color: done ? '#fff' : '#6B7280' }}>
+                                  {busy ? '...' : t.label}
+                                </span>
+                                <span style={{ fontSize:9, color: done ? 'rgba(255,255,255,0.7)' : '#9CA3AF' }}>
+                                  {wt}%
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     {/* Micro-topic heatmap */}
                     <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} />
                   </div>
@@ -2914,17 +2930,22 @@ function MicroTopicHeatmap({ subject, chapter }) {
 
   useEffect(() => {
     api('getMicroTopics', { subject, chapter })
-      .then(setTopics).catch(() => setTopics([]))
+      .then(data => setTopics(Array.isArray(data) ? data : []))
+      .catch(() => setTopics([]))
       .finally(() => setLoading(false));
   }, [subject, chapter]);
 
   if (loading) return (
-    <div style={{ fontSize:11, color:'#9CA3AF', textAlign:'center', padding:'8px 0' }}>
-      Loading micro-topics...
+    <div style={{ fontSize:11, color:'#9CA3AF', textAlign:'center', padding:'6px 0' }}>
+      ⏳ Loading micro-topics...
     </div>
   );
 
-  if (!topics || topics.length === 0) return null;
+  if (!topics || topics.length === 0) return (
+    <div style={{ fontSize:11, color:'#9CA3AF', fontStyle:'italic', padding:'4px 0' }}>
+      No micro-topics defined for this chapter yet
+    </div>
+  );
 
   const priorityConfig = {
     'High':     { bg:'#C62828', color:'#fff', label:'HIGH' },
