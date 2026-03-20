@@ -2844,19 +2844,50 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
                   transition:'box-shadow 0.15s',
                   boxShadow:'0 2px 6px rgba(0,0,0,0.08)'
                 }}>
-                <div style={{ fontSize:14, fontWeight:700, color:sc.text, marginBottom:8 }}>
-                  {subj.subject}
+                {/* Subject name + exam badge */}
+                <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:6 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:sc.text, lineHeight:1.3, flex:1 }}>
+                    {subj.subject}
+                  </div>
+                  {(() => {
+                    const exam = subj.exam_type || 'both';
+                    const BADGES = {
+                      'pre':   { label:'PRE',   bg:'#1565C0' },
+                      'mains': { label:'MAINS', bg:'#E65100' },
+                      'both':  { label:'P+M',   bg:'#2E7D32' },
+                    };
+                    const b = BADGES[exam] || BADGES['both'];
+                    return <span style={{ background:b.bg, color:'#fff', fontSize:8, fontWeight:800, padding:'2px 5px', borderRadius:3, marginLeft:4, flexShrink:0 }}>{b.label}</span>;
+                  })()}
                 </div>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <span style={{ fontSize:11, color:sc.text, opacity:0.7 }}>
-                    {subj.chapters.length} chapters
-                  </span>
-                  <span style={{
-                    background: sc.dot, color:'#fff',
-                    padding:'3px 10px', borderRadius:99,
-                    fontSize:13, fontWeight:800
-                  }}>{pct}%</span>
-                </div>
+                <div style={{ fontSize:10, color:sc.text, opacity:0.6, marginBottom:8 }}>{subj.chapters.length} chapters</div>
+                {/* Progress bars */}
+                {(subj.exam_type === 'both') ? (
+                  <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                      <span style={{ fontSize:8, color:'#1565C0', fontWeight:700, width:14 }}>P</span>
+                      <div style={{ flex:1, background:'rgba(0,0,0,0.12)', borderRadius:99, height:4 }}>
+                        <div style={{ width:`${pct}%`, height:4, background:'#1565C0', borderRadius:99 }} />
+                      </div>
+                      <span style={{ fontSize:9, fontWeight:800, color:'#1565C0', width:22, textAlign:'right' }}>{pct}%</span>
+                    </div>
+                    <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                      <span style={{ fontSize:8, color:'#E65100', fontWeight:700, width:14 }}>M</span>
+                      <div style={{ flex:1, background:'rgba(0,0,0,0.12)', borderRadius:99, height:4 }}>
+                        <div style={{ width:`${pct}%`, height:4, background:'#E65100', borderRadius:99 }} />
+                      </div>
+                      <span style={{ fontSize:9, fontWeight:800, color:'#E65100', width:22, textAlign:'right' }}>{pct}%</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                    <div style={{ flex:1, background:'rgba(0,0,0,0.12)', borderRadius:99, height:5 }}>
+                      <div style={{ width:`${pct}%`, height:5,
+                        background: subj.exam_type==='pre' ? '#1565C0' : '#E65100', borderRadius:99 }} />
+                    </div>
+                    <span style={{ fontSize:10, fontWeight:800, color:sc.dot, width:24, textAlign:'right' }}>{pct}%</span>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -2892,25 +2923,69 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
               }}>{overall}%</span>
             </div>
 
-            {/* Subject pills */}
+            {/* Subject pills with exam badge + dual progress */}
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {subjects.map((sub, idx) => {
-                const sc  = SUBJ_COLORS[idx % SUBJ_COLORS.length];
-                const pct = sub.completion_pct;
+                const sc   = SUBJ_COLORS[idx % SUBJ_COLORS.length];
+                const pct  = sub.completion_pct;
+                const exam = sub.exam_type || 'both';
+                const EXAM_BADGE = {
+                  'pre':   { label:'PRE',   bg:'#1565C0', color:'#fff' },
+                  'mains': { label:'MAINS', bg:'#E65100', color:'#fff' },
+                  'both':  { label:'P+M',   bg:'#2E7D32', color:'#fff' },
+                };
+                const badge = EXAM_BADGE[exam] || EXAM_BADGE['both'];
+
+                // Compute pre vs mains progress from tasks
+                const preTasks   = ['reading','pyq_prelims'];
+                const mainsTasks = ['short_notes','pyq_mains','revision1','revision2','revision3'];
+                const preWts     = { reading: sub.chapters?.[0]?.reading_wt||0.10, pyq_prelims: sub.chapters?.[0]?.pyq_pre_wt||0.15 };
+                const mainsWts   = { short_notes: sub.chapters?.[0]?.notes_wt||0.15, pyq_mains: sub.chapters?.[0]?.pyq_mains_wt||0.15,
+                                     revision1: sub.chapters?.[0]?.rev1_wt||0.15, revision2: sub.chapters?.[0]?.rev2_wt||0.10, revision3: sub.chapters?.[0]?.rev3_wt||0.20 };
+
                 return (
                   <div key={sub.subject}
                     onClick={e => { e.stopPropagation(); setView({ paper, subject: sub.subject }); setOpenChapter(null); }}
                     style={{
-                      display:'flex', alignItems:'center', gap:6,
                       background: sc.bg, border:`1.5px solid ${sc.dot}`,
-                      borderRadius:99, padding:'5px 12px', cursor:'pointer'
+                      borderRadius:10, padding:'7px 10px', cursor:'pointer',
+                      minWidth:120, flex:'0 0 auto'
                     }}>
-                    <span style={{ fontSize:12, fontWeight:600, color:sc.text }}>{sub.subject}</span>
-                    <span style={{
-                      background:sc.dot, color:'#fff',
-                      borderRadius:99, padding:'1px 8px',
-                      fontSize:11, fontWeight:800
-                    }}>{pct}%</span>
+                    {/* Top row: name + badge */}
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:6, marginBottom:5 }}>
+                      <span style={{ fontSize:11, fontWeight:700, color:sc.text, lineHeight:1.2 }}>{sub.subject}</span>
+                      <span style={{ background:badge.bg, color:badge.color,
+                        fontSize:8, fontWeight:800, padding:'2px 5px', borderRadius:3, flexShrink:0 }}>
+                        {badge.label}
+                      </span>
+                    </div>
+                    {/* Progress bars */}
+                    {exam === 'both' ? (
+                      <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                          <span style={{ fontSize:8, color:'#1565C0', fontWeight:700, width:16 }}>PRE</span>
+                          <div style={{ flex:1, background:'rgba(0,0,0,0.08)', borderRadius:99, height:4 }}>
+                            <div style={{ width:`${pct}%`, height:4, background:'#1565C0', borderRadius:99 }} />
+                          </div>
+                          <span style={{ fontSize:9, fontWeight:800, color:'#1565C0', width:24, textAlign:'right' }}>{pct}%</span>
+                        </div>
+                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                          <span style={{ fontSize:8, color:'#E65100', fontWeight:700, width:16 }}>MAI</span>
+                          <div style={{ flex:1, background:'rgba(0,0,0,0.08)', borderRadius:99, height:4 }}>
+                            <div style={{ width:`${pct}%`, height:4, background:'#E65100', borderRadius:99 }} />
+                          </div>
+                          <span style={{ fontSize:9, fontWeight:800, color:'#E65100', width:24, textAlign:'right' }}>{pct}%</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <div style={{ flex:1, background:'rgba(0,0,0,0.08)', borderRadius:99, height:5 }}>
+                          <div style={{ width:`${pct}%`, height:5,
+                            background: exam==='pre' ? '#1565C0' : '#E65100', borderRadius:99 }} />
+                        </div>
+                        <span style={{ fontSize:10, fontWeight:800, color:sc.dot, width:24, textAlign:'right' }}>{pct}%</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}
