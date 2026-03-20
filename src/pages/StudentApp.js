@@ -2862,31 +2862,19 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
                 </div>
                 <div style={{ fontSize:10, color:sc.text, opacity:0.6, marginBottom:8 }}>{subj.chapters.length} chapters</div>
                 {/* Progress bars */}
-                {(subj.exam_type === 'both') ? (
-                  <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                      <span style={{ fontSize:8, color:'#1565C0', fontWeight:700, width:14 }}>P</span>
-                      <div style={{ flex:1, background:'rgba(0,0,0,0.12)', borderRadius:99, height:4 }}>
-                        <div style={{ width:`${pct}%`, height:4, background:'#1565C0', borderRadius:99 }} />
+                {/* Single progress bar with exam-appropriate color */}
+                {(() => {
+                  const exam     = subj.exam_type || 'both';
+                  const barColor = exam==='mains' ? '#E65100' : exam==='pre' ? '#1565C0' : sc.dot;
+                  return (
+                    <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                      <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:5 }}>
+                        <div style={{ width:`${pct}%`, height:5, background:barColor, borderRadius:99 }} />
                       </div>
-                      <span style={{ fontSize:9, fontWeight:800, color:'#1565C0', width:22, textAlign:'right' }}>{pct}%</span>
+                      <span style={{ fontSize:10, fontWeight:800, color:barColor, width:24, textAlign:'right' }}>{pct}%</span>
                     </div>
-                    <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                      <span style={{ fontSize:8, color:'#E65100', fontWeight:700, width:14 }}>M</span>
-                      <div style={{ flex:1, background:'rgba(0,0,0,0.12)', borderRadius:99, height:4 }}>
-                        <div style={{ width:`${pct}%`, height:4, background:'#E65100', borderRadius:99 }} />
-                      </div>
-                      <span style={{ fontSize:9, fontWeight:800, color:'#E65100', width:22, textAlign:'right' }}>{pct}%</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                    <div style={{ flex:1, background:'rgba(0,0,0,0.12)', borderRadius:99, height:5 }}>
-                      <div style={{ width:`${pct}%`, height:5,
-                        background: subj.exam_type==='pre' ? '#1565C0' : '#E65100', borderRadius:99 }} />
-                    </div>
-                    <span style={{ fontSize:10, fontWeight:800, color:sc.dot, width:24, textAlign:'right' }}>{pct}%</span>
-                  </div>
+                  );
+                })()}
                 )}
               </div>
             );
@@ -2923,7 +2911,7 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
               }}>{overall}%</span>
             </div>
 
-            {/* Subject pills with exam badge + dual progress */}
+            {/* Subject pills — exam badge + single progress bar */}
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {subjects.map((sub, idx) => {
                 const sc   = SUBJ_COLORS[idx % SUBJ_COLORS.length];
@@ -2934,58 +2922,29 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
                   'mains': { label:'MAINS', bg:'#E65100', color:'#fff' },
                   'both':  { label:'P+M',   bg:'#2E7D32', color:'#fff' },
                 };
-                const badge = EXAM_BADGE[exam] || EXAM_BADGE['both'];
-
-                // Compute pre vs mains progress from tasks
-                const preTasks   = ['reading','pyq_prelims'];
-                const mainsTasks = ['short_notes','pyq_mains','revision1','revision2','revision3'];
-                const preWts     = { reading: sub.chapters?.[0]?.reading_wt||0.10, pyq_prelims: sub.chapters?.[0]?.pyq_pre_wt||0.15 };
-                const mainsWts   = { short_notes: sub.chapters?.[0]?.notes_wt||0.15, pyq_mains: sub.chapters?.[0]?.pyq_mains_wt||0.15,
-                                     revision1: sub.chapters?.[0]?.rev1_wt||0.15, revision2: sub.chapters?.[0]?.rev2_wt||0.10, revision3: sub.chapters?.[0]?.rev3_wt||0.20 };
-
+                const badge    = EXAM_BADGE[exam] || EXAM_BADGE['both'];
+                const barColor = exam==='mains' ? '#E65100' : exam==='pre' ? '#1565C0' : sc.dot;
                 return (
                   <div key={sub.subject}
                     onClick={e => { e.stopPropagation(); setView({ paper, subject: sub.subject }); setOpenChapter(null); }}
                     style={{
                       background: sc.bg, border:`1.5px solid ${sc.dot}`,
                       borderRadius:10, padding:'7px 10px', cursor:'pointer',
-                      minWidth:120, flex:'0 0 auto'
+                      minWidth:110, flex:'0 0 auto'
                     }}>
-                    {/* Top row: name + badge */}
-                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:6, marginBottom:5 }}>
+                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:6, marginBottom:6 }}>
                       <span style={{ fontSize:11, fontWeight:700, color:sc.text, lineHeight:1.2 }}>{sub.subject}</span>
                       <span style={{ background:badge.bg, color:badge.color,
                         fontSize:8, fontWeight:800, padding:'2px 5px', borderRadius:3, flexShrink:0 }}>
                         {badge.label}
                       </span>
                     </div>
-                    {/* Progress bars */}
-                    {exam === 'both' ? (
-                      <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                          <span style={{ fontSize:8, color:'#1565C0', fontWeight:700, width:16 }}>PRE</span>
-                          <div style={{ flex:1, background:'rgba(0,0,0,0.08)', borderRadius:99, height:4 }}>
-                            <div style={{ width:`${pct}%`, height:4, background:'#1565C0', borderRadius:99 }} />
-                          </div>
-                          <span style={{ fontSize:9, fontWeight:800, color:'#1565C0', width:24, textAlign:'right' }}>{pct}%</span>
-                        </div>
-                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                          <span style={{ fontSize:8, color:'#E65100', fontWeight:700, width:16 }}>MAI</span>
-                          <div style={{ flex:1, background:'rgba(0,0,0,0.08)', borderRadius:99, height:4 }}>
-                            <div style={{ width:`${pct}%`, height:4, background:'#E65100', borderRadius:99 }} />
-                          </div>
-                          <span style={{ fontSize:9, fontWeight:800, color:'#E65100', width:24, textAlign:'right' }}>{pct}%</span>
-                        </div>
+                    <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                      <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:5 }}>
+                        <div style={{ width:`${pct}%`, height:5, background:barColor, borderRadius:99 }} />
                       </div>
-                    ) : (
-                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                        <div style={{ flex:1, background:'rgba(0,0,0,0.08)', borderRadius:99, height:5 }}>
-                          <div style={{ width:`${pct}%`, height:5,
-                            background: exam==='pre' ? '#1565C0' : '#E65100', borderRadius:99 }} />
-                        </div>
-                        <span style={{ fontSize:10, fontWeight:800, color:sc.dot, width:24, textAlign:'right' }}>{pct}%</span>
-                      </div>
-                    )}
+                      <span style={{ fontSize:10, fontWeight:800, color:barColor, width:22, textAlign:'right' }}>{pct}%</span>
+                    </div>
                   </div>
                 );
               })}
