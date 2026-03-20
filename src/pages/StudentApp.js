@@ -2646,28 +2646,30 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
     { bg:'#EDE7F6', text:'#4527A0', dot:'#512DA8' },
   ];
 
-  // Task definitions — labels and emoji per key
-  const isEssay = subj.gs_paper === 'Essay';
-  const TASK_DEFS = isEssay ? [
-    { key:'reading',     label:'Class/Brainstorm', emoji:'🧠', wtKey:'reading_wt'    },
-    { key:'pyq_mains',   label:'Mains PYQ',        emoji:'📌', wtKey:'pyq_mains_wt'  },
-    { key:'short_notes', label:'Sh. Notes',         emoji:'📝', wtKey:'notes_wt'      },
-    { key:'revision1',   label:'Set 1',             emoji:'✏️', wtKey:'rev1_wt'       },
-    { key:'revision2',   label:'Set 2',             emoji:'✏️', wtKey:'rev2_wt'       },
-    { key:'revision3',   label:'Set 3',             emoji:'✏️', wtKey:'rev3_wt'       },
-  ] : [
-    { key:'reading',     label:'Study/Reading', emoji:'📖', wtKey:'reading_wt'    },
-    { key:'short_notes', label:'Short Notes',   emoji:'📝', wtKey:'notes_wt'      },
-    { key:'pyq_prelims', label:'PYQ Pre',       emoji:'📋', wtKey:'pyq_pre_wt'    },
-    { key:'pyq_mains',   label:'PYQ Mains',     emoji:'📌', wtKey:'pyq_mains_wt'  },
-    { key:'revision1',   label:'Revision 1',    emoji:'🔁', wtKey:'rev1_wt'       },
-    { key:'revision2',   label:'Revision 2',    emoji:'🔂', wtKey:'rev2_wt'       },
-    { key:'revision3',   label:'Revision 3',    emoji:'📚', wtKey:'rev3_wt'       },
-  ];
+  // Task definitions — function so it can use gs_paper context
+  function getTaskDefs(gs_paper) {
+    if (gs_paper === 'Essay') return [
+      { key:'reading',     label:'Class/Brainstorm', emoji:'🧠', wtKey:'reading_wt'    },
+      { key:'pyq_mains',   label:'Mains PYQ',        emoji:'📌', wtKey:'pyq_mains_wt'  },
+      { key:'short_notes', label:'Sh. Notes',         emoji:'📝', wtKey:'notes_wt'      },
+      { key:'revision1',   label:'Set 1',             emoji:'✏️', wtKey:'rev1_wt'       },
+      { key:'revision2',   label:'Set 2',             emoji:'✏️', wtKey:'rev2_wt'       },
+      { key:'revision3',   label:'Set 3',             emoji:'✏️', wtKey:'rev3_wt'       },
+    ];
+    return [
+      { key:'reading',     label:'Study/Reading', emoji:'📖', wtKey:'reading_wt'    },
+      { key:'short_notes', label:'Short Notes',   emoji:'📝', wtKey:'notes_wt'      },
+      { key:'pyq_prelims', label:'PYQ Pre',       emoji:'📋', wtKey:'pyq_pre_wt'    },
+      { key:'pyq_mains',   label:'PYQ Mains',     emoji:'📌', wtKey:'pyq_mains_wt'  },
+      { key:'revision1',   label:'Revision 1',    emoji:'🔁', wtKey:'rev1_wt'       },
+      { key:'revision2',   label:'Revision 2',    emoji:'🔂', wtKey:'rev2_wt'       },
+      { key:'revision3',   label:'Revision 3',    emoji:'📚', wtKey:'rev3_wt'       },
+    ];
+  }
 
   // Get active tasks for a chapter — only show tasks with weight > 0
-  function getChapterTasks(ch) {
-    return TASK_DEFS.filter(t => Number(ch[t.wtKey] || 0) > 0);
+  function getChapterTasks(ch, gs_paper) {
+    return getTaskDefs(gs_paper).filter(t => Number(ch[t.wtKey] || 0) > 0);
   }
 
   async function toggleTask(subject, chapter, field, current) {
