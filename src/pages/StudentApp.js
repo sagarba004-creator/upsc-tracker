@@ -2647,7 +2647,15 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   ];
 
   // Task definitions — labels and emoji per key
-  const TASK_DEFS = [
+  const isEssay = subj.gs_paper === 'Essay';
+  const TASK_DEFS = isEssay ? [
+    { key:'reading',     label:'Class/Brainstorm', emoji:'🧠', wtKey:'reading_wt'    },
+    { key:'pyq_mains',   label:'Mains PYQ',        emoji:'📌', wtKey:'pyq_mains_wt'  },
+    { key:'short_notes', label:'Sh. Notes',         emoji:'📝', wtKey:'notes_wt'      },
+    { key:'revision1',   label:'Set 1',             emoji:'✏️', wtKey:'rev1_wt'       },
+    { key:'revision2',   label:'Set 2',             emoji:'✏️', wtKey:'rev2_wt'       },
+    { key:'revision3',   label:'Set 3',             emoji:'✏️', wtKey:'rev3_wt'       },
+  ] : [
     { key:'reading',     label:'Study/Reading', emoji:'📖', wtKey:'reading_wt'    },
     { key:'short_notes', label:'Short Notes',   emoji:'📝', wtKey:'notes_wt'      },
     { key:'pyq_prelims', label:'PYQ Pre',       emoji:'📋', wtKey:'pyq_pre_wt'    },
@@ -2723,6 +2731,11 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
             {subj.completion_pct}%
           </div>
         </div>
+
+        {/* Essay subject-level heatmap dropdown */}
+        {subj.gs_paper === 'Essay' && (
+          <EssayHeatmap subject={subj.subject} chapters={subj.chapters} />
+        )}
 
         {/* Chapter pills grid */}
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -2802,7 +2815,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                       );
                     })()}
                     {/* Micro-topic heatmap */}
-                    {!['CSAT','Essay'].includes(subj.gs_paper) && <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} />}
+                    {subj.gs_paper !== 'CSAT' && <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} />}
                   </div>
                 )}
               </div>
@@ -3027,6 +3040,80 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   );
 }
 
+
+// ── Essay Subject-Level Heatmap ──────────────────────────────
+function EssayHeatmap({ subject, chapters }) {
+  const [open, setOpen] = useState(false);
+
+  // Gather all topics from all chapters
+  const allTopics = chapters.flatMap(ch =>
+    (ch.micro_topics || []).map(t => ({ ...t, chapter: ch.chapter }))
+  );
+
+  const priorityConfig = {
+    'High':     { bg:'#C62828', color:'#fff', label:'HIGH' },
+    'Med-High': { bg:'#D97706', color:'#fff', label:'MED-H' },
+    'Medium':   { bg:'#A08000', color:'#fff', label:'MED' },
+    'Low':      { bg:'#388E3C', color:'#fff', label:'LOW' },
+  };
+
+  return (
+    <div style={{ marginBottom:10 }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width:'100%', display:'flex', alignItems:'center',
+          justifyContent:'space-between', padding:'8px 12px',
+          background:'#F8F9FA', border:'1.5px solid #E0E6EF',
+          borderRadius: open ? '8px 8px 0 0' : 8,
+          cursor:'pointer', transition:'all 0.2s'
+        }}>
+        <span style={{ fontSize:12, fontWeight:700, color:'#4B5563' }}>
+          🔥 Heatmap {allTopics.length > 0 ? `(${allTopics.length})` : ''}
+        </span>
+        <span style={{ fontSize:11, color:'#9CA3AF', transform: open ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}>▼</span>
+      </button>
+      {open && (
+        <div style={{ border:'1.5px solid #E0E6EF', borderTop:'none', borderRadius:'0 0 8px 8px', padding:10, background:'#FAFAFA' }}>
+          {allTopics.length === 0 ? (
+            <div style={{ fontSize:11, color:'#9CA3AF', fontStyle:'italic' }}>No topics defined yet</div>
+          ) : (
+            chapters.map(ch => {
+              const topics = ch.micro_topics || [];
+              if (!topics.length) return null;
+              return (
+                <div key={ch.chapter} style={{ marginBottom:10 }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:'#6B7280', marginBottom:5, textTransform:'uppercase', letterSpacing:'0.05em' }}>
+                    {ch.chapter}
+                  </div>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                    {topics.map((t, i) => {
+                      const cfg = priorityConfig[t.pyq_priority] || priorityConfig['Medium'];
+                      return (
+                        <div key={i} style={{
+                          background:`${cfg.bg}18`, border:`1.5px solid ${cfg.bg}`,
+                          borderLeft:`4px solid ${cfg.bg}`, borderRadius:6,
+                          padding:'5px 8px', fontSize:11, color:'#1A1A2E',
+                          lineHeight:1.4, flex:'1 1 160px'
+                        }}>
+                          <span style={{ display:'inline-block', background:cfg.bg, color:cfg.color,
+                            fontSize:8, fontWeight:700, padding:'1px 4px', borderRadius:3, marginRight:5 }}>
+                            {cfg.label}
+                          </span>
+                          {t.micro_topic}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Micro Topic Heatmap ──────────────────────────────────────
 function MicroTopicHeatmap({ subject, chapter }) {
