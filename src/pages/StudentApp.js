@@ -2392,7 +2392,7 @@ export default function StudentApp({ user, onLogout }) {
         ) : (
           <>
             {tab === 'home'    && <HomeTab    dashboard={dashboard} consistency={consistency} user={user} />}
-            {tab === 'subjects'&& <SubjectsTab dashboard={dashboard} user={user} onUpdate={loadDashboard} />}
+            {tab === 'subjects'&& <SubjectsTab dashboard={dashboard} user={user} onUpdate={loadDashboard} gsSummary={dashboard?.gs_summary} />}
             {tab === 'daily'   && <DailyTab   dashboard={dashboard} user={user} onUpdate={loadDashboard} consistency={consistency} />}
             {tab === 'tests'   && <TestsTab   user={user} />}
           </>
@@ -2611,7 +2611,7 @@ function HomeTab({ dashboard, consistency, user }) {
 
 
 // ── Subjects Tab ──────────────────────────────────────────────
-function SubjectsTab({ dashboard, user, onUpdate }) {
+function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   const [localData, setLocalData] = useState(null);
   const [saving, setSaving]       = useState('');
   const [view, setView]           = useState(null); // null | { paper } | { paper, subject }
@@ -2844,38 +2844,60 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
                   transition:'box-shadow 0.15s',
                   boxShadow:'0 2px 6px rgba(0,0,0,0.08)'
                 }}>
-                {/* Subject name + exam badge */}
-                <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:6 }}>
+                {/* Subject name + badge + dominant % pill */}
+                <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:4 }}>
                   <div style={{ fontSize:13, fontWeight:700, color:sc.text, lineHeight:1.3, flex:1 }}>
                     {subj.subject}
                   </div>
                   {(() => {
                     const exam = subj.exam_type || 'both';
-                    const BADGES = {
-                      'pre':   { label:'PRE',   bg:'#1565C0' },
-                      'mains': { label:'MAINS', bg:'#E65100' },
-                      'both':  { label:'P+M',   bg:'#2E7D32' },
-                    };
-                    const b = BADGES[exam] || BADGES['both'];
-                    return <span style={{ background:b.bg, color:'#fff', fontSize:8, fontWeight:800, padding:'2px 5px', borderRadius:3, marginLeft:4, flexShrink:0 }}>{b.label}</span>;
+                    const domPct = exam==='pre' ? (subj.pre_pct||0) : exam==='mains' ? (subj.mains_pct||0) : (subj.completion_pct||0);
+                    const pillColor = exam==='pre' ? '#1565C0' : exam==='mains' ? '#E65100' : sc.dot;
+                    return (
+                      <span style={{ background:pillColor, color:'#fff', fontSize:11, fontWeight:800,
+                        padding:'3px 9px', borderRadius:99, marginLeft:6, flexShrink:0 }}>
+                        {domPct}%
+                      </span>
+                    );
                   })()}
                 </div>
-                <div style={{ fontSize:10, color:sc.text, opacity:0.6, marginBottom:8 }}>{subj.chapters.length} chapters</div>
+                {/* Exam badge + chapter count */}
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
+                  {(() => {
+                    const exam = subj.exam_type || 'both';
+                    const BADGES = { 'pre':{ label:'PRE', bg:'#1565C0' }, 'mains':{ label:'MAINS', bg:'#E65100' }, 'both':{ label:'P+M', bg:'#2E7D32' } };
+                    const b = BADGES[exam] || BADGES['both'];
+                    return <span style={{ background:b.bg, color:'#fff', fontSize:8, fontWeight:800, padding:'2px 5px', borderRadius:3 }}>{b.label}</span>;
+                  })()}
+                  <span style={{ fontSize:10, color:sc.text, opacity:0.6 }}>{subj.chapters.length} chapters</span>
+                </div>
                 {/* Progress bars */}
-                {/* Single progress bar with exam-appropriate color */}
-                {(() => {
-                  const exam     = subj.exam_type || 'both';
-                  const barColor = exam==='mains' ? '#E65100' : exam==='pre' ? '#1565C0' : sc.dot;
-                  return (
+                {subj.exam_type === 'both' ? (
+                  <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
                     <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                      <span style={{ fontSize:9, color:'#1565C0', fontWeight:700, width:14 }}>P</span>
                       <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:5 }}>
-                        <div style={{ width:`${pct}%`, height:5, background:barColor, borderRadius:99 }} />
+                        <div style={{ width:`${subj.pre_pct||0}%`, height:5, background:'#1565C0', borderRadius:99 }} />
                       </div>
-                      <span style={{ fontSize:10, fontWeight:800, color:barColor, width:24, textAlign:'right' }}>{pct}%</span>
+                      <span style={{ fontSize:9, fontWeight:800, color:'#1565C0', width:22, textAlign:'right' }}>{subj.pre_pct||0}%</span>
                     </div>
-                  );
-                })()}
+                    <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                      <span style={{ fontSize:9, color:'#E65100', fontWeight:700, width:14 }}>M</span>
+                      <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:5 }}>
+                        <div style={{ width:`${subj.mains_pct||0}%`, height:5, background:'#E65100', borderRadius:99 }} />
+                      </div>
+                      <span style={{ fontSize:9, fontWeight:800, color:'#E65100', width:22, textAlign:'right' }}>{subj.mains_pct||0}%</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                    <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:5 }}>
+                      <div style={{ width:`${subj.exam_type==='pre' ? (subj.pre_pct||0) : (subj.mains_pct||0)}%`, height:5,
+                        background: subj.exam_type==='pre' ? '#1565C0' : '#E65100', borderRadius:99 }} />
+                    </div>
+                  </div>
                 )}
+
               </div>
             );
           })}
@@ -2901,15 +2923,45 @@ function SubjectsTab({ dashboard, user, onUpdate }) {
               boxShadow:'0 2px 10px rgba(0,0,0,0.08)', cursor:'pointer',
               borderLeft:`5px solid ${col.top}`
             }}>
-            {/* Paper header */}
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+            {/* Paper header with overall % pill */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
               <div style={{ fontSize:16, fontWeight:800, color:col.top }}>{paper}</div>
               <span style={{
                 background:col.bg, color:col.text,
                 border:`1.5px solid ${col.pill}`,
-                padding:'5px 16px', borderRadius:99, fontSize:16, fontWeight:800
+                padding:'4px 14px', borderRadius:99, fontSize:15, fontWeight:800
               }}>{overall}%</span>
             </div>
+            {/* Pre / Mains readiness bars */}
+            {(() => {
+              const gs = dashboard?.gs_summary?.find(g => g.gs_paper === paper);
+              const prePct   = gs?.pre_pct   || 0;
+              const mainsPct = gs?.mains_pct || 0;
+              const hasPre   = subjects.some(s => (s.exam_type||'both') !== 'mains');
+              const hasMains = subjects.some(s => (s.exam_type||'both') !== 'pre');
+              return (
+                <div style={{ display:'flex', flexDirection:'column', gap:4, marginBottom:12 }}>
+                  {hasPre && (
+                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <span style={{ fontSize:9, fontWeight:700, color:'#1565C0', width:32 }}>PRE</span>
+                      <div style={{ flex:1, background:'#E0E6EF', borderRadius:99, height:6 }}>
+                        <div style={{ width:`${prePct}%`, height:6, background:'#1565C0', borderRadius:99 }} />
+                      </div>
+                      <span style={{ fontSize:10, fontWeight:800, color:'#1565C0', width:28, textAlign:'right' }}>{prePct}%</span>
+                    </div>
+                  )}
+                  {hasMains && (
+                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <span style={{ fontSize:9, fontWeight:700, color:'#E65100', width:32 }}>MAINS</span>
+                      <div style={{ flex:1, background:'#E0E6EF', borderRadius:99, height:6 }}>
+                        <div style={{ width:`${mainsPct}%`, height:6, background:'#E65100', borderRadius:99 }} />
+                      </div>
+                      <span style={{ fontSize:10, fontWeight:800, color:'#E65100', width:28, textAlign:'right' }}>{mainsPct}%</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Subject pills — exam badge + single progress bar */}
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
