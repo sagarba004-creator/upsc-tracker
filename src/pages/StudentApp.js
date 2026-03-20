@@ -2802,7 +2802,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                       );
                     })()}
                     {/* Micro-topic heatmap */}
-                    <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} />
+                    {!['CSAT','Essay'].includes(subj.gs_paper) && <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} />}
                   </div>
                 )}
               </div>
