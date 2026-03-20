@@ -2991,12 +2991,31 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                         {badge.label}
                       </span>
                     </div>
-                    <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                      <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:5 }}>
-                        <div style={{ width:`${pct}%`, height:5, background:barColor, borderRadius:99 }} />
+                    {exam === 'both' ? (
+                      <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                          <span style={{ fontSize:8, color:'#1565C0', fontWeight:700, width:12 }}>P</span>
+                          <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:4 }}>
+                            <div style={{ width:`${sub.pre_pct||0}%`, height:4, background:'#1565C0', borderRadius:99 }} />
+                          </div>
+                          <span style={{ fontSize:9, fontWeight:800, color:'#1565C0', width:20, textAlign:'right' }}>{sub.pre_pct||0}%</span>
+                        </div>
+                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                          <span style={{ fontSize:8, color:'#E65100', fontWeight:700, width:12 }}>M</span>
+                          <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:4 }}>
+                            <div style={{ width:`${sub.mains_pct||0}%`, height:4, background:'#E65100', borderRadius:99 }} />
+                          </div>
+                          <span style={{ fontSize:9, fontWeight:800, color:'#E65100', width:20, textAlign:'right' }}>{sub.mains_pct||0}%</span>
+                        </div>
                       </div>
-                      <span style={{ fontSize:10, fontWeight:800, color:barColor, width:22, textAlign:'right' }}>{pct}%</span>
-                    </div>
+                    ) : (
+                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                        <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:5 }}>
+                          <div style={{ width:`${exam==='pre'?(sub.pre_pct||0):(sub.mains_pct||0)}%`, height:5, background:barColor, borderRadius:99 }} />
+                        </div>
+                        <span style={{ fontSize:10, fontWeight:800, color:barColor, width:22, textAlign:'right' }}>{exam==='pre'?(sub.pre_pct||0):(sub.mains_pct||0)}%</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}
