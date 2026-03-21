@@ -3266,75 +3266,162 @@ function BreadCrumb({ items, onBack, color }) {
 
 // ── Daily Tab ─────────────────────────────────────────────────
 function DailyTab({ dashboard, user, onUpdate, consistency }) {
-  const today = dashboard?.today_log;
+  // Date picker — default to today in IST
+  const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // yyyy-MM-dd
+  const [selectedDate, setSelectedDate] = useState(todayIST);
   const [vals, setVals] = useState({
-    editorials_mins:      today?.editorials_mins      || '',
-    current_affairs_mins: today?.current_affairs_mins || '',
-    static_mins:          today?.static_mins          || '',
-    csat_mins:            today?.csat_mins            || '',
+    editorials_mins: '', current_affairs_mins: '', static_mins: '', csat_mins: '',
   });
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved]   = useState(false);
+  const [loadingDate, setLoadingDate] = useState(false);
+  const [saving, setSaving]   = useState(false);
+  const [saved, setSaved]     = useState(false);
+  const [isEdit, setIsEdit]   = useState(false); // true if entry exists for this date
 
   const TASKS_DAILY = [
-    { key: 'editorials_mins',      label: '📰 Editorials',      optimal: dashboard?.config?.editorials_optimal_mins || 20, unit: 'min' },
-    { key: 'current_affairs_mins', label: '🗞️ Current Affairs', optimal: dashboard?.config?.current_affairs_optimal_mins || 60, unit: 'min' },
-    { key: 'static_mins',          label: '📚 Static (GS+Opt)', optimal: dashboard?.config?.static_optimal_mins || 150, unit: 'min' },
-    { key: 'csat_mins',            label: '🔢 CSAT',            optimal: dashboard?.config?.csat_optimal_mins || 30, unit: 'min' },
+    { key: 'editorials_mins',      label: '📰 Editorials',      optimal: dashboard?.config?.editorials_optimal_mins || 20 },
+    { key: 'current_affairs_mins', label: '🗞️ Current Affairs', optimal: dashboard?.config?.current_affairs_optimal_mins || 60 },
+    { key: 'static_mins',          label: '📚 Static (GS+Opt)', optimal: dashboard?.config?.static_optimal_mins || 150 },
+    { key: 'csat_mins',            label: '🔢 CSAT',            optimal: dashboard?.config?.csat_optimal_mins || 30 },
   ];
+
+  // Load existing entry whenever date changes
+  useEffect(() => {
+    async function loadEntry() {
+      setLoadingDate(true);
+      try {
+        const entry = await api('getDailyLog', { phone: user.phone, date: selectedDate });
+        if (entry) {
+          setVals({
+            editorials_mins:      entry.editorials_mins      || '',
+            current_affairs_mins: entry.current_affairs_mins || '',
+            static_mins:          entry.static_mins          || '',
+            csat_mins:            entry.csat_mins            || '',
+          });
+          setIsEdit(true);
+        } else {
+          setVals({ editorials_mins: '', current_affairs_mins: '', static_mins: '', csat_mins: '' });
+          setIsEdit(false);
+        }
+      } catch { setVals({ editorials_mins: '', current_affairs_mins: '', static_mins: '', csat_mins: '' }); setIsEdit(false); }
+      finally { setLoadingDate(false); }
+    }
+    loadEntry();
+  }, [selectedDate, user.phone]);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
     try {
-      await api('logDailyTask', { phone: user.phone, ...vals });
+      await api('logDailyTask', { phone: user.phone, date: selectedDate, ...vals });
       await onUpdate(true);
       setSaved(true);
+      setIsEdit(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch (err) { alert('Failed to save'); }
+    } catch { alert('Failed to save'); }
     finally { setSaving(false); }
   }
+
+  // Total score for the selected day
+  const totalPct = Math.min(100, Math.round(
+    TASKS_DAILY.reduce((sum, t) => {
+      const val = Number(vals[t.key]) || 0;
+      return sum + Math.min(val / t.optimal, 1) * (100 / TASKS_DAILY.length);
+    }, 0)
+  ));
+  const isToday  = selectedDate === todayIST;
+  const isFuture = selectedDate > todayIST;
 
   return (
     <>
       <div className="card">
-        <div className="card-title">📅 Today's Study Log</div>
-        <form onSubmit={handleSubmit}>
-          {TASKS_DAILY.map(t => {
-            const val = Number(vals[t.key]) || 0;
-            const pct = Math.min(100, Math.round((val / t.optimal) * 100));
-            return (
-              <div key={t.key} style={{ marginBottom: 18 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <label style={{ fontSize: 14, fontWeight: 500 }}>{t.label}</label>
-                  <span style={{ fontSize: 12, color: '#6B7280' }}>Optimal: {t.optimal} min</span>
-                </div>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <input
-                    type="number" min="0" max="600"
-                    className="input-field"
-                    style={{ width: 90, flexShrink: 0 }}
-                    placeholder="0"
-                    value={vals[t.key]}
-                    onChange={e => setVals(v => ({ ...v, [t.key]: e.target.value }))}
-                  />
-                  <div style={{ flex: 1 }}>
-                    <div className="progress-bar-wrap">
-                      <div className="progress-bar-fill" style={{
-                        width: `${pct}%`,
-                        background: pct >= 100 ? '#2E7D32' : pct >= 60 ? '#F5A623' : '#E65100'
-                      }} />
+        {/* Header with date picker */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div className="card-title" style={{ marginBottom: 0 }}>
+            {isToday ? "📅 Today's Study Log" : `📅 Log for ${selectedDate}`}
+          </div>
+          {isEdit && !isToday && (
+            <span style={{ fontSize: 11, background: '#E3F0FF', color: '#1565C0',
+              padding: '3px 8px', borderRadius: 99, fontWeight: 600 }}>Editing</span>
+          )}
+        </div>
+
+        {/* Date selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+          <button onClick={() => {
+            const d = new Date(selectedDate); d.setDate(d.getDate() - 1);
+            setSelectedDate(d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }));
+          }} style={{ background: '#F3F4F6', border: 'none', borderRadius: 8, padding: '7px 12px',
+            fontSize: 16, cursor: 'pointer', fontWeight: 700 }}>‹</button>
+          <input type="date" value={selectedDate} max={todayIST}
+            onChange={e => setSelectedDate(e.target.value)}
+            style={{ flex: 1, padding: '8px 10px', border: '1.5px solid #E0E6EF',
+              borderRadius: 8, fontSize: 14, textAlign: 'center', background: '#FAFAFA' }} />
+          <button onClick={() => {
+            if (selectedDate < todayIST) {
+              const d = new Date(selectedDate); d.setDate(d.getDate() + 1);
+              setSelectedDate(d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }));
+            }
+          }} style={{ background: '#F3F4F6', border: 'none', borderRadius: 8, padding: '7px 12px',
+            fontSize: 16, cursor: 'pointer', fontWeight: 700,
+            opacity: selectedDate >= todayIST ? 0.3 : 1 }}>›</button>
+          {!isToday && (
+            <button onClick={() => setSelectedDate(todayIST)}
+              style={{ background: '#E3F0FF', border: 'none', borderRadius: 8, padding: '7px 10px',
+                fontSize: 12, cursor: 'pointer', color: '#1565C0', fontWeight: 600 }}>Today</button>
+          )}
+        </div>
+
+        {loadingDate ? (
+          <div style={{ textAlign: 'center', padding: 24 }}>
+            <span className="spinner spinner-dark" style={{ width: 24, height: 24, display: 'inline-block' }} />
+          </div>
+        ) : isFuture ? (
+          <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 13, padding: 16 }}>
+            Can't log future dates
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            {TASKS_DAILY.map(t => {
+              const val = Number(vals[t.key]) || 0;
+              const pct = Math.min(100, Math.round((val / t.optimal) * 100));
+              return (
+                <div key={t.key} style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <label style={{ fontSize: 14, fontWeight: 500 }}>{t.label}</label>
+                    <span style={{ fontSize: 12, color: '#6B7280' }}>Target: {t.optimal} min</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <input type="number" min="0" max="600" className="input-field"
+                      style={{ width: 90, flexShrink: 0 }} placeholder="0"
+                      value={vals[t.key]}
+                      onChange={e => setVals(v => ({ ...v, [t.key]: e.target.value }))} />
+                    <div style={{ flex: 1 }}>
+                      <div className="progress-bar-wrap">
+                        <div className="progress-bar-fill" style={{
+                          width: `${pct}%`,
+                          background: pct >= 100 ? '#2E7D32' : pct >= 60 ? '#F5A623' : '#E65100'
+                        }} />
+                      </div>
+                      <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>{pct}% of target</div>
                     </div>
-                    <div style={{ fontSize: 11, color: '#6B7280', marginTop: 3 }}>{pct}% of optimal</div>
                   </div>
                 </div>
+              );
+            })}
+
+            {/* All-targets-met indicator */}
+            {totalPct >= 100 && (
+              <div style={{ background: '#E8F5E9', border: '1.5px solid #2E7D32', borderRadius: 8,
+                padding: '8px 12px', marginBottom: 12, fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>
+                ✅ All targets met — this day counts towards your consistency!
               </div>
-            );
-          })}
-          <button className="btn btn-primary" type="submit" disabled={saving}>
-            {saving ? <span className="spinner" /> : saved ? '✓ Saved!' : 'Save Today\'s Log'}
-          </button>
-        </form>
+            )}
+
+            <button className="btn btn-primary" type="submit" disabled={saving}>
+              {saving ? <span className="spinner" /> : saved ? '✓ Saved!' : isEdit ? 'Update Log' : 'Save Log'}
+            </button>
+          </form>
+        )}
       </div>
 
       {/* Heatmap */}
@@ -3344,21 +3431,39 @@ function DailyTab({ dashboard, user, onUpdate, consistency }) {
           <div className="heatmap">
             {consistency.heatmap.map(d => {
               const s = d.score;
-              const bg = s === null ? '#F0F0F0' : s >= 80 ? '#1B5E20' : s >= 60 ? '#388E3C' : s >= 40 ? '#81C784' : '#C8E6C9';
+              const q = d.qualifying;
+              const bg = s === null ? '#F0F0F0' : q ? '#1B5E20' : s >= 60 ? '#F5A623' : '#FECACA';
               return (
-                <div key={d.date} className="heatmap-cell" style={{ background: bg, color: s !== null && s >= 60 ? '#fff' : '#999' }}
-                  title={`${d.date}: ${s !== null ? s + '%' : 'No log'}`}>
+                <div key={d.date} className="heatmap-cell"
+                  style={{ background: bg, color: s !== null && (q || s >= 60) ? '#fff' : '#999',
+                    cursor: 'pointer' }}
+                  title={`${d.date}: ${s !== null ? s + '% daily score' + (q ? ' ✅ Qualifying' : '') : 'No log'}`}
+                  onClick={() => setSelectedDate(d.date)}>
                   {s !== null ? s : ''}
                 </div>
               );
             })}
           </div>
-          <div style={{ display: 'flex', gap: 6, marginTop: 10, alignItems: 'center', fontSize: 11, color: '#6B7280' }}>
-            <span>Less</span>
-            {['#F0F0F0','#C8E6C9','#81C784','#388E3C','#1B5E20'].map(c => (
-              <div key={c} style={{ width: 14, height: 14, background: c, borderRadius: 3 }} />
-            ))}
-            <span>More</span>
+          <div style={{ display: 'flex', gap: 12, marginTop: 10, alignItems: 'center', fontSize: 11, color: '#6B7280', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <div style={{ width: 12, height: 12, background: '#1B5E20', borderRadius: 3 }} />
+              <span>Qualifying (100%)</span>
+            </div>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <div style={{ width: 12, height: 12, background: '#F5A623', borderRadius: 3 }} />
+              <span>Partial</span>
+            </div>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <div style={{ width: 12, height: 12, background: '#FECACA', borderRadius: 3 }} />
+              <span>Low</span>
+            </div>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <div style={{ width: 12, height: 12, background: '#F0F0F0', borderRadius: 3 }} />
+              <span>No log</span>
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: '#6B7280', marginTop: 8 }}>
+            Tap any cell to edit that day's log
           </div>
         </div>
       )}
@@ -3367,22 +3472,29 @@ function DailyTab({ dashboard, user, onUpdate, consistency }) {
       {consistency && (
         <div className="card">
           <div className="card-title">📊 Consistency Score</div>
+          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 12 }}>
+            Target: 6 qualifying days/week until {consistency.overall.exam_end_date} · {consistency.overall.total_weeks} weeks total
+          </div>
           <div className="stat-grid">
             <div className="stat-box">
-              <div className="val" style={{ color: '#1565C0' }}>{consistency.weekly.consistency_pct}%</div>
+              <div className="val" style={{ color: '#1565C0' }}>{Math.min(100, consistency.weekly.consistency_pct)}%</div>
               <div className="lbl">This Week</div>
+              <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{consistency.weekly.qualifying_days}/6 days</div>
             </div>
             <div className="stat-box">
-              <div className="val" style={{ color: '#E65100' }}>{consistency.monthly.consistency_pct}%</div>
+              <div className="val" style={{ color: '#E65100' }}>{Math.min(100, consistency.monthly.consistency_pct)}%</div>
               <div className="lbl">This Month</div>
+              <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{consistency.monthly.qualifying_days}/{consistency.monthly.target_days} days</div>
             </div>
             <div className="stat-box">
               <div className="val" style={{ color: '#2E7D32' }}>{consistency.overall.consistency_pct}%</div>
               <div className="lbl">Overall</div>
+              <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>{consistency.overall.qualifying_days}/{consistency.overall.target_days} days</div>
             </div>
             <div className="stat-box">
-              <div className="val" style={{ color: '#6A1B9A' }}>{consistency.overall.logged_days}</div>
-              <div className="lbl">Days Logged</div>
+              <div className="val" style={{ color: '#6A1B9A' }}>{Math.min(100, consistency.overall.on_track_pct)}%</div>
+              <div className="lbl">On Track</div>
+              <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>vs target so far</div>
             </div>
           </div>
         </div>
@@ -3415,57 +3527,25 @@ function TestsTab({ user }) {
     e.preventDefault(); setSaving(true);
     try {
       const testType = adding.series === 'CMT' ? 'cmt' : adding.series === 'AWP' ? 'awp' : adding.category;
-      // If editing, use updateTestScore; otherwise logTestScore
-      const action = adding.editRowId ? 'updateTestScore' : 'logTestScore';
-      await api(action, { phone: user.phone, test_type: testType, row_id: adding.editRowId || undefined, ...form });
+      await api('logTestScore', { phone: user.phone, test_type: testType, ...form });
       await loadScores(); setAdding(null); setForm({});
     } catch { alert('Failed to save. Please try again.'); }
     finally { setSaving(false); }
   }
 
-  async function deleteTest(testType, rowId) {
-    if (!window.confirm('Delete this test entry?')) return;
-    try {
-      await api('deleteTestScore', { phone: user.phone, test_type: testType, row_id: rowId });
-      await loadScores();
-    } catch { alert('Failed to delete. Please try again.'); }
-  }
-
-  function startEdit(sec, series, entry) {
-    const testType = series === 'CMT' ? 'cmt' : series === 'AWP' ? 'awp' : sec.key;
-    setAdding({ category: sec.key, series, cmtKey: sec.cmtKey, editRowId: entry.row_id, testType });
-    setForm({
-      test_code: entry.test_code,
-      test_name: entry.test_name,
-      marks_total: entry.marks_total,
-      marks_scored: entry.marks_scored,
-      attempted: entry.attempted,
-      chapter: entry.chapter,
-      mastery_status: entry.mastery_status,
-      subject_name: entry.subject_name,
-      questions_attempted: entry.questions_attempted,
-    });
-  }
-
   if (loading) return <div style={{ textAlign:'center', padding:60 }}><div className="spinner spinner-dark" style={{ width:30, height:30, margin:'0 auto' }}/></div>;
 
   const SECTIONS = [
-    { key:'gs_prelims',   label:'📝 GS Prelims Tests',      scoreKey:'prelims', hasCMT:true,  cmtKey:'cmt_gs',   hasScore:true  },
-    { key:'csat_prelims', label:'📝 CSAT Prelims Tests',    scoreKey:'csat',    hasCMT:true,  cmtKey:'cmt_csat', hasScore:true  },
-    { key:'mains',        label:'📋 Mains Tests',           scoreKey:'mains',   hasCMT:false, cmtKey:null,       hasAWP:true    },
+    { key:'gs_prelims',   label:'📝 GS Prelims Tests',      scoreKey:'prelims', hasCMT:true,  cmtKey:'cmt_gs'   },
+    { key:'csat_prelims', label:'📝 CSAT Prelims Tests',    scoreKey:'csat',    hasCMT:true,  cmtKey:'cmt_csat' },
+    { key:'mains',        label:'📋 Mains Tests',           scoreKey:'mains',   hasCMT:false, cmtKey:null, hasAWP:true },
   ];
 
   return (
     <>
       {SECTIONS.map(sec => (
         <TestSection key={sec.key} section={sec} scores={scores}
-          onAdd={(series) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm({}); }}
-          onEdit={(series, entry) => startEdit(sec, series, entry)}
-          onDelete={(series, entry) => {
-            const testType = series === 'CMT' ? 'cmt' : series === 'AWP' ? 'awp' : sec.key;
-            deleteTest(testType, entry.row_id);
-          }}
-        />
+          onAdd={(series) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm({}); }} />
       ))}
 
       {adding && (
@@ -3475,9 +3555,7 @@ function TestsTab({ user }) {
 
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
               <div style={{ flex:1, fontWeight:700, fontSize:16 }}>
-                {adding.editRowId
-                  ? (adding.series === 'CMT' ? 'Edit CMT Entry' : 'Edit Score')
-                  : (adding.series === 'CMT' ? 'Add CMT Entry' : 'Add Score')}
+                {adding.category==='cmt' ? 'Add CMT Entry' : 'Add Score'}
               </div>
               {adding.series === 'AWP' && (
                 <>
@@ -3575,16 +3653,11 @@ function TestsTab({ user }) {
                     <select className="input-field" required value={form.test_code||''}
                       onChange={e => selectTest(e.target.value)}>
                       <option value="">— Choose a test —</option>
-                      {(TESTS_MASTER[adding.category]||[]).filter(t => t.type===adding.series).map(t => {
-                        // Disable tests already entered (unless we're editing that same test)
-                        const existingScores = scores?.[adding.category==='gs_prelims'?'prelims':adding.category==='csat_prelims'?'csat':'mains'] || [];
-                        const alreadyDone = !adding.editRowId && existingScores.some(r => r.test_code === t.code);
-                        return (
-                          <option key={t.code} value={t.code} disabled={alreadyDone}>
-                            {alreadyDone ? '✓ ' : ''}{t.code} — {t.name.length>45 ? t.name.slice(0,45)+'…' : t.name}
-                          </option>
-                        );
-                      })}
+                      {(TESTS_MASTER[adding.category]||[]).filter(t => t.type===adding.series).map(t => (
+                        <option key={t.code} value={t.code}>
+                          {t.code} — {t.name.length>45 ? t.name.slice(0,45)+'…' : t.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   {form.test_code && (
@@ -3627,25 +3700,14 @@ function TestsTab({ user }) {
 }
 
 // ── Test Section Component ────────────────────────────────────
-function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
+function TestSection({ section, scores, onAdd }) {
   const [activeSeries, setActiveSeries] = useState('LEEP');
   const series = section.hasAWP ? ['LEEP','EDGE','AWP'] : section.hasCMT ? ['LEEP','EDGE','CMT'] : ['LEEP','EDGE'];
 
   const allEntries = scores?.[section.scoreKey] || [];
   const cmtEntries = scores?.cmt || [];
   const awpEntries = scores?.awp || [];
-
-  // Deduplicate by test_code — keep the last entry (highest row_id) per code
-  function dedupe(entries) {
-    const map = new Map();
-    entries.forEach(r => {
-      const key = r.test_code || r.chapter || r.subject_name || String(Math.random());
-      if (!map.has(key) || (r.row_id > map.get(key).row_id)) map.set(key, r);
-    });
-    return Array.from(map.values());
-  }
-
-  const rawFiltered = activeSeries === 'CMT'
+  const filtered = activeSeries === 'CMT'
     ? cmtEntries.filter(r => {
         const cmtList = TESTS_MASTER[section.cmtKey] || [];
         return cmtList.some(c => c.name === r.chapter);
@@ -3657,8 +3719,6 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
         if (activeSeries === 'EDGE') return String(r.test_code||'').startsWith('ES');
         return !String(r.test_code||'').startsWith('ES');
       });
-
-  const filtered = dedupe(rawFiltered);
 
   return (
     <div className="card">
@@ -3673,24 +3733,20 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
           <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:12 }}>
             <button className="btn btn-sm btn-saffron" onClick={() => onAdd('CMT')}>+ Add</button>
           </div>
-          {(scores?.cmt||[]).length ? dedupe(scores.cmt||[]).map((r,i) => (
+          {(scores?.cmt||[]).length ? (scores.cmt||[]).map((r,i) => (
             <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0',
               display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <span style={{ fontSize:14, fontWeight:500 }}>{r.chapter}</span>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':
-                  r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>
-                  {r.mastery_status}
-                </span>
-                <button onClick={() => onEdit('CMT', r)} style={editBtnStyle}>✏️</button>
-                <button onClick={() => onDelete('CMT', r)} style={deleteBtnStyle}>🗑</button>
-              </div>
+              <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':
+                r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>
+                {r.mastery_status}
+              </span>
             </div>
           )) : <div style={{ color:'#6B7280', fontSize:13 }}>No entries yet</div>}
         </>
       ) : (
         <>
-          {/* Series toggle + Add button */}
+          {/* LEEP / EDGE toggle */}
           <div style={{ display:'flex', gap:6, marginBottom:12 }}>
             {series.map(s => {
               const colors = { LEEP:'#1565C0', EDGE:'#2E7D32', CMT:'#6A1B9A', AWP:'#E65100' };
@@ -3714,51 +3770,41 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
 
           {/* Entries */}
           {filtered.length ? filtered.map((r, i) => (
-            <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'10px 0' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:8 }}>
-                {/* Left: code + name */}
+            <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:14, fontWeight:600, color:'#1B3A6B' }}>
+                  <div style={{ fontSize:14, fontWeight:500 }}>
                     {activeSeries === 'CMT' ? r.chapter : activeSeries === 'AWP' ? r.subject_name : r.test_code}
                   </div>
                   {activeSeries !== 'CMT' && activeSeries !== 'AWP' && (
                     <div style={{ fontSize:11, color:'#6B7280', marginTop:1 }}>{r.test_name}</div>
                   )}
                 </div>
-
-                {/* Right: score / status + actions */}
-                <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-                  {activeSeries === 'CMT' ? (
-                    <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>
-                      {r.mastery_status}
-                    </span>
-                  ) : activeSeries === 'AWP' ? (
-                    <div style={{ textAlign:'right' }}>
-                      <div style={{ fontSize:15, fontWeight:700, color:'#E65100' }}>{r.questions_attempted}Q</div>
-                      <div style={{ fontSize:11, color:'#6B7280' }}>
-                        {r.questions_attempted>=40?'100%':r.questions_attempted>=30?'70%':r.questions_attempted>=20?'30%':r.questions_attempted>=10?'10%':'0%'}
-                      </div>
+                {activeSeries === 'CMT' ? (
+                  <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>
+                    {r.mastery_status}
+                  </span>
+                ) : activeSeries === 'AWP' ? (
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ fontSize:15, fontWeight:700, color:'#E65100' }}>{r.questions_attempted}Q</div>
+                    <div style={{ fontSize:11, color:'#6B7280' }}>
+                      {r.questions_attempted>=40?'100%':r.questions_attempted>=30?'70%':r.questions_attempted>=20?'30%':r.questions_attempted>=10?'10%':'0%'}
                     </div>
-                  ) : section.hasScore ? (
-                    <div style={{ textAlign:'right' }}>
-                      <div style={{ fontSize:16, fontWeight:700, color:'#1B3A6B' }}>
-                        {r.marks_scored}<span style={{ fontSize:11, color:'#6B7280' }}>/{r.marks_total}</span>
-                      </div>
-                      <div style={{ fontSize:11, color: getScoreColor(r.marks_scored, r.marks_total) }}>
-                        {r.marks_total > 0 ? Math.round(r.marks_scored/r.marks_total*100) : 0}%
-                      </div>
+                  </div>
+                ) : section.hasScore ? (
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ fontSize:16, fontWeight:700, color:'#1B3A6B' }}>
+                      {r.marks_scored}<span style={{ fontSize:11, color:'#6B7280' }}>/{r.marks_total}</span>
                     </div>
-                  ) : (
-                    /* Mains — show Attempted/Not Done pill only */
-                    <span className={`pill ${r.attempted==='Yes'?'pill-green':'pill-orange'}`}>
-                      {r.attempted==='Yes'?'Done':'Not Done'}
-                    </span>
-                  )}
-
-                  {/* Edit / Delete */}
-                  <button onClick={() => onEdit(activeSeries, r)} style={editBtnStyle} title="Edit">✏️</button>
-                  <button onClick={() => onDelete(activeSeries, r)} style={deleteBtnStyle} title="Delete">🗑</button>
-                </div>
+                    <div style={{ fontSize:11, color: getScoreColor(r.marks_scored, r.marks_total) }}>
+                      {r.marks_total > 0 ? Math.round(r.marks_scored/r.marks_total*100) : 0}%
+                    </div>
+                  </div>
+                ) : (
+                  <span className={`pill ${r.attempted==='Yes'?'pill-green':'pill-orange'}`}>
+                    {r.attempted==='Yes'?'Done':'Not Done'}
+                  </span>
+                )}
               </div>
             </div>
           )) : (
@@ -3771,15 +3817,6 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
     </div>
   );
 }
-
-const editBtnStyle = {
-  background:'#EAF2FB', border:'none', borderRadius:6,
-  padding:'4px 8px', fontSize:13, cursor:'pointer', color:'#1565C0', lineHeight:1
-};
-const deleteBtnStyle = {
-  background:'#FDEBEE', border:'none', borderRadius:6,
-  padding:'4px 8px', fontSize:13, cursor:'pointer', color:'#B00020', lineHeight:1
-};
 
 function getScoreColor(scored, total) {
   if (!total) return '#6B7280';
