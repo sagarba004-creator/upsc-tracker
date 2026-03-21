@@ -3527,25 +3527,51 @@ function TestsTab({ user }) {
     e.preventDefault(); setSaving(true);
     try {
       const testType = adding.series === 'CMT' ? 'cmt' : adding.series === 'AWP' ? 'awp' : adding.category;
-      await api('logTestScore', { phone: user.phone, test_type: testType, ...form });
+      const action = adding.editRowId ? 'updateTestScore' : 'logTestScore';
+      await api(action, { phone: user.phone, test_type: testType, row_id: adding.editRowId || undefined, ...form });
       await loadScores(); setAdding(null); setForm({});
     } catch { alert('Failed to save. Please try again.'); }
     finally { setSaving(false); }
   }
 
+  async function deleteTest(testType, rowId) {
+    if (!window.confirm('Delete this test entry?')) return;
+    try {
+      await api('deleteTestScore', { phone: user.phone, test_type: testType, row_id: rowId });
+      await loadScores();
+    } catch { alert('Failed to delete. Please try again.'); }
+  }
+
+  function startEdit(sec, series, entry) {
+    setAdding({ category: sec.key, series, cmtKey: sec.cmtKey, editRowId: entry.row_id });
+    setForm({
+      test_code: entry.test_code, test_name: entry.test_name,
+      marks_total: entry.marks_total, marks_scored: entry.marks_scored,
+      attempted: entry.attempted, chapter: entry.chapter,
+      mastery_status: entry.mastery_status, subject_name: entry.subject_name,
+      questions_attempted: entry.questions_attempted,
+    });
+  }
+
   if (loading) return <div style={{ textAlign:'center', padding:60 }}><div className="spinner spinner-dark" style={{ width:30, height:30, margin:'0 auto' }}/></div>;
 
   const SECTIONS = [
-    { key:'gs_prelims',   label:'📝 GS Prelims Tests',      scoreKey:'prelims', hasCMT:true,  cmtKey:'cmt_gs'   },
-    { key:'csat_prelims', label:'📝 CSAT Prelims Tests',    scoreKey:'csat',    hasCMT:true,  cmtKey:'cmt_csat' },
-    { key:'mains',        label:'📋 Mains Tests',           scoreKey:'mains',   hasCMT:false, cmtKey:null, hasAWP:true },
+    { key:'gs_prelims',   label:'📝 GS Prelims Tests',      scoreKey:'prelims', hasCMT:true,  cmtKey:'cmt_gs',   hasScore:true },
+    { key:'csat_prelims', label:'📝 CSAT Prelims Tests',    scoreKey:'csat',    hasCMT:true,  cmtKey:'cmt_csat', hasScore:true },
+    { key:'mains',        label:'📋 Mains Tests',           scoreKey:'mains',   hasCMT:false, cmtKey:null,       hasAWP:true   },
   ];
 
   return (
     <>
       {SECTIONS.map(sec => (
         <TestSection key={sec.key} section={sec} scores={scores}
-          onAdd={(series) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm({}); }} />
+          onAdd={(series) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm({}); }}
+          onEdit={(series, entry) => startEdit(sec, series, entry)}
+          onDelete={(series, entry) => {
+            const testType = series === 'CMT' ? 'cmt' : series === 'AWP' ? 'awp' : sec.key;
+            deleteTest(testType, entry.row_id);
+          }}
+        />
       ))}
 
       {adding && (
@@ -3555,7 +3581,9 @@ function TestsTab({ user }) {
 
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
               <div style={{ flex:1, fontWeight:700, fontSize:16 }}>
-                {adding.category==='cmt' ? 'Add CMT Entry' : 'Add Score'}
+                {adding.editRowId
+                  ? (adding.series === 'CMT' ? 'Edit CMT Entry' : 'Edit Score')
+                  : (adding.series === 'CMT' ? 'Add CMT Entry' : 'Add Score')}
               </div>
               {adding.series === 'AWP' && (
                 <>
@@ -3653,11 +3681,15 @@ function TestsTab({ user }) {
                     <select className="input-field" required value={form.test_code||''}
                       onChange={e => selectTest(e.target.value)}>
                       <option value="">— Choose a test —</option>
-                      {(TESTS_MASTER[adding.category]||[]).filter(t => t.type===adding.series).map(t => (
-                        <option key={t.code} value={t.code}>
-                          {t.code} — {t.name.length>45 ? t.name.slice(0,45)+'…' : t.name}
-                        </option>
-                      ))}
+                      {(TESTS_MASTER[adding.category]||[]).filter(t => t.type===adding.series).map(t => {
+                        const existingScores = scores?.[adding.category==='gs_prelims'?'prelims':adding.category==='csat_prelims'?'csat':'mains'] || [];
+                        const alreadyDone = !adding.editRowId && existingScores.some(r => r.test_code === t.code);
+                        return (
+                          <option key={t.code} value={t.code} disabled={alreadyDone}>
+                            {alreadyDone ? '✓ ' : ''}{t.code} — {t.name.length>45 ? t.name.slice(0,45)+'…' : t.name}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
                   {form.test_code && (
@@ -3700,53 +3732,61 @@ function TestsTab({ user }) {
 }
 
 // ── Test Section Component ────────────────────────────────────
-function TestSection({ section, scores, onAdd }) {
+const editBtnStyle = { background:'#EAF2FB', border:'none', borderRadius:6, padding:'4px 8px', fontSize:13, cursor:'pointer', color:'#1565C0', lineHeight:1 };
+const deleteBtnStyle = { background:'#FDEBEE', border:'none', borderRadius:6, padding:'4px 8px', fontSize:13, cursor:'pointer', color:'#B00020', lineHeight:1 };
+
+function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
   const [activeSeries, setActiveSeries] = useState('LEEP');
   const series = section.hasAWP ? ['LEEP','EDGE','AWP'] : section.hasCMT ? ['LEEP','EDGE','CMT'] : ['LEEP','EDGE'];
 
   const allEntries = scores?.[section.scoreKey] || [];
   const cmtEntries = scores?.cmt || [];
   const awpEntries = scores?.awp || [];
-  const filtered = activeSeries === 'CMT'
-    ? cmtEntries.filter(r => {
-        const cmtList = TESTS_MASTER[section.cmtKey] || [];
-        return cmtList.some(c => c.name === r.chapter);
-      })
-    : activeSeries === 'AWP'
-    ? awpEntries
+
+  // Deduplicate by test_code — keep latest row_id per code
+  function dedupe(entries) {
+    const map = new Map();
+    entries.forEach(r => {
+      const key = r.test_code || r.chapter || r.subject_name || String(Math.random());
+      if (!map.has(key) || (r.row_id > map.get(key).row_id)) map.set(key, r);
+    });
+    return Array.from(map.values());
+  }
+
+  const rawFiltered = activeSeries === 'CMT'
+    ? cmtEntries.filter(r => { const cmtList = TESTS_MASTER[section.cmtKey]||[]; return cmtList.some(c => c.name === r.chapter); })
+    : activeSeries === 'AWP' ? awpEntries
     : allEntries.filter(r => {
         if (r.test_label) return r.test_label === activeSeries;
         if (activeSeries === 'EDGE') return String(r.test_code||'').startsWith('ES');
         return !String(r.test_code||'').startsWith('ES');
       });
+  const filtered = dedupe(rawFiltered);
 
   return (
     <div className="card">
-      {/* Header */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
         <div className="card-title" style={{ marginBottom:0 }}>{section.label}</div>
       </div>
 
-      {/* CMT — no LEEP/EDGE, just add button */}
       {section.isCMT ? (
         <>
           <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:12 }}>
             <button className="btn btn-sm btn-saffron" onClick={() => onAdd('CMT')}>+ Add</button>
           </div>
-          {(scores?.cmt||[]).length ? (scores.cmt||[]).map((r,i) => (
-            <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0',
-              display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          {dedupe(scores?.cmt||[]).length ? dedupe(scores?.cmt||[]).map((r,i) => (
+            <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <span style={{ fontSize:14, fontWeight:500 }}>{r.chapter}</span>
-              <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':
-                r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>
-                {r.mastery_status}
-              </span>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>{r.mastery_status}</span>
+                <button onClick={() => onEdit('CMT', r)} style={editBtnStyle}>✏️</button>
+                <button onClick={() => onDelete('CMT', r)} style={deleteBtnStyle}>🗑</button>
+              </div>
             </div>
           )) : <div style={{ color:'#6B7280', fontSize:13 }}>No entries yet</div>}
         </>
       ) : (
         <>
-          {/* LEEP / EDGE toggle */}
           <div style={{ display:'flex', gap:6, marginBottom:12 }}>
             {series.map(s => {
               const colors = { LEEP:'#1565C0', EDGE:'#2E7D32', CMT:'#6A1B9A', AWP:'#E65100' };
@@ -3754,63 +3794,55 @@ function TestSection({ section, scores, onAdd }) {
               return (
                 <button key={s} onClick={() => setActiveSeries(s)}
                   style={{ padding:'5px 14px', borderRadius:99, border:'1.5px solid',
-                    borderColor: active ? colors[s] : '#E0E6EF',
-                    background: active ? colors[s] : '#fff',
-                    color: active ? '#fff' : '#6B7280',
-                    fontWeight:600, fontSize:12, cursor:'pointer' }}>
+                    borderColor: active ? colors[s] : '#E0E6EF', background: active ? colors[s] : '#fff',
+                    color: active ? '#fff' : '#6B7280', fontWeight:600, fontSize:12, cursor:'pointer' }}>
                   {s}
                 </button>
               );
             })}
-            <button className="btn btn-sm btn-saffron" style={{ marginLeft:'auto' }}
-              onClick={() => onAdd(activeSeries)}>
-              + Add
-            </button>
+            <button className="btn btn-sm btn-saffron" style={{ marginLeft:'auto' }} onClick={() => onAdd(activeSeries)}>+ Add</button>
           </div>
 
-          {/* Entries */}
           {filtered.length ? filtered.map((r, i) => (
-            <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'10px 0' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:8 }}>
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:14, fontWeight:500 }}>
+                  <div style={{ fontSize:14, fontWeight:600, color:'#1B3A6B' }}>
                     {activeSeries === 'CMT' ? r.chapter : activeSeries === 'AWP' ? r.subject_name : r.test_code}
                   </div>
                   {activeSeries !== 'CMT' && activeSeries !== 'AWP' && (
                     <div style={{ fontSize:11, color:'#6B7280', marginTop:1 }}>{r.test_name}</div>
                   )}
                 </div>
-                {activeSeries === 'CMT' ? (
-                  <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>
-                    {r.mastery_status}
-                  </span>
-                ) : activeSeries === 'AWP' ? (
-                  <div style={{ textAlign:'right' }}>
-                    <div style={{ fontSize:15, fontWeight:700, color:'#E65100' }}>{r.questions_attempted}Q</div>
-                    <div style={{ fontSize:11, color:'#6B7280' }}>
-                      {r.questions_attempted>=40?'100%':r.questions_attempted>=30?'70%':r.questions_attempted>=20?'30%':r.questions_attempted>=10?'10%':'0%'}
+                <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                  {activeSeries === 'CMT' ? (
+                    <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>{r.mastery_status}</span>
+                  ) : activeSeries === 'AWP' ? (
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:15, fontWeight:700, color:'#E65100' }}>{r.questions_attempted}Q</div>
+                      <div style={{ fontSize:11, color:'#6B7280' }}>{r.questions_attempted>=40?'100%':r.questions_attempted>=30?'70%':r.questions_attempted>=20?'30%':r.questions_attempted>=10?'10%':'0%'}</div>
                     </div>
-                  </div>
-                ) : section.hasScore ? (
-                  <div style={{ textAlign:'right' }}>
-                    <div style={{ fontSize:16, fontWeight:700, color:'#1B3A6B' }}>
-                      {r.marks_scored}<span style={{ fontSize:11, color:'#6B7280' }}>/{r.marks_total}</span>
+                  ) : section.hasScore ? (
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:16, fontWeight:700, color:'#1B3A6B' }}>
+                        {r.marks_scored}<span style={{ fontSize:11, color:'#6B7280' }}>/{r.marks_total}</span>
+                      </div>
+                      <div style={{ fontSize:11, color: getScoreColor(r.marks_scored, r.marks_total) }}>
+                        {r.marks_total > 0 ? Math.round(r.marks_scored/r.marks_total*100) : 0}%
+                      </div>
                     </div>
-                    <div style={{ fontSize:11, color: getScoreColor(r.marks_scored, r.marks_total) }}>
-                      {r.marks_total > 0 ? Math.round(r.marks_scored/r.marks_total*100) : 0}%
-                    </div>
-                  </div>
-                ) : (
-                  <span className={`pill ${r.attempted==='Yes'?'pill-green':'pill-orange'}`}>
-                    {r.attempted==='Yes'?'Done':'Not Done'}
-                  </span>
-                )}
+                  ) : (
+                    <span className={`pill ${r.attempted==='Yes'?'pill-green':'pill-orange'}`}>
+                      {r.attempted==='Yes'?'Done':'Not Done'}
+                    </span>
+                  )}
+                  <button onClick={() => onEdit(activeSeries, r)} style={editBtnStyle} title="Edit">✏️</button>
+                  <button onClick={() => onDelete(activeSeries, r)} style={deleteBtnStyle} title="Delete">🗑</button>
+                </div>
               </div>
             </div>
           )) : (
-            <div style={{ color:'#6B7280', fontSize:13, padding:'8px 0' }}>
-              No {activeSeries} entries yet
-            </div>
+            <div style={{ color:'#6B7280', fontSize:13, padding:'8px 0' }}>No {activeSeries} entries yet</div>
           )}
         </>
       )}
