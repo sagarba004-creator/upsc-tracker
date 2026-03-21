@@ -2528,6 +2528,23 @@ function HomeTab({ dashboard, consistency, user }) {
         </div>
       </div>
 
+      {/* ── Pre / Mains Success Probability ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
+        {[
+          { label:'📘 Prelims Success', value: dashboard?.pre_success||0,   color:'#1565C0', bg:'#E3F0FF', bar:'#2563EB' },
+          { label:'📗 Mains Success',   value: dashboard?.mains_success||0, color:'#065F46', bg:'#D1FAE5', bar:'#059669' },
+        ].map(m => (
+          <div key={m.label} style={{ background:m.bg, borderRadius:14, padding:'14px',
+            boxShadow:'0 1px 6px rgba(0,0,0,0.07)' }}>
+            <div style={{ fontSize:10, color:m.color, fontWeight:700, marginBottom:4, opacity:0.8 }}>{m.label}</div>
+            <div style={{ fontSize:28, fontWeight:900, color:m.color, lineHeight:1 }}>{m.value}<span style={{ fontSize:14 }}>%</span></div>
+            <div style={{ background:'rgba(0,0,0,0.08)', borderRadius:99, height:5, marginTop:8 }}>
+              <div style={{ width:`${m.value}%`, height:5, background:m.bar, borderRadius:99, transition:'width 0.5s' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* ── Subject Proficiency ── */}
       <PillarCard title="Subject Proficiency" score={proficiency} color="#1B3A6B" icon="📚">
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -2605,6 +2622,20 @@ function HomeTab({ dashboard, consistency, user }) {
           </div>
         )}
       </PillarCard>
+
+      {/* ── Mentor Feedback ── */}
+      {dashboard?.feedback?.length > 0 && (
+        <div className="card">
+          <div className="card-title">💬 Mentor Feedback</div>
+          {dashboard.feedback.slice(0,3).map((f,i) => (
+            <div key={i} style={{ padding:'10px', background:'#F0FDF4', borderRadius:8,
+              marginBottom:8, borderLeft:'3px solid #16A34A' }}>
+              <div style={{ fontSize:13, color:'#1E293B' }}>{f.note}</div>
+              <div style={{ fontSize:10, color:'#64748B', marginTop:4 }}>{f.created_date}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }
