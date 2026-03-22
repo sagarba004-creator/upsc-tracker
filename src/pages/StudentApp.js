@@ -3532,6 +3532,8 @@ function TestsTab({ user }) {
       answers_written: entry.answers_written,
       // For CMT: don't pre-fill marks_total — the form derives correct value from section
       marks_total: series === 'CMT' ? undefined : entry.marks_total,
+      correct_responses:   entry.correct_responses,
+      incorrect_responses: entry.incorrect_responses,
     });
   }
 
@@ -3688,23 +3690,65 @@ function TestsTab({ user }) {
                     </div>
                   )}
                   {(() => {
-                    // Threshold: CSAT prelims = 45%, GS prelims = 60%, Mains = 60%
-                    const thresh = adding.category === 'csat_prelims' ? 0.45 : 0.60;
-                    const threshLabel = adding.category === 'csat_prelims' ? '45%' : '60%';
-                    const pct = form.marks_total ? Number(form.marks_scored)/Number(form.marks_total) : 0;
+                    // Scoring rules:
+                    // GS:   2 marks/Q, -2/3 per wrong  → marksPerQ=2,   penaltyPerQ=2/3
+                    // CSAT: 2.5 marks/Q, -2.5/3 per wrong → marksPerQ=2.5, penaltyPerQ=2.5/3
+                    const isCSAT      = adding.category === 'csat_prelims';
+                    const marksPerQ   = isCSAT ? 2.5 : 2;
+                    const penaltyPerQ = marksPerQ / 3;
+                    const totalMarks  = Number(form.marks_total) || 0;
+                    const totalQ      = totalMarks > 0 ? Math.round(totalMarks / marksPerQ) : '?';
+                    const correct     = Number(form.correct_responses) || 0;
+                    const incorrect   = Number(form.incorrect_responses) || 0;
+                    const calcScore   = correct > 0 || incorrect > 0
+                      ? Math.max(0, correct * marksPerQ - incorrect * penaltyPerQ)
+                      : null;
+                    const thresh      = isCSAT ? 0.45 : 0.60;
+                    const threshLabel = isCSAT ? '45%' : '60%';
+                    const pct         = calcScore !== null && totalMarks > 0 ? calcScore / totalMarks : null;
                     return (
-                      <div className="input-group">
-                        <label>Marks Scored (out of {form.marks_total||'?'})</label>
-                        <input className="input-field" type="number" min="0" max={form.marks_total||9999} required
-                          value={form.marks_scored||''} onChange={e => setForm(f => ({ ...f, marks_scored: e.target.value }))} />
-                        {form.marks_scored && form.marks_total && (
-                          <div style={{ marginTop:6, fontSize:12, fontWeight:600,
-                            color: pct >= thresh ? '#2E7D32' : '#E65100' }}>
-                            {Math.round(pct*100)}%
-                            {pct >= thresh ? ' ✅ Full credit' : ` ⚠️ Partial credit (need ≥${threshLabel})`}
+                      <>
+                        <div style={{ display:'flex', gap:10, marginBottom:4 }}>
+                          <div className="input-group" style={{ flex:1 }}>
+                            <label>✅ Correct</label>
+                            <input className="input-field" type="number" min="0" max={totalQ} required
+                              placeholder="0"
+                              value={form.correct_responses||''}
+                              onChange={e => {
+                                const c = Number(e.target.value);
+                                const inc = Number(form.incorrect_responses)||0;
+                                const sc = Math.max(0, c * marksPerQ - inc * penaltyPerQ);
+                                setForm(f => ({ ...f, correct_responses: e.target.value, marks_scored: Math.round(sc * 100) / 100 }));
+                              }} />
+                          </div>
+                          <div className="input-group" style={{ flex:1 }}>
+                            <label>❌ Incorrect</label>
+                            <input className="input-field" type="number" min="0" max={totalQ} required
+                              placeholder="0"
+                              value={form.incorrect_responses||''}
+                              onChange={e => {
+                                const inc = Number(e.target.value);
+                                const c = Number(form.correct_responses)||0;
+                                const sc = Math.max(0, c * marksPerQ - inc * penaltyPerQ);
+                                setForm(f => ({ ...f, incorrect_responses: e.target.value, marks_scored: Math.round(sc * 100) / 100 }));
+                              }} />
+                          </div>
+                        </div>
+                        {calcScore !== null && (
+                          <div style={{ background: pct >= thresh ? '#E8F5E9' : '#FFF3E0',
+                            border: `1.5px solid ${pct >= thresh ? '#2E7D32' : '#E65100'}`,
+                            borderRadius:8, padding:'8px 12px', marginBottom:8, fontSize:13 }}>
+                            <div style={{ fontWeight:700, color: pct >= thresh ? '#2E7D32' : '#E65100' }}>
+                              Score: {calcScore.toFixed(2)} / {totalMarks}
+                              {' '}({Math.round(pct*100)}%)
+                              {' '}{pct >= thresh ? '✅ Full credit' : `⚠️ Need ≥${threshLabel}`}
+                            </div>
+                            <div style={{ fontSize:11, color:'#6B7280', marginTop:3 }}>
+                              ({correct} × {marksPerQ}) − ({incorrect} × {penaltyPerQ.toFixed(2)}) = {calcScore.toFixed(2)}
+                            </div>
                           </div>
                         )}
-                      </div>
+                      </>
                     );
                   })()}
                 </>
@@ -3890,16 +3934,30 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                         <div style={{ fontSize:11, color: fl?'#2E7D32':'#E65100' }}>{fp}% {fl?'✅':'⚠️'}</div>
                       </div>
                     );
-                  })() : section.hasScore ? (
-                    <div style={{ textAlign:'right' }}>
-                      <div style={{ fontSize:16, fontWeight:700, color:'#1B3A6B' }}>
-                        {r.marks_scored}<span style={{ fontSize:11, color:'#6B7280' }}>/{r.marks_total}</span>
+                  })() : section.hasScore ? (() => {
+                    const isCSAT  = section.key === 'csat_prelims';
+                    const scored  = Number(r.marks_scored) || 0;
+                    const total   = Number(r.marks_total) || 0;
+                    const pct     = total > 0 ? Math.round(scored / total * 100) : 0;
+                    const thresh  = isCSAT ? 45 : 60;
+                    const correct   = (r.correct_responses !== undefined && r.correct_responses !== '') ? Number(r.correct_responses) : null;
+                    const incorrect = (r.incorrect_responses !== undefined && r.incorrect_responses !== '') ? Number(r.incorrect_responses) : null;
+                    return (
+                      <div style={{ textAlign:'right' }}>
+                        {correct !== null && (
+                          <div style={{ fontSize:11, marginBottom:2, display:'flex', gap:6, justifyContent:'flex-end' }}>
+                            <span style={{ color:'#2E7D32', fontWeight:700 }}>✅{correct}</span>
+                            <span style={{ color:'#B00020', fontWeight:700 }}>❌{incorrect}</span>
+                          </div>
+                        )}
+                        <div style={{ fontSize:15, fontWeight:700, color: pct >= thresh ? '#2E7D32' : pct >= thresh*0.75 ? '#E65100' : '#B00020' }}>
+                          {Number.isInteger(scored) ? scored : scored.toFixed(2)}
+                          <span style={{ fontSize:11, color:'#6B7280' }}>/{total}</span>
+                        </div>
+                        <div style={{ fontSize:11, color: pct >= thresh ? '#2E7D32' : '#E65100' }}>{pct}%</div>
                       </div>
-                      <div style={{ fontSize:11, color: getScoreColor(r.marks_scored, r.marks_total) }}>
-                        {r.marks_total > 0 ? Math.round(r.marks_scored/r.marks_total*100) : 0}%
-                      </div>
-                    </div>
-                  ) : (
+                    );
+                  })() : (
                     <span className={`pill ${r.attempted==='Yes'?'pill-green':'pill-orange'}`}>
                       {r.attempted==='Yes'?'Done':'Not Done'}
                     </span>
