@@ -3536,7 +3536,7 @@ function TestsTab({ user }) {
     <>
       {SECTIONS.map(sec => (
         <TestSection key={sec.key} section={sec} scores={scores}
-          onAdd={(series) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm({}); }}
+          onAdd={(series, preSubject) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm(preSubject ? { subject_name: preSubject } : {}); }}
           onEdit={(series, entry) => startEdit(sec, series, entry)}
           onDelete={(series, entry) => {
             const testType = series === 'CMT' ? 'cmt' : series === 'AWP' ? 'awp' : sec.key;
@@ -3788,14 +3788,62 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
             <button className="btn btn-sm btn-saffron" style={{ marginLeft:'auto' }} onClick={() => onAdd(activeSeries)}>+ Add</button>
           </div>
 
-          {filtered.length ? filtered.map((r, i) => (
+          {activeSeries === 'AWP' ? (() => {
+            // Accumulate all answers_written per subject across all entries
+            const writtenMap = {};
+            awpEntries.forEach(r => {
+              if (r.subject_name) writtenMap[r.subject_name] = (writtenMap[r.subject_name]||0) + (Number(r.answers_written)||0);
+            });
+            const hasAny = awpEntries.length > 0;
+            return (
+              <div>
+                {!hasAny && (
+                  <div style={{ color:'#6B7280', fontSize:13, padding:'8px 0' }}>
+                    No AWP entries yet — tap + Log on any subject to start
+                  </div>
+                )}
+                {TESTS_MASTER.awp.map(subj => {
+                  const written = writtenMap[subj.name] || 0;
+                  const pct = Math.min(100, Math.round((written / subj.target) * 100));
+                  const done = pct >= 100;
+                  if (!hasAny && written === 0) return null;
+                  return (
+                    <div key={subj.name} style={{ borderBottom:'1px solid #F0F0F0', padding:'10px 0' }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:13, fontWeight:600, color:'#1B3A6B' }}>{subj.name}</div>
+                          <div style={{ fontSize:11, color:'#6B7280' }}>{subj.paper} · {(subj.weight*100).toFixed(2)}% wt</div>
+                        </div>
+                        <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                          <div style={{ textAlign:'right' }}>
+                            <div style={{ fontSize:14, fontWeight:700, color: done?'#2E7D32':'#E65100' }}>
+                              {written}<span style={{ fontSize:11, color:'#6B7280' }}>/{subj.target}</span>
+                            </div>
+                            <div style={{ fontSize:10, color: done?'#2E7D32':'#9CA3AF' }}>{pct}% {done?'✅':''}</div>
+                          </div>
+                          <button
+                            onClick={() => onAdd('AWP', subj.name)}
+                            style={{ background:'#FFF3E0', border:'none', borderRadius:6, padding:'4px 8px', fontSize:12, cursor:'pointer', color:'#E65100', fontWeight:600 }}>
+                            + Log
+                          </button>
+                        </div>
+                      </div>
+                      <div style={{ background:'#F0F0F0', borderRadius:99, height:4 }}>
+                        <div style={{ width:`${pct}%`, height:4, background: done?'#2E7D32':'#E65100', borderRadius:99 }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })() : filtered.length ? filtered.map((r, i) => (
             <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'10px 0' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:8 }}>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontSize:14, fontWeight:600, color:'#1B3A6B' }}>
-                    {activeSeries === 'CMT' ? r.chapter : activeSeries === 'AWP' ? r.subject_name : r.test_code}
+                    {activeSeries === 'CMT' ? r.chapter : r.test_code}
                   </div>
-                  {activeSeries !== 'CMT' && activeSeries !== 'AWP' && (
+                  {activeSeries !== 'CMT' && (
                     <div style={{ fontSize:11, color:'#6B7280', marginTop:1 }}>{r.test_name}</div>
                   )}
                 </div>
@@ -3810,12 +3858,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                         <div style={{ fontSize:11, color: fl?'#2E7D32':'#E65100' }}>{fp}% {fl?'✅':'⚠️'}</div>
                       </div>
                     );
-                  })() : activeSeries === 'AWP' ? (
-                    <div style={{ textAlign:'right' }}>
-                      <div style={{ fontSize:15, fontWeight:700, color:'#E65100' }}>{r.questions_attempted}Q</div>
-                      <div style={{ fontSize:11, color:'#6B7280' }}>{r.questions_attempted>=40?'100%':r.questions_attempted>=30?'70%':r.questions_attempted>=20?'30%':r.questions_attempted>=10?'10%':'0%'}</div>
-                    </div>
-                  ) : section.hasScore ? (
+                  })() : section.hasScore ? (
                     <div style={{ textAlign:'right' }}>
                       <div style={{ fontSize:16, fontWeight:700, color:'#1B3A6B' }}>
                         {r.marks_scored}<span style={{ fontSize:11, color:'#6B7280' }}>/{r.marks_total}</span>
