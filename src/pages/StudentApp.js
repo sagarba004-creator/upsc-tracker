@@ -2608,6 +2608,14 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
 
   // Task definitions — function so it can use gs_paper context
   function getTaskDefs(gs_paper) {
+    if (gs_paper === 'Optional') return [
+      { key:'reading',     label:'📖 Reading',    wtKey:'reading_wt'   },
+      { key:'short_notes', label:'📝 Notes',      wtKey:'notes_wt'     },
+      { key:'pyq_mains',   label:'📋 PYQ Mains',  wtKey:'pyq_mains_wt' },
+      { key:'revision1',   label:'🔁 Revision 1', wtKey:'rev1_wt'      },
+      { key:'revision2',   label:'🔁 Revision 2', wtKey:'rev2_wt'      },
+      { key:'revision3',   label:'🔁 Revision 3', wtKey:'rev3_wt'      },
+    ];
     if (gs_paper === 'Essay') return [
       { key:'reading',     label:'Class/Brainstorm', emoji:'🧠', wtKey:'reading_wt'    },
       { key:'pyq_mains',   label:'Mains PYQ',        emoji:'📌', wtKey:'pyq_mains_wt'  },
@@ -2662,13 +2670,24 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   }
 
   // Group by gs_paper
+  // For Optional: only show subjects matching the student's chosen optional
+  const studentOptional = user?.optional || '';
   const grouped = {};
   data.subjects.forEach(s => {
+    if (s.gs_paper === 'Optional') {
+      // Only include if subject name contains the student's optional keyword
+      if (!studentOptional) return;
+      const subjectName = (s.subject || '').toLowerCase();
+      const optionalKey = studentOptional.toLowerCase();
+      if (!subjectName.includes(optionalKey.split(' ')[0])) return; // match first word e.g. "Psychology"
+    }
     if (!grouped[s.gs_paper]) grouped[s.gs_paper] = [];
     grouped[s.gs_paper].push(s);
   });
 
-  const paperOrder = ['GS Paper 1','GS Paper 2','GS Paper 3','GS Paper 4','Essay','CSAT'];
+  // Include Optional only if student has an optional set AND it has chapters in dashboard
+  const paperOrder = ['GS Paper 1','GS Paper 2','GS Paper 3','GS Paper 4','Essay','CSAT',
+    ...(user?.optional && grouped['Optional'] ? ['Optional'] : [])];
 
   // ── Subject view: chapter pills + inline tasks ──
   if (view?.subject) {
