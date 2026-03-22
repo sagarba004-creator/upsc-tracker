@@ -3472,9 +3472,50 @@ function DailyTab({ dashboard, user, onUpdate, consistency }) {
       {consistency && (
         <div className="card">
           <div className="card-title">📊 Consistency Score</div>
-          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 12 }}>
+          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 10 }}>
             Target: 6 qualifying days/week until {consistency.overall.exam_end_date} · {consistency.overall.total_weeks} weeks total
           </div>
+
+          {/* Compensation banner */}
+          {(() => {
+            const used = consistency.overall.comp_weeks_used || 0;
+            const remaining = consistency.overall.comp_weeks_remaining ?? consistency.overall.max_comp_weeks;
+            const max = consistency.overall.max_comp_weeks || 6;
+            if (used === 0) return null;
+            const exhausted = remaining === 0;
+            return (
+              <div style={{
+                background: exhausted ? '#FEE2E2' : '#FFF7ED',
+                border: `1.5px solid ${exhausted ? '#EF4444' : '#F59E0B'}`,
+                borderRadius: 8, padding: '8px 12px', marginBottom: 12,
+                fontSize: 12, color: exhausted ? '#B91C1C' : '#92400E'
+              }}>
+                {exhausted
+                  ? `⚠️ All ${max} compensation weeks used — missed weeks now penalise your score`
+                  : `🔄 ${used} of ${max} compensation weeks used · ${remaining} remaining`}
+              </div>
+            );
+          })()}
+
+          {/* Current week status */}
+          {(() => {
+            const s = consistency.weekly.status;
+            if (!s || s === 'FULL') return null;
+            const cfg = {
+              COMPENSATED:        { bg:'#EFF6FF', border:'#3B82F6', color:'#1D4ED8', text:'🔄 Compensation week — full credit applied' },
+              PARTIAL:            { bg:'#FFF7ED', border:'#F59E0B', color:'#92400E', text:'⚡ Partial week — log more days or compensate' },
+              PARTIAL_OVER_BUDGET:{ bg:'#FEE2E2', border:'#EF4444', color:'#B91C1C', text:'❌ Partial week — compensation budget exhausted' },
+              MISSED:             { bg:'#FEE2E2', border:'#EF4444', color:'#B91C1C', text:'❌ No logs this week' },
+            };
+            const c = cfg[s]; if (!c) return null;
+            return (
+              <div style={{ background:c.bg, border:`1.5px solid ${c.border}`, borderRadius:8,
+                padding:'7px 12px', marginBottom:12, fontSize:12, color:c.color, fontWeight:600 }}>
+                {c.text}
+              </div>
+            );
+          })()}
+
           <div className="stat-grid">
             <div className="stat-box">
               <div className="val" style={{ color: '#1565C0' }}>{Math.min(100, consistency.weekly.consistency_pct)}%</div>
@@ -3636,14 +3677,24 @@ function TestsTab({ user }) {
                     </select>
                   </div>
                   <div className="input-group">
-                    <label>Mastery Status</label>
-                    <select className="input-field" required value={form.mastery_status||''}
-                      onChange={e => setForm(f => ({ ...f, mastery_status: e.target.value }))}>
-                      <option value="">— Select —</option>
-                      <option value="Mastered">✅ Mastered (&gt;65%)</option>
-                      <option value="Concerned">⚠️ Concerned</option>
-                      <option value="Not Attempted">🔴 Not Attempted</option>
-                    </select>
+                    <label>Score (out of 40)</label>
+                    <input className="input-field" type="number" min="0" max="40" required
+                      placeholder="Enter marks scored"
+                      value={form.marks_scored||''}
+                      onChange={e => {
+                        const score = Number(e.target.value);
+                        const status = score >= 26 ? 'Mastered' : score > 0 ? 'Concerned' : 'Not Attempted';
+                        setForm(f => ({ ...f, marks_scored: e.target.value, marks_total: 40, mastery_status: status }));
+                      }} />
+                    {form.marks_scored !== '' && form.marks_scored !== undefined && (
+                      <div style={{ marginTop: 6, fontSize: 12,
+                        color: Number(form.marks_scored) >= 26 ? '#2E7D32' : '#E65100',
+                        fontWeight: 600 }}>
+                        {Number(form.marks_scored) >= 26
+                          ? `✅ ${Math.round(Number(form.marks_scored)/40*100)}% — Full credit`
+                          : `⚠️ ${Math.round(Number(form.marks_scored)/40*100)}% — Partial credit (need ≥26 for full)`}
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -3774,16 +3825,31 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
           <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:12 }}>
             <button className="btn btn-sm btn-saffron" onClick={() => onAdd('CMT')}>+ Add</button>
           </div>
-          {dedupe(scores?.cmt||[]).length ? dedupe(scores?.cmt||[]).map((r,i) => (
-            <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span style={{ fontSize:14, fontWeight:500 }}>{r.chapter}</span>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>{r.mastery_status}</span>
-                <button onClick={() => onEdit('CMT', r)} style={editBtnStyle}>✏️</button>
-                <button onClick={() => onDelete('CMT', r)} style={deleteBtnStyle}>🗑</button>
+          {dedupe(scores?.cmt||[]).length ? dedupe(scores?.cmt||[]).map((r,i) => {
+            const scored = Number(r.marks_scored || 0);
+            const pct    = Math.round(scored / 40 * 100);
+            const full   = scored >= 26;
+            return (
+              <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:14, fontWeight:600, color:'#1B3A6B' }}>{r.chapter}</div>
+                  {r.subject && <div style={{ fontSize:11, color:'#6B7280', marginTop:1 }}>{r.subject}</div>}
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+                  <div style={{ textAlign:'right' }}>
+                    <div style={{ fontSize:15, fontWeight:700, color: full ? '#2E7D32' : '#E65100' }}>
+                      {scored}<span style={{ fontSize:11, color:'#6B7280' }}>/40</span>
+                    </div>
+                    <div style={{ fontSize:11, color: full ? '#2E7D32' : '#E65100' }}>
+                      {pct}% {full ? '✅' : '⚠️'}
+                    </div>
+                  </div>
+                  <button onClick={() => onEdit('CMT', r)} style={editBtnStyle}>✏️</button>
+                  <button onClick={() => onDelete('CMT', r)} style={deleteBtnStyle}>🗑</button>
+                </div>
               </div>
-            </div>
-          )) : <div style={{ color:'#6B7280', fontSize:13 }}>No entries yet</div>}
+            );
+          }) : <div style={{ color:'#6B7280', fontSize:13 }}>No entries yet</div>}
         </>
       ) : (
         <>
@@ -3815,9 +3881,17 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                   )}
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-                  {activeSeries === 'CMT' ? (
-                    <span className={`pill ${r.mastery_status==='Mastered'?'pill-green':r.mastery_status==='Concerned'?'pill-orange':'pill-blue'}`}>{r.mastery_status}</span>
-                  ) : activeSeries === 'AWP' ? (
+                  {activeSeries === 'CMT' ? (() => {
+                    const sc = Number(r.marks_scored||0), fp = Math.round(sc/40*100), fl = sc>=26;
+                    return (
+                      <div style={{ textAlign:'right' }}>
+                        <div style={{ fontSize:15, fontWeight:700, color: fl?'#2E7D32':'#E65100' }}>
+                          {sc}<span style={{ fontSize:11, color:'#6B7280' }}>/40</span>
+                        </div>
+                        <div style={{ fontSize:11, color: fl?'#2E7D32':'#E65100' }}>{fp}% {fl?'✅':'⚠️'}</div>
+                      </div>
+                    );
+                  })() : activeSeries === 'AWP' ? (
                     <div style={{ textAlign:'right' }}>
                       <div style={{ fontSize:15, fontWeight:700, color:'#E65100' }}>{r.questions_attempted}Q</div>
                       <div style={{ fontSize:11, color:'#6B7280' }}>{r.questions_attempted>=40?'100%':r.questions_attempted>=30?'70%':r.questions_attempted>=20?'30%':r.questions_attempted>=10?'10%':'0%'}</div>
