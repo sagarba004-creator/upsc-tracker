@@ -3528,6 +3528,7 @@ function TestsTab({ user }) {
       marks_total: entry.marks_total, marks_scored: entry.marks_scored,
       attempted: entry.attempted, chapter: entry.chapter,
       mastery_status: entry.mastery_status, subject_name: entry.subject_name,
+      cmt_subject: entry.subject || '',
       questions_attempted: entry.questions_attempted,
       answers_written: entry.answers_written,
       // For CMT: don't pre-fill marks_total — the form derives correct value from section
@@ -3581,18 +3582,40 @@ function TestsTab({ user }) {
             <form onSubmit={saveTest}>
               {adding.series === 'CMT' && (
                 <>
-                  <div className="input-group">
-                    <label>Select Chapter</label>
-                    <select className="input-field" required value={form.chapter||''}
-                      onChange={e => setForm(f => ({ ...f, chapter: e.target.value }))}>
-                      <option value="">— Choose a chapter —</option>
-                      {(TESTS_MASTER[adding.cmtKey]||[]).map(c => (
-                        <option key={c.name} value={c.name}>
-                          {c.subject ? `[${c.subject.replace(/^\d+\.\s*/,'')}] ` : ''}{c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {(() => {
+                    // Build unique subject list from CMT master
+                    const cmtList = TESTS_MASTER[adding.cmtKey] || [];
+                    const subjects = [...new Set(cmtList.map(c => c.subject).filter(Boolean))];
+                    const selectedSubj = form.cmt_subject || '';
+                    const filteredChapters = selectedSubj
+                      ? cmtList.filter(c => c.subject === selectedSubj)
+                      : cmtList;
+                    return (
+                      <>
+                        <div className="input-group">
+                          <label>Select Subject</label>
+                          <select className="input-field" required value={selectedSubj}
+                            onChange={e => setForm(f => ({ ...f, cmt_subject: e.target.value, chapter: '' }))}>
+                            <option value="">— Choose a subject —</option>
+                            {subjects.map(s => (
+                              <option key={s} value={s}>{s.replace(/^\d+\.\s*/, '')}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="input-group">
+                          <label>Select Chapter</label>
+                          <select className="input-field" required value={form.chapter||''}
+                            onChange={e => setForm(f => ({ ...f, chapter: e.target.value }))}
+                            disabled={!selectedSubj}>
+                            <option value="">— {selectedSubj ? 'Choose a chapter' : 'Select subject first'} —</option>
+                            {filteredChapters.map(c => (
+                              <option key={c.name} value={c.name}>{c.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </>
+                    );
+                  })()}
                   {(() => {
                     const isCsat    = adding.cmtKey === 'cmt_csat';
                     const maxMarks  = isCsat ? 50 : 40;
