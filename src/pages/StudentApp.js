@@ -3487,10 +3487,19 @@ function TestsTab({ user }) {
 
   useEffect(() => { loadScores(); }, [user.phone]);
 
+  const ESSAY_CODES = new Set(["MT-2116","MT-2119","MT-2123","MT-2125","MT-2128","MT-2131","ESMT 18","ESMT 26","ESMT 30","ESMT 32","ESMT 35"]);
   function selectTest(code) {
     const list = (TESTS_MASTER[adding.category] || []).filter(t => t.type === adding.series);
     const found = list.find(t => t.code === code);
-    if (found) setForm(f => ({ ...f, test_code: found.code, test_name: found.name, marks_total: found.marks || found.questions || '' }));
+    if (found) {
+      let marksTotal = found.marks || 0;
+      // For mains tests: derive marks from questions if not set
+      if (adding.category === 'mains' && !marksTotal) {
+        const q = found.questions || 20;
+        marksTotal = ESSAY_CODES.has(code) ? 250 : (q <= 10 ? 125 : 250);
+      }
+      setForm(f => ({ ...f, test_code: found.code, test_name: found.name, marks_total: marksTotal }));
+    }
   }
 
   async function saveTest(e) {
@@ -3529,7 +3538,7 @@ function TestsTab({ user }) {
   const SECTIONS = [
     { key:'gs_prelims',   label:'📝 GS Prelims Tests',      scoreKey:'prelims', hasCMT:true,  cmtKey:'cmt_gs',   hasScore:true },
     { key:'csat_prelims', label:'📝 CSAT Prelims Tests',    scoreKey:'csat',    hasCMT:true,  cmtKey:'cmt_csat', hasScore:true },
-    { key:'mains',        label:'📋 Mains Tests',           scoreKey:'mains',   hasCMT:false, cmtKey:null,       hasAWP:true   },
+    { key:'mains',        label:'📋 Mains Tests',           scoreKey:'mains',   hasCMT:false, cmtKey:null,       hasAWP:true,  hasScore:true },
   ];
 
   return (
@@ -3668,22 +3677,18 @@ function TestsTab({ user }) {
                       <span style={{ opacity:0.8 }}>Total: {form.marks_total}</span>
                     </div>
                   )}
-                  {adding.category !== 'mains' && adding.series !== 'CMT' && adding.series !== 'AWP' ? (
-                    <div className="input-group">
-                      <label>Marks Scored (out of {form.marks_total||'?'})</label>
-                      <input className="input-field" type="number" min="0" max={form.marks_total||9999} required
-                        value={form.marks_scored||''} onChange={e => setForm(f => ({ ...f, marks_scored: e.target.value }))} />
-                    </div>
-                  ) : (
-                    <div className="input-group">
-                      <label>Attempted?</label>
-                      <select className="input-field" value={form.attempted||'Yes'}
-                        onChange={e => setForm(f => ({ ...f, attempted: e.target.value }))}>
-                        <option value="Yes">Yes — Attempted</option>
-                        <option value="Not Done">Not Done</option>
-                      </select>
-                    </div>
-                  )}
+                  <div className="input-group">
+                    <label>Marks Scored (out of {form.marks_total||'?'})</label>
+                    <input className="input-field" type="number" min="0" max={form.marks_total||9999} required
+                      value={form.marks_scored||''} onChange={e => setForm(f => ({ ...f, marks_scored: e.target.value }))} />
+                    {form.marks_scored && form.marks_total && (
+                      <div style={{ marginTop:6, fontSize:12, fontWeight:600,
+                        color: Number(form.marks_scored)/Number(form.marks_total) >= 0.6 ? '#2E7D32' : '#E65100' }}>
+                        {Math.round(Number(form.marks_scored)/Number(form.marks_total)*100)}%
+                        {Number(form.marks_scored)/Number(form.marks_total) >= 0.6 ? ' ✅ Full credit' : ' ⚠️ Partial credit (need ≥60%)'}
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
