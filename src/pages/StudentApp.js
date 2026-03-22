@@ -3763,7 +3763,6 @@ function TestsTab({ user }) {
                             borderRadius:8, padding:'8px 12px', marginBottom:8, fontSize:13 }}>
                             <div style={{ fontWeight:700, color: pct >= thresh ? '#2E7D32' : '#E65100' }}>
                               Score: {calcScore.toFixed(2)} / {totalMarks}
-                              {' '}({Math.round(pct*100)}%)
                               {' '}{pct >= thresh ? '✅ Full credit' : `⚠️ Need ≥${threshLabel}`}
                             </div>
                             <div style={{ fontSize:11, color:'#6B7280', marginTop:3 }}>
@@ -3855,7 +3854,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                       {scored}<span style={{ fontSize:11, color:'#6B7280' }}>/{maxMarks}</span>
                     </div>
                     <div style={{ fontSize:11, color: full ? '#2E7D32' : '#E65100' }}>
-                      {pct}% {full ? '✅' : '⚠️'}
+                      {full ? '✅' : '⚠️'}
                     </div>
                   </div>
                   <button onClick={() => onEdit('CMT', r)} style={editBtnStyle}>✏️</button>
@@ -3914,7 +3913,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                             <div style={{ fontSize:14, fontWeight:700, color: done?'#2E7D32':'#E65100' }}>
                               {written}<span style={{ fontSize:11, color:'#6B7280' }}>/{subj.target}</span>
                             </div>
-                            <div style={{ fontSize:10, color: done?'#2E7D32':'#9CA3AF' }}>{pct}% {done?'✅':''}</div>
+                            <div style={{ fontSize:10, color: done?'#2E7D32':'#9CA3AF' }}>{done?'✅':''}</div>
                           </div>
                           <button
                             onClick={() => onAdd('AWP', subj.name)}
@@ -3954,7 +3953,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                         <div style={{ fontSize:15, fontWeight:700, color: fl?'#2E7D32':'#E65100' }}>
                           {sc}<span style={{ fontSize:11, color:'#6B7280' }}>/{maxM}</span>
                         </div>
-                        <div style={{ fontSize:11, color: fl?'#2E7D32':'#E65100' }}>{fp}% {fl?'✅':'⚠️'}</div>
+                        <div style={{ fontSize:11, color: fl?'#2E7D32':'#E65100' }}>{fl?'✅':'⚠️'}</div>
                       </div>
                     );
                   })() : section.hasScore ? (() => {
@@ -3977,7 +3976,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                           {Number.isInteger(scored) ? scored : scored.toFixed(2)}
                           <span style={{ fontSize:11, color:'#6B7280' }}>/{total}</span>
                         </div>
-                        <div style={{ fontSize:11, color: pct >= thresh ? '#2E7D32' : '#E65100' }}>{pct}%</div>
+
                       </div>
                     );
                   })() : (
