@@ -3530,6 +3530,8 @@ function TestsTab({ user }) {
       mastery_status: entry.mastery_status, subject_name: entry.subject_name,
       questions_attempted: entry.questions_attempted,
       answers_written: entry.answers_written,
+      // For CMT: don't pre-fill marks_total — the form derives correct value from section
+      marks_total: series === 'CMT' ? undefined : entry.marks_total,
     });
   }
 
@@ -3766,9 +3768,14 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
             <button className="btn btn-sm btn-saffron" onClick={() => onAdd('CMT')}>+ Add</button>
           </div>
           {dedupe(scores?.cmt||[]).length ? dedupe(scores?.cmt||[]).map((r,i) => {
-            const scored = Number(r.marks_scored || 0);
-            const pct    = Math.round(scored / 40 * 100);
-            const full   = scored >= 26;
+            // Derive correct max marks from section: CSAT CMT = 50, GS CMT = 40
+            const maxMarks  = section.cmtKey === 'cmt_csat' ? 50 : 40;
+            const threshPct = section.cmtKey === 'cmt_csat' ? 0.50 : 0.65;
+            const scored    = Number(r.marks_scored || 0);
+            // Use stored marks_total if correct, otherwise use derived value
+            const displayMax = (Number(r.marks_total) === maxMarks || !r.marks_total) ? maxMarks : Number(r.marks_total);
+            const pct  = Math.round(scored / displayMax * 100);
+            const full = scored >= displayMax * threshPct;
             return (
               <div key={i} style={{ borderBottom:'1px solid #F0F0F0', padding:'8px 0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <div style={{ flex:1, minWidth:0 }}>
@@ -3778,7 +3785,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                 <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
                   <div style={{ textAlign:'right' }}>
                     <div style={{ fontSize:15, fontWeight:700, color: full ? '#2E7D32' : '#E65100' }}>
-                      {scored}<span style={{ fontSize:11, color:'#6B7280' }}>/40</span>
+                      {scored}<span style={{ fontSize:11, color:'#6B7280' }}>/{maxMarks}</span>
                     </div>
                     <div style={{ fontSize:11, color: full ? '#2E7D32' : '#E65100' }}>
                       {pct}% {full ? '✅' : '⚠️'}
@@ -3870,11 +3877,15 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
                   {activeSeries === 'CMT' ? (() => {
-                    const sc = Number(r.marks_scored||0), fp = Math.round(sc/40*100), fl = sc>=26;
+                    const maxM = section.cmtKey === 'cmt_csat' ? 50 : 40;
+                    const thr  = section.cmtKey === 'cmt_csat' ? 0.50 : 0.65;
+                    const sc   = Number(r.marks_scored||0);
+                    const fp   = Math.round(sc/maxM*100);
+                    const fl   = sc >= maxM * thr;
                     return (
                       <div style={{ textAlign:'right' }}>
                         <div style={{ fontSize:15, fontWeight:700, color: fl?'#2E7D32':'#E65100' }}>
-                          {sc}<span style={{ fontSize:11, color:'#6B7280' }}>/40</span>
+                          {sc}<span style={{ fontSize:11, color:'#6B7280' }}>/{maxM}</span>
                         </div>
                         <div style={{ fontSize:11, color: fl?'#2E7D32':'#E65100' }}>{fp}% {fl?'✅':'⚠️'}</div>
                       </div>
