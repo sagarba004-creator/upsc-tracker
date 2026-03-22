@@ -2241,96 +2241,25 @@ const TESTS_MASTER = {
     }
   ],
   "awp": [
-    {
-      "code": "AWP-Art and Culture",
-      "name": "Art and Culture",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Modern History",
-      "name": "Modern History",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Post-Independence",
-      "name": "Post-Independence",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-World History",
-      "name": "World History",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Geography",
-      "name": "Geography",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Society",
-      "name": "Society",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Polity",
-      "name": "Polity",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Governance",
-      "name": "Governance",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-International Relati",
-      "name": "International Relations",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Economy",
-      "name": "Economy",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Social Justice",
-      "name": "Social Justice",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Environment",
-      "name": "Environment",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Internal Security",
-      "name": "Internal Security",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Disaster Management",
-      "name": "Disaster Management",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Science and Tech",
-      "name": "Science and Tech",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Ethics",
-      "name": "Ethics",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Ethics Case studies",
-      "name": "Ethics Case studies",
-      "type": "AWP"
-    },
-    {
-      "code": "AWP-Essay",
-      "name": "Essay",
-      "type": "AWP"
-    }
+    { "code": "AWP-Art and Culture",         "name": "Art and Culture",         "paper": "GS Paper 1", "weight": 0.025,  "target": 10,  "type": "AWP" },
+    { "code": "AWP-Modern History",          "name": "Modern History",          "paper": "GS Paper 1", "weight": 0.025,  "target": 10,  "type": "AWP" },
+    { "code": "AWP-Post-Independence",       "name": "Post-Independence",       "paper": "GS Paper 1", "weight": 0.025,  "target": 10,  "type": "AWP" },
+    { "code": "AWP-World History",           "name": "World History",           "paper": "GS Paper 1", "weight": 0.025,  "target": 10,  "type": "AWP" },
+    { "code": "AWP-Geography",               "name": "Geography",               "paper": "GS Paper 1", "weight": 0.025,  "target": 10,  "type": "AWP" },
+    { "code": "AWP-Society",                 "name": "Society",                 "paper": "GS Paper 1", "weight": 0.025,  "target": 10,  "type": "AWP" },
+    { "code": "AWP-Polity",                  "name": "Polity",                  "paper": "GS Paper 2", "weight": 0.04375,"target": 15,  "type": "AWP" },
+    { "code": "AWP-Governance",              "name": "Governance",              "paper": "GS Paper 2", "weight": 0.04375,"target": 15,  "type": "AWP" },
+    { "code": "AWP-International Relati",    "name": "International Relations", "paper": "GS Paper 2", "weight": 0.04375,"target": 15,  "type": "AWP" },
+    { "code": "AWP-Social Justice",          "name": "Social Justice",          "paper": "GS Paper 2", "weight": 0.04375,"target": 15,  "type": "AWP" },
+    { "code": "AWP-Economy",                 "name": "Economy",                 "paper": "GS Paper 3", "weight": 0.035,  "target": 15,  "type": "AWP" },
+    { "code": "AWP-Environment",             "name": "Environment",             "paper": "GS Paper 3", "weight": 0.035,  "target": 15,  "type": "AWP" },
+    { "code": "AWP-Internal Security",       "name": "Internal Security",       "paper": "GS Paper 3", "weight": 0.035,  "target": 15,  "type": "AWP" },
+    { "code": "AWP-Disaster Management",     "name": "Disaster Management",     "paper": "GS Paper 3", "weight": 0.035,  "target": 15,  "type": "AWP" },
+    { "code": "AWP-Science and Tech",        "name": "Science and Tech",        "paper": "GS Paper 3", "weight": 0.035,  "target": 15,  "type": "AWP" },
+    { "code": "AWP-Ethics",                  "name": "Ethics",                  "paper": "GS Paper 4", "weight": 0.0875, "target": 20,  "type": "AWP" },
+    { "code": "AWP-Ethics Case studies",     "name": "Ethics Case studies",     "paper": "GS Paper 4", "weight": 0.0875, "target": 20,  "type": "AWP" },
+    { "code": "AWP-Essay",                   "name": "Essay",                   "paper": "Essay",      "weight": 0.15,   "target": 10,  "type": "AWP" },
+    { "code": "AWP-Optional",                "name": "Optional",                "paper": "Optional",   "weight": 0.175,  "target": 100, "type": "AWP" }
   ]
 };
 
@@ -3591,6 +3520,7 @@ function TestsTab({ user }) {
       attempted: entry.attempted, chapter: entry.chapter,
       mastery_status: entry.mastery_status, subject_name: entry.subject_name,
       questions_attempted: entry.questions_attempted,
+      answers_written: entry.answers_written,
     });
   }
 
@@ -3626,31 +3556,46 @@ function TestsTab({ user }) {
                   ? (adding.series === 'CMT' ? 'Edit CMT Entry' : 'Edit Score')
                   : (adding.series === 'CMT' ? 'Add CMT Entry' : 'Add Score')}
               </div>
-              {adding.series === 'AWP' && (
-                <>
-                  <div className="input-group">
-                    <label>Select Subject</label>
-                    <select className="input-field" required value={form.subject_name||''}
-                      onChange={e => setForm(f => ({ ...f, subject_name: e.target.value }))}>
-                      <option value="">— Choose a subject —</option>
-                      {(TESTS_MASTER.awp||[]).map(s => (
-                        <option key={s.name} value={s.name}>{s.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="input-group">
-                    <label>Questions Attempted</label>
-                    <select className="input-field" required value={form.questions_attempted||''}
-                      onChange={e => setForm(f => ({ ...f, questions_attempted: Number(e.target.value) }))}>
-                      <option value="">— Select —</option>
-                      <option value="10">10 Questions (10% Mastery)</option>
-                      <option value="20">20 Questions (30% Mastery)</option>
-                      <option value="30">30 Questions (70% Mastery)</option>
-                      <option value="40">40 Questions (100% Mastery)</option>
-                    </select>
-                  </div>
-                </>
-              )}
+              {adding.series === 'AWP' && (() => {
+                const subj = TESTS_MASTER.awp.find(s => s.name === form.subject_name);
+                const target = subj ? subj.target : null;
+                const written = Number(form.answers_written) || 0;
+                const pct = target ? Math.round((written / target) * 100) : 0;
+                return (
+                  <>
+                    <div className="input-group">
+                      <label>Select Subject</label>
+                      <select className="input-field" required value={form.subject_name||''}
+                        onChange={e => setForm(f => ({ ...f, subject_name: e.target.value, answers_written: '' }))}>
+                        <option value="">— Choose a subject —</option>
+                        {(TESTS_MASTER.awp||[]).map(s => (
+                          <option key={s.name} value={s.name}>
+                            {s.name} (Target: {s.target} answers)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {subj && (
+                      <div style={{ background:'#F0F4FF', borderRadius:8, padding:'8px 12px', marginBottom:12, fontSize:12, color:'#1B3A6B' }}>
+                        <strong>{subj.paper}</strong> · Weight: {(subj.weight*100).toFixed(2)}% · Target: <strong>{subj.target} answers</strong>
+                      </div>
+                    )}
+                    <div className="input-group">
+                      <label>Answers Written Today</label>
+                      <input className="input-field" type="number" min="1"
+                        max={target ? target : 999} required
+                        placeholder="How many answers did you write today?"
+                        value={form.answers_written||''}
+                        onChange={e => setForm(f => ({ ...f, answers_written: Number(e.target.value) }))} />
+                      {target && written > 0 && (
+                        <div style={{ marginTop:6, fontSize:12, color: pct >= 100 ? '#2E7D32' : '#1565C0', fontWeight:600 }}>
+                          {written} answers logged · {pct >= 100 ? `✅ Target reached!` : `${pct}% of target (${target - written} more to go)`}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
 
               {adding.series !== 'CMT' && adding.series !== 'AWP' && (
                 <span style={{ background: adding.series==='LEEP'?'#E3F0FF':'#E8F5E9',
@@ -3699,31 +3644,46 @@ function TestsTab({ user }) {
                 </>
               )}
 
-              {adding.series === 'AWP' && (
-                <>
-                  <div className="input-group">
-                    <label>Select Subject</label>
-                    <select className="input-field" required value={form.subject_name||''}
-                      onChange={e => setForm(f => ({ ...f, subject_name: e.target.value }))}>
-                      <option value="">— Choose a subject —</option>
-                      {(TESTS_MASTER.awp||[]).map(s => (
-                        <option key={s.name} value={s.name}>{s.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="input-group">
-                    <label>Questions Attempted</label>
-                    <select className="input-field" required value={form.questions_attempted||''}
-                      onChange={e => setForm(f => ({ ...f, questions_attempted: Number(e.target.value) }))}>
-                      <option value="">— Select —</option>
-                      <option value="10">10 Questions (10% Mastery)</option>
-                      <option value="20">20 Questions (30% Mastery)</option>
-                      <option value="30">30 Questions (70% Mastery)</option>
-                      <option value="40">40 Questions (100% Mastery)</option>
-                    </select>
-                  </div>
-                </>
-              )}
+              {adding.series === 'AWP' && (() => {
+                const subj = TESTS_MASTER.awp.find(s => s.name === form.subject_name);
+                const target = subj ? subj.target : null;
+                const written = Number(form.answers_written) || 0;
+                const pct = target ? Math.round((written / target) * 100) : 0;
+                return (
+                  <>
+                    <div className="input-group">
+                      <label>Select Subject</label>
+                      <select className="input-field" required value={form.subject_name||''}
+                        onChange={e => setForm(f => ({ ...f, subject_name: e.target.value, answers_written: '' }))}>
+                        <option value="">— Choose a subject —</option>
+                        {(TESTS_MASTER.awp||[]).map(s => (
+                          <option key={s.name} value={s.name}>
+                            {s.name} (Target: {s.target} answers)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {subj && (
+                      <div style={{ background:'#F0F4FF', borderRadius:8, padding:'8px 12px', marginBottom:12, fontSize:12, color:'#1B3A6B' }}>
+                        <strong>{subj.paper}</strong> · Weight: {(subj.weight*100).toFixed(2)}% · Target: <strong>{subj.target} answers</strong>
+                      </div>
+                    )}
+                    <div className="input-group">
+                      <label>Answers Written Today</label>
+                      <input className="input-field" type="number" min="1"
+                        max={target ? target : 999} required
+                        placeholder="How many answers did you write today?"
+                        value={form.answers_written||''}
+                        onChange={e => setForm(f => ({ ...f, answers_written: Number(e.target.value) }))} />
+                      {target && written > 0 && (
+                        <div style={{ marginTop:6, fontSize:12, color: pct >= 100 ? '#2E7D32' : '#1565C0', fontWeight:600 }}>
+                          {written} answers logged · {pct >= 100 ? `✅ Target reached!` : `${pct}% of target (${target - written} more to go)`}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
 
               {adding.series !== 'CMT' && adding.series !== 'AWP' && (
                 <>
