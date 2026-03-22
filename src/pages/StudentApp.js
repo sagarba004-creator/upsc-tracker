@@ -3590,8 +3590,10 @@ function TestsTab({ user }) {
                     </select>
                   </div>
                   {(() => {
-                    const maxMarks  = adding.cmtKey === 'cmt_csat' ? 50 : 40;
-                    const threshold = Math.round(maxMarks * 0.65); // 65% threshold
+                    const isCsat    = adding.cmtKey === 'cmt_csat';
+                    const maxMarks  = isCsat ? 50 : 40;
+                    const threshPct = isCsat ? 0.50 : 0.65; // 50% for CSAT, 65% for GS
+                    const threshold = Math.round(maxMarks * threshPct);
                     const scored    = Number(form.marks_scored) || 0;
                     return (
                       <div className="input-group">
@@ -3609,7 +3611,7 @@ function TestsTab({ user }) {
                             color: scored >= threshold ? '#2E7D32' : '#E65100', fontWeight: 600 }}>
                             {scored >= threshold
                               ? `✅ ${Math.round(scored/maxMarks*100)}% — Full credit`
-                              : `⚠️ ${Math.round(scored/maxMarks*100)}% — Partial credit (need ≥${threshold} for full)`}
+                              : `⚠️ ${Math.round(scored/maxMarks*100)}% — Partial credit (need ≥${threshold}/${maxMarks} for full)`}
                           </div>
                         )}
                       </div>
@@ -3683,18 +3685,26 @@ function TestsTab({ user }) {
                       <span style={{ opacity:0.8 }}>Total: {form.marks_total}</span>
                     </div>
                   )}
-                  <div className="input-group">
-                    <label>Marks Scored (out of {form.marks_total||'?'})</label>
-                    <input className="input-field" type="number" min="0" max={form.marks_total||9999} required
-                      value={form.marks_scored||''} onChange={e => setForm(f => ({ ...f, marks_scored: e.target.value }))} />
-                    {form.marks_scored && form.marks_total && (
-                      <div style={{ marginTop:6, fontSize:12, fontWeight:600,
-                        color: Number(form.marks_scored)/Number(form.marks_total) >= 0.6 ? '#2E7D32' : '#E65100' }}>
-                        {Math.round(Number(form.marks_scored)/Number(form.marks_total)*100)}%
-                        {Number(form.marks_scored)/Number(form.marks_total) >= 0.6 ? ' ✅ Full credit' : ' ⚠️ Partial credit (need ≥60%)'}
+                  {(() => {
+                    // Threshold: CSAT prelims = 45%, GS prelims = 60%, Mains = 60%
+                    const thresh = adding.category === 'csat_prelims' ? 0.45 : 0.60;
+                    const threshLabel = adding.category === 'csat_prelims' ? '45%' : '60%';
+                    const pct = form.marks_total ? Number(form.marks_scored)/Number(form.marks_total) : 0;
+                    return (
+                      <div className="input-group">
+                        <label>Marks Scored (out of {form.marks_total||'?'})</label>
+                        <input className="input-field" type="number" min="0" max={form.marks_total||9999} required
+                          value={form.marks_scored||''} onChange={e => setForm(f => ({ ...f, marks_scored: e.target.value }))} />
+                        {form.marks_scored && form.marks_total && (
+                          <div style={{ marginTop:6, fontSize:12, fontWeight:600,
+                            color: pct >= thresh ? '#2E7D32' : '#E65100' }}>
+                            {Math.round(pct*100)}%
+                            {pct >= thresh ? ' ✅ Full credit' : ` ⚠️ Partial credit (need ≥${threshLabel})`}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
                 </>
               )}
 
