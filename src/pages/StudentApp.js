@@ -3589,26 +3589,32 @@ function TestsTab({ user }) {
                       ))}
                     </select>
                   </div>
-                  <div className="input-group">
-                    <label>Score (out of 40)</label>
-                    <input className="input-field" type="number" min="0" max="40" required
-                      placeholder="Enter marks scored"
-                      value={form.marks_scored||''}
-                      onChange={e => {
-                        const score = Number(e.target.value);
-                        const status = score >= 26 ? 'Mastered' : score > 0 ? 'Concerned' : 'Not Attempted';
-                        setForm(f => ({ ...f, marks_scored: e.target.value, marks_total: 40, mastery_status: status }));
-                      }} />
-                    {form.marks_scored !== '' && form.marks_scored !== undefined && (
-                      <div style={{ marginTop: 6, fontSize: 12,
-                        color: Number(form.marks_scored) >= 26 ? '#2E7D32' : '#E65100',
-                        fontWeight: 600 }}>
-                        {Number(form.marks_scored) >= 26
-                          ? `✅ ${Math.round(Number(form.marks_scored)/40*100)}% — Full credit`
-                          : `⚠️ ${Math.round(Number(form.marks_scored)/40*100)}% — Partial credit (need ≥26 for full)`}
+                  {(() => {
+                    const maxMarks  = adding.cmtKey === 'cmt_csat' ? 50 : 40;
+                    const threshold = Math.round(maxMarks * 0.65); // 65% threshold
+                    const scored    = Number(form.marks_scored) || 0;
+                    return (
+                      <div className="input-group">
+                        <label>Score (out of {maxMarks})</label>
+                        <input className="input-field" type="number" min="0" max={maxMarks} required
+                          placeholder={`Enter marks scored (max ${maxMarks})`}
+                          value={form.marks_scored||''}
+                          onChange={e => {
+                            const score = Number(e.target.value);
+                            const status = score >= threshold ? 'Mastered' : score > 0 ? 'Concerned' : 'Not Attempted';
+                            setForm(f => ({ ...f, marks_scored: e.target.value, marks_total: maxMarks, mastery_status: status }));
+                          }} />
+                        {form.marks_scored !== '' && form.marks_scored !== undefined && (
+                          <div style={{ marginTop: 6, fontSize: 12,
+                            color: scored >= threshold ? '#2E7D32' : '#E65100', fontWeight: 600 }}>
+                            {scored >= threshold
+                              ? `✅ ${Math.round(scored/maxMarks*100)}% — Full credit`
+                              : `⚠️ ${Math.round(scored/maxMarks*100)}% — Partial credit (need ≥${threshold} for full)`}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
                 </>
               )}
 
