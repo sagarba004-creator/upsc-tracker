@@ -3560,9 +3560,9 @@ function TestsTab({ user }) {
       ))}
 
       {adding && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200, display:'flex', alignItems:'flex-end' }}
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center' }}
           onClick={e => e.target===e.currentTarget && setAdding(null)}>
-          <div style={{ background:'#fff', borderRadius:'18px 18px 0 0', padding:24, width:'100%', maxWidth:480, margin:'0 auto', maxHeight:'85vh', overflowY:'auto' }}>
+          <div style={{ background:'#fff', borderRadius:18, padding:24, width:'92%', maxWidth:480, maxHeight:'90vh', overflowY:'auto' }}>
 
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
               <div style={{ flex:1, fontWeight:700, fontSize:16 }}>
