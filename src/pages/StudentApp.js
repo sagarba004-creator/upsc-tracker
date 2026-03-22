@@ -3556,47 +3556,6 @@ function TestsTab({ user }) {
                   ? (adding.series === 'CMT' ? 'Edit CMT Entry' : 'Edit Score')
                   : (adding.series === 'CMT' ? 'Add CMT Entry' : 'Add Score')}
               </div>
-              {adding.series === 'AWP' && (() => {
-                const subj = TESTS_MASTER.awp.find(s => s.name === form.subject_name);
-                const target = subj ? subj.target : null;
-                const written = Number(form.answers_written) || 0;
-                const pct = target ? Math.round((written / target) * 100) : 0;
-                return (
-                  <>
-                    <div className="input-group">
-                      <label>Select Subject</label>
-                      <select className="input-field" required value={form.subject_name||''}
-                        onChange={e => setForm(f => ({ ...f, subject_name: e.target.value, answers_written: '' }))}>
-                        <option value="">— Choose a subject —</option>
-                        {(TESTS_MASTER.awp||[]).map(s => (
-                          <option key={s.name} value={s.name}>
-                            {s.name} (Target: {s.target} answers)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {subj && (
-                      <div style={{ background:'#F0F4FF', borderRadius:8, padding:'8px 12px', marginBottom:12, fontSize:12, color:'#1B3A6B' }}>
-                        <strong>{subj.paper}</strong> · Weight: {(subj.weight*100).toFixed(2)}% · Target: <strong>{subj.target} answers</strong>
-                      </div>
-                    )}
-                    <div className="input-group">
-                      <label>Answers Written Today</label>
-                      <input className="input-field" type="number" min="1"
-                        max={target ? target : 999} required
-                        placeholder="How many answers did you write today?"
-                        value={form.answers_written||''}
-                        onChange={e => setForm(f => ({ ...f, answers_written: Number(e.target.value) }))} />
-                      {target && written > 0 && (
-                        <div style={{ marginTop:6, fontSize:12, color: pct >= 100 ? '#2E7D32' : '#1565C0', fontWeight:600 }}>
-                          {written} answers logged · {pct >= 100 ? `✅ Target reached!` : `${pct}% of target (${target - written} more to go)`}
-                        </div>
-                      )}
-                    </div>
-                  </>
-                );
-              })()}
-
               {adding.series !== 'CMT' && adding.series !== 'AWP' && (
                 <span style={{ background: adding.series==='LEEP'?'#E3F0FF':'#E8F5E9',
                   color: adding.series==='LEEP'?'#1565C0':'#2E7D32',
