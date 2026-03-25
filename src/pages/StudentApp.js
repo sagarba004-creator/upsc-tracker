@@ -2320,7 +2320,7 @@ export default function StudentApp({ user, onLogout }) {
           </div>
         ) : (
           <>
-            {tab === 'home'    && <HomeTab    dashboard={dashboard} consistency={consistency} user={user} />}
+            {tab === 'home'    && <HomeTab    dashboard={dashboard} consistency={consistency} user={user} onTabChange={setTab} />}
             {tab === 'subjects'&& <SubjectsTab dashboard={dashboard} user={user} onUpdate={loadDashboard} gsSummary={dashboard?.gs_summary} />}
             {tab === 'daily'   && <DailyTab   dashboard={dashboard} user={user} onUpdate={loadDashboard} consistency={consistency} />}
             {tab === 'tests'   && <TestsTab   user={user} />}
@@ -2346,7 +2346,7 @@ export default function StudentApp({ user, onLogout }) {
 }
 
 // ── Home Tab ──────────────────────────────────────────────
-function HomeTab({ dashboard, consistency, user }) {
+function HomeTab({ dashboard, consistency, user, onTabChange }) {
   if (!dashboard) return null;
 
   const proficiency  = dashboard.proficiency_score  || 0;
@@ -2475,25 +2475,47 @@ function HomeTab({ dashboard, consistency, user }) {
       </div>
 
       {/* ── Subject Proficiency ── */}
-      <PillarCard title="Subject Proficiency" score={proficiency} color="#1B3A6B" icon="📚">
-        <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-          {PAPER_ORDER.map(paper => {
-            const color = GS_COL[paper] || '#666';
-            const pct = paperMap[paper] ?? 0;
-            return (
-              <div key={paper}>
-                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-                  <span style={{ fontSize:12, color:'#4B5563' }}>{paper}</span>
-                  <span style={{ fontSize:12, fontWeight:700, color }}>{pct}%</span>
+      <div
+        onClick={() => onTabChange && onTabChange('subjects')}
+        style={{ cursor:'pointer' }}>
+        <PillarCard title="Subject Proficiency" score={proficiency} color="#1B3A6B" icon="📚">
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {/* Prelims bar */}
+            {(() => {
+              const prePct = dashboard?.pre_proficiency || 0;
+              return (
+                <div>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                    <span style={{ fontSize:13, fontWeight:600, color:'#1565C0' }}>📘 Prelims</span>
+                    <span style={{ fontSize:13, fontWeight:800, color:'#1565C0' }}>{prePct}%</span>
+                  </div>
+                  <div className="progress-bar-wrap" style={{ height:8, borderRadius:99 }}>
+                    <div className="progress-bar-fill" style={{ width:`${prePct}%`, background:'#1565C0', borderRadius:99 }} />
+                  </div>
                 </div>
-                <div className="progress-bar-wrap" style={{ height:5 }}>
-                  <div className="progress-bar-fill" style={{ width:`${pct}%`, background:color }} />
+              );
+            })()}
+            {/* Mains bar */}
+            {(() => {
+              const mainsPct = dashboard?.mains_proficiency || 0;
+              return (
+                <div>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                    <span style={{ fontSize:13, fontWeight:600, color:'#E65100' }}>📗 Mains</span>
+                    <span style={{ fontSize:13, fontWeight:800, color:'#E65100' }}>{mainsPct}%</span>
+                  </div>
+                  <div className="progress-bar-wrap" style={{ height:8, borderRadius:99 }}>
+                    <div className="progress-bar-fill" style={{ width:`${mainsPct}%`, background:'#E65100', borderRadius:99 }} />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </PillarCard>
+              );
+            })()}
+            <div style={{ fontSize:11, color:'#9CA3AF', textAlign:'center', marginTop:2 }}>
+              Tap to view subjects →
+            </div>
+          </div>
+        </PillarCard>
+      </div>
 
       {/* ── Exam Readiness ── */}
       <PillarCard title="Exam Readiness" score={readiness} color="#E65100" icon="📝">
@@ -2571,11 +2593,15 @@ function HomeTab({ dashboard, consistency, user }) {
 
 
 // ── Subjects Tab ──────────────────────────────────────────────
+const PYQ_YEAR_DATA = {"Ancient India": {"pre": {"2019": 13, "2021": 9, "2024": 9, "2023": 14, "2013": 11, "2017": 9, "2011": 8, "2012": 13, "2025": 10, "2022": 12, "2020": 15, "2005": 4, "2016": 15, "2006": 10, "2014": 6, "2009": 5, "2010": 3, "2015": 2, "2018": 7, "2008": 1}, "mains": {}, "combined": {"2019": 13, "2021": 9, "2024": 9, "2023": 14, "2013": 11, "2017": 9, "2011": 8, "2012": 13, "2025": 10, "2022": 12, "2020": 15, "2005": 4, "2016": 15, "2006": 10, "2014": 6, "2009": 5, "2010": 3, "2015": 2, "2018": 7, "2008": 1}}, "Medieval History": {"pre": {"2006": 13, "2018": 5, "2019": 9, "2010": 6, "2014": 4, "2024": 7, "2020": 3, "2012": 4, "2021": 5, "2022": 7, "2016": 6, "2023": 5, "2015": 5, "2005": 3, "2013": 2, "2008": 2, "2009": 4}, "mains": {}, "combined": {"2006": 13, "2018": 5, "2019": 9, "2010": 6, "2014": 4, "2024": 7, "2020": 3, "2012": 4, "2021": 5, "2022": 7, "2016": 6, "2023": 5, "2015": 5, "2005": 3, "2013": 2, "2008": 2, "2009": 4}}, "Art and Culture": {"pre": {"2006": 6, "2014": 20, "2025": 5, "2012": 4, "2013": 5, "2018": 8, "2015": 4, "2009": 12, "2017": 3, "2008": 6, "2007": 1, "2021": 5, "2024": 4, "2022": 4, "2020": 5, "2016": 3, "2019": 1, "2023": 2}, "mains": {}, "combined": {"2006": 6, "2014": 20, "2025": 5, "2012": 4, "2013": 5, "2018": 8, "2015": 4, "2009": 12, "2017": 3, "2008": 6, "2007": 1, "2021": 5, "2024": 4, "2022": 4, "2020": 5, "2016": 3, "2019": 1, "2023": 2}}};
+
 function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   const [localData, setLocalData] = useState(null);
   const [saving, setSaving]       = useState('');
   const [view, setView]           = useState(null); // null | { paper } | { paper, subject }
   const [openChapter, setOpenChapter] = useState(null);
+  const [openTrend, setOpenTrend] = useState(null);   // subject name with open trend
+  const [trendMode, setTrendMode] = useState('pre');  // 'pre' | 'mains'
 
   React.useEffect(() => {
     if (dashboard) setLocalData(JSON.parse(JSON.stringify(dashboard)));
@@ -2670,24 +2696,22 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   }
 
   // Group by gs_paper
-  // For Optional: only show subjects matching the student's chosen optional
-  const studentOptional = user?.optional || '';
+  const studentOptional = (user?.optional || '').trim().toLowerCase();
   const grouped = {};
   data.subjects.forEach(s => {
     if (s.gs_paper === 'Optional') {
-      // Only include if subject name contains the student's optional keyword
       if (!studentOptional) return;
-      const subjectName = (s.subject || '').toLowerCase();
-      const optionalKey = studentOptional.toLowerCase();
-      if (!subjectName.includes(optionalKey.split(' ')[0])) return; // match first word e.g. "Psychology"
+      // "Psychology Paper 1".toLowerCase().startsWith("psychology") → true
+      const subjectLower = (s.subject || '').trim().toLowerCase();
+      if (!subjectLower.startsWith(studentOptional) && !subjectLower.includes(studentOptional)) return;
     }
     if (!grouped[s.gs_paper]) grouped[s.gs_paper] = [];
     grouped[s.gs_paper].push(s);
   });
 
-  // Include Optional only if student has an optional set AND it has chapters in dashboard
+  // Include Optional if student has optional set (show even if 0% progress)
   const paperOrder = ['GS Paper 1','GS Paper 2','GS Paper 3','GS Paper 4','Essay','CSAT',
-    ...(user?.optional && grouped['Optional'] ? ['Optional'] : [])];
+    ...(studentOptional ? ['Optional'] : [])];
 
   // ── Subject view: chapter pills + inline tasks ──
   if (view?.subject) {
@@ -2900,120 +2924,152 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
     );
   }
 
-  // ── Home: Paper cards ──
+  // ── Home: Flat subject list ──
+  // Paper label map
+  const PAPER_LABEL = {
+    'GS Paper 1':'GS1','GS Paper 2':'GS2','GS Paper 3':'GS3',
+    'GS Paper 4':'GS4','Essay':'Essay','CSAT':'CSAT','Optional':'Opt'
+  };
+  const EXAM_BADGE = {
+    'pre':   { label:'PRE',    bg:'#1565C0', color:'#fff' },
+    'mains': { label:'MAINS',  bg:'#E65100', color:'#fff' },
+    'both':  { label:'PRE+M',  bg:'#2E7D32', color:'#fff' },
+  };
+
+  // Flat ordered subject list
+  const allSubjects = paperOrder.flatMap(p => grouped[p] || []);
+
+  // TrendChart component inline
+  function TrendChart({ subjectName, examType }) {
+    const [mode, setMode] = React.useState(examType === 'mains' ? 'mains' : 'pre');
+    const ydata = PYQ_YEAR_DATA[subjectName] || {};
+    const useData = examType === 'both'
+      ? (mode === 'mains' ? ydata.mains : ydata.pre)
+      : (examType === 'mains' ? ydata.mains : ydata.pre);
+    const combined = ydata.combined || ydata.pre || {};
+    const srcData = (examType === 'both') ? (mode === 'mains' ? ydata.mains || {} : ydata.pre || {}) : (examType === 'mains' ? ydata.mains || {} : ydata.pre || {});
+    const allYears = Object.keys(srcData).map(Number).sort();
+    if (!allYears.length) return (
+      <div style={{fontSize:12,color:'#9CA3AF',padding:'8px 0',textAlign:'center'}}>
+        No year-wise PYQ data available yet
+      </div>
+    );
+    const maxVal = Math.max(1, ...allYears.map(y => srcData[y]||0));
+    const barColor = mode === 'mains' ? '#E65100' : '#1565C0';
+    return (
+      <div style={{marginTop:8}}>
+        {examType === 'both' && (
+          <div style={{display:'flex',gap:6,marginBottom:10}}>
+            {['pre','mains'].map(m => (
+              <button key={m} onClick={e=>{e.stopPropagation();setMode(m);}}
+                style={{padding:'3px 10px',borderRadius:99,border:'none',cursor:'pointer',fontSize:11,fontWeight:700,
+                  background: mode===m ? (m==='mains'?'#E65100':'#1565C0') : '#F3F4F6',
+                  color: mode===m ? '#fff' : '#6B7280'}}>
+                {m==='pre'?'Prelims':'Mains'}
+              </button>
+            ))}
+          </div>
+        )}
+        <div style={{display:'flex',alignItems:'flex-end',gap:3,height:60,overflowX:'auto',paddingBottom:4}}>
+          {allYears.map(y => {
+            const val = srcData[y]||0;
+            const barH = maxVal > 0 ? Math.max(4, Math.round((val/maxVal)*52)) : 4;
+            return (
+              <div key={y} style={{display:'flex',flexDirection:'column',alignItems:'center',minWidth:22}}>
+                <div style={{fontSize:9,color:barColor,fontWeight:700,marginBottom:2}}>{val||''}</div>
+                <div style={{width:14,height:barH,background:barColor,borderRadius:'3px 3px 0 0',opacity:0.85}}/>
+                <div style={{fontSize:8,color:'#9CA3AF',marginTop:2,transform:'rotate(-45deg)',transformOrigin:'top left',
+                  whiteSpace:'nowrap',marginLeft:4}}>{String(y).slice(2)}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div style={{fontSize:10,color:'#9CA3AF',marginTop:8}}>
+          {mode==='mains'?'Mains':'Prelims'} PYQ frequency by year
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-      {paperOrder.filter(p => grouped[p]).map(paper => {
-        const col     = PAPER_COL[paper] || PAPER_COL['GS Paper 1'];
-        const subjects = grouped[paper] || [];
-        const overall  = subjects.length
-          ? Math.round(subjects.reduce((s,sub) => s+sub.completion_pct, 0) / subjects.length)
-          : 0;
-
+    <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+      {allSubjects.map((subj, idx) => {
+        const col     = PAPER_COL[subj.gs_paper] || PAPER_COL['GS Paper 1'];
+        const sc      = SUBJ_COLORS[idx % SUBJ_COLORS.length];
+        const exam    = subj.exam_type || 'both';
+        const badge   = EXAM_BADGE[exam] || EXAM_BADGE['both'];
+        const paperLbl = PAPER_LABEL[subj.gs_paper] || subj.gs_paper;
+        const isOpen  = openTrend === subj.subject;
+        const hasPYQ  = !!PYQ_YEAR_DATA[subj.subject];
         return (
-          <div key={paper} onClick={() => setView({ paper })}
-            style={{
-              background:'#fff', borderRadius:14, padding:'16px',
-              boxShadow:'0 2px 10px rgba(0,0,0,0.08)', cursor:'pointer',
-              borderLeft:`5px solid ${col.top}`
-            }}>
-            {/* Paper header with overall % pill */}
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-              <div style={{ fontSize:16, fontWeight:800, color:col.top }}>{paper}</div>
-              <span style={{
-                background:col.bg, color:col.text,
-                border:`1.5px solid ${col.pill}`,
-                padding:'4px 14px', borderRadius:99, fontSize:15, fontWeight:800
-              }}>{overall}%</span>
+          <div key={subj.subject} style={{
+            background:'#fff', borderRadius:14, padding:'14px 16px',
+            boxShadow:'0 2px 8px rgba(0,0,0,0.07)',
+            borderLeft:`4px solid ${col.top}`
+          }}>
+            {/* Row 1: name + pills */}
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,flexWrap:'wrap'}}>
+              <div style={{flex:1,fontSize:14,fontWeight:700,color:'#1B3A6B',cursor:'pointer',minWidth:100}}
+                onClick={() => { setView({ paper: subj.gs_paper, subject: subj.subject }); setOpenChapter(null); }}>
+                {subj.subject}
+              </div>
+              {/* Paper pill */}
+              <span style={{background:col.bg,color:col.text,border:`1px solid ${col.pill}`,
+                fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:99,flexShrink:0}}>
+                {paperLbl}
+              </span>
+              {/* Exam type pill */}
+              <span style={{background:badge.bg,color:badge.color,
+                fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:99,flexShrink:0}}>
+                {badge.label}
+              </span>
             </div>
-            {/* Pre / Mains readiness bars */}
-            {(() => {
-              const gs = dashboard?.gs_summary?.find(g => g.gs_paper === paper);
-              const prePct   = gs?.pre_pct   || 0;
-              const mainsPct = gs?.mains_pct || 0;
-              const hasPre   = subjects.some(s => (s.exam_type||'both') !== 'mains');
-              const hasMains = subjects.some(s => (s.exam_type||'both') !== 'pre');
-              return (
-                <div style={{ display:'flex', flexDirection:'column', gap:4, marginBottom:12 }}>
-                  {hasPre && (
-                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                      <span style={{ fontSize:9, fontWeight:700, color:'#1565C0', width:32 }}>PRE</span>
-                      <div style={{ flex:1, background:'#E0E6EF', borderRadius:99, height:6 }}>
-                        <div style={{ width:`${prePct}%`, height:6, background:'#1565C0', borderRadius:99 }} />
-                      </div>
-                      <span style={{ fontSize:10, fontWeight:800, color:'#1565C0', width:28, textAlign:'right' }}>{prePct}%</span>
-                    </div>
-                  )}
-                  {hasMains && (
-                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                      <span style={{ fontSize:9, fontWeight:700, color:'#E65100', width:32 }}>MAINS</span>
-                      <div style={{ flex:1, background:'#E0E6EF', borderRadius:99, height:6 }}>
-                        <div style={{ width:`${mainsPct}%`, height:6, background:'#E65100', borderRadius:99 }} />
-                      </div>
-                      <span style={{ fontSize:10, fontWeight:800, color:'#E65100', width:28, textAlign:'right' }}>{mainsPct}%</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* Subject pills — exam badge + single progress bar */}
-            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-              {subjects.map((sub, idx) => {
-                const sc   = SUBJ_COLORS[idx % SUBJ_COLORS.length];
-                const pct  = sub.completion_pct;
-                const exam = sub.exam_type || 'both';
-                const EXAM_BADGE = {
-                  'pre':   { label:'PRE',   bg:'#1565C0', color:'#fff' },
-                  'mains': { label:'MAINS', bg:'#E65100', color:'#fff' },
-                  'both':  { label:'P+M',   bg:'#2E7D32', color:'#fff' },
-                };
-                const badge    = EXAM_BADGE[exam] || EXAM_BADGE['both'];
-                const barColor = exam==='mains' ? '#E65100' : exam==='pre' ? '#1565C0' : sc.dot;
-                return (
-                  <div key={sub.subject}
-                    onClick={e => { e.stopPropagation(); setView({ paper, subject: sub.subject }); setOpenChapter(null); }}
-                    style={{
-                      background: sc.bg, border:`1.5px solid ${sc.dot}`,
-                      borderRadius:10, padding:'7px 10px', cursor:'pointer',
-                      minWidth:110, flex:'0 0 auto'
-                    }}>
-                    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:6, marginBottom:6 }}>
-                      <span style={{ fontSize:11, fontWeight:700, color:sc.text, lineHeight:1.2 }}>{sub.subject}</span>
-                      <span style={{ background:badge.bg, color:badge.color,
-                        fontSize:8, fontWeight:800, padding:'2px 5px', borderRadius:3, flexShrink:0 }}>
-                        {badge.label}
-                      </span>
-                    </div>
-                    {exam === 'both' ? (
-                      <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                          <span style={{ fontSize:8, color:'#1565C0', fontWeight:700, width:12 }}>P</span>
-                          <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:4 }}>
-                            <div style={{ width:`${sub.pre_pct||0}%`, height:4, background:'#1565C0', borderRadius:99 }} />
-                          </div>
-                          <span style={{ fontSize:9, fontWeight:800, color:'#1565C0', width:20, textAlign:'right' }}>{sub.pre_pct||0}%</span>
-                        </div>
-                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                          <span style={{ fontSize:8, color:'#E65100', fontWeight:700, width:12 }}>M</span>
-                          <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:4 }}>
-                            <div style={{ width:`${sub.mains_pct||0}%`, height:4, background:'#E65100', borderRadius:99 }} />
-                          </div>
-                          <span style={{ fontSize:9, fontWeight:800, color:'#E65100', width:20, textAlign:'right' }}>{sub.mains_pct||0}%</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                        <div style={{ flex:1, background:'rgba(0,0,0,0.1)', borderRadius:99, height:5 }}>
-                          <div style={{ width:`${exam==='pre'?(sub.pre_pct||0):(sub.mains_pct||0)}%`, height:5, background:barColor, borderRadius:99 }} />
-                        </div>
-                        <span style={{ fontSize:10, fontWeight:800, color:barColor, width:22, textAlign:'right' }}>{exam==='pre'?(sub.pre_pct||0):(sub.mains_pct||0)}%</span>
-                      </div>
-                    )}
+            {/* Row 2: progress bar(s) */}
+            {exam === 'both' ? (
+              <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:8}}
+                onClick={() => { setView({ paper: subj.gs_paper, subject: subj.subject }); setOpenChapter(null); }}
+                style2={{cursor:'pointer'}}>
+                <div style={{display:'flex',alignItems:'center',gap:6}}>
+                  <span style={{fontSize:9,fontWeight:700,color:'#1565C0',width:8}}>P</span>
+                  <div style={{flex:1,background:'#E8EEF6',borderRadius:99,height:6}}>
+                    <div style={{width:`${subj.pre_pct||0}%`,height:6,background:'#1565C0',borderRadius:99}}/>
                   </div>
-                );
-              })}
-            </div>
+                  <span style={{fontSize:10,fontWeight:800,color:'#1565C0',width:26,textAlign:'right'}}>{subj.pre_pct||0}%</span>
+                </div>
+                <div style={{display:'flex',alignItems:'center',gap:6}}>
+                  <span style={{fontSize:9,fontWeight:700,color:'#E65100',width:8}}>M</span>
+                  <div style={{flex:1,background:'#F5ECE6',borderRadius:99,height:6}}>
+                    <div style={{width:`${subj.mains_pct||0}%`,height:6,background:'#E65100',borderRadius:99}}/>
+                  </div>
+                  <span style={{fontSize:10,fontWeight:800,color:'#E65100',width:26,textAlign:'right'}}>{subj.mains_pct||0}%</span>
+                </div>
+              </div>
+            ) : (
+              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8,cursor:'pointer'}}
+                onClick={() => { setView({ paper: subj.gs_paper, subject: subj.subject }); setOpenChapter(null); }}>
+                <div style={{flex:1,background: exam==='pre'?'#E8EEF6':'#F5ECE6',borderRadius:99,height:7}}>
+                  <div style={{width:`${exam==='pre'?(subj.pre_pct||0):(subj.mains_pct||0)}%`,height:7,
+                    background: exam==='pre'?'#1565C0':'#E65100',borderRadius:99}}/>
+                </div>
+                <span style={{fontSize:11,fontWeight:800,color: exam==='pre'?'#1565C0':'#E65100',width:28,textAlign:'right'}}>
+                  {exam==='pre'?(subj.pre_pct||0):(subj.mains_pct||0)}%
+                </span>
+              </div>
+            )}
+            {/* Row 3: trend toggle */}
+            {hasPYQ && (
+              <div>
+                <button onClick={e=>{e.stopPropagation();setOpenTrend(isOpen?null:subj.subject);}}
+                  style={{background:'none',border:'1px solid #E5E7EB',borderRadius:8,
+                    padding:'4px 10px',fontSize:11,cursor:'pointer',color:'#6B7280',
+                    display:'flex',alignItems:'center',gap:4}}>
+                  📊 {isOpen ? 'Hide' : 'PYQ Trend'}
+                </button>
+                {isOpen && (
+                  <TrendChart subjectName={subj.subject} examType={exam} />
+                )}
+              </div>
+            )}
           </div>
         );
       })}
