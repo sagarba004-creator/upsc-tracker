@@ -2937,7 +2937,13 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   };
 
   // Flat ordered subject list
-  const allSubjects = paperOrder.flatMap(p => grouped[p] || []);
+  // Deduplicate by subject name (in case old sheet rows linger)
+  const _seen = new Set();
+  const allSubjects = paperOrder.flatMap(p => grouped[p] || []).filter(s => {
+    if (_seen.has(s.subject)) return false;
+    _seen.add(s.subject);
+    return true;
+  });
 
   // TrendChart component inline
   function TrendChart({ subjectName, examType }) {
