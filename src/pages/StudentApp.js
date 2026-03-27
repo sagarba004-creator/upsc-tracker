@@ -2593,7 +2593,7 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
 
 
 // ── Subjects Tab ──────────────────────────────────────────────
-const PYQ_YEAR_DATA = {"Ancient India": {"pre": {"2019": 13, "2021": 9, "2024": 9, "2023": 14, "2013": 11, "2017": 9, "2011": 8, "2012": 13, "2025": 10, "2022": 12, "2020": 15, "2005": 4, "2016": 15, "2006": 10, "2014": 6, "2009": 5, "2010": 3, "2015": 2, "2018": 7, "2008": 1}, "mains": {}, "combined": {"2019": 13, "2021": 9, "2024": 9, "2023": 14, "2013": 11, "2017": 9, "2011": 8, "2012": 13, "2025": 10, "2022": 12, "2020": 15, "2005": 4, "2016": 15, "2006": 10, "2014": 6, "2009": 5, "2010": 3, "2015": 2, "2018": 7, "2008": 1}}, "Medieval History": {"pre": {"2006": 13, "2018": 5, "2019": 9, "2010": 6, "2014": 4, "2024": 7, "2020": 3, "2012": 4, "2021": 5, "2022": 7, "2016": 6, "2023": 5, "2015": 5, "2005": 3, "2013": 2, "2008": 2, "2009": 4}, "mains": {}, "combined": {"2006": 13, "2018": 5, "2019": 9, "2010": 6, "2014": 4, "2024": 7, "2020": 3, "2012": 4, "2021": 5, "2022": 7, "2016": 6, "2023": 5, "2015": 5, "2005": 3, "2013": 2, "2008": 2, "2009": 4}}, "Art and Culture": {"pre": {"2006": 6, "2014": 20, "2025": 5, "2012": 4, "2013": 5, "2018": 8, "2015": 4, "2009": 12, "2017": 3, "2008": 6, "2007": 1, "2021": 5, "2024": 4, "2022": 4, "2020": 5, "2016": 3, "2019": 1, "2023": 2}, "mains": {}, "combined": {"2006": 6, "2014": 20, "2025": 5, "2012": 4, "2013": 5, "2018": 8, "2015": 4, "2009": 12, "2017": 3, "2008": 6, "2007": 1, "2021": 5, "2024": 4, "2022": 4, "2020": 5, "2016": 3, "2019": 1, "2023": 2}}};
+const PYQ_YEAR_DATA = {"Ancient India": {"pre": {"2005": 2, "2006": 5, "2008": 0, "2009": 2, "2010": 1, "2011": 5, "2012": 7, "2013": 6, "2014": 3, "2015": 0, "2016": 8, "2017": 5, "2018": 3, "2019": 6, "2020": 7, "2021": 4, "2022": 6, "2023": 7, "2024": 3, "2025": 6}, "mains": {}}, "Medieval History": {"pre": {"2005": 2, "2006": 9, "2008": 1, "2009": 1, "2010": 5, "2012": 4, "2013": 2, "2014": 3, "2015": 4, "2016": 5, "2018": 4, "2019": 8, "2020": 3, "2021": 2, "2022": 4, "2023": 2, "2024": 3}, "mains": {}}, "Art and Culture": {"pre": {"2006": 6, "2007": 1, "2008": 6, "2009": 12, "2012": 4, "2013": 2, "2014": 16, "2015": 2, "2017": 2, "2018": 5, "2021": 4, "2024": 2, "2025": 2}, "mains": {"2013": 3, "2014": 4, "2015": 2, "2016": 3, "2017": 1, "2018": 3, "2019": 1, "2020": 5, "2021": 1, "2022": 4, "2023": 2, "2024": 2, "2025": 3}}};
 
 function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   const [localData, setLocalData] = useState(null);
@@ -2949,12 +2949,10 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   function TrendChart({ subjectName, examType }) {
     const [mode, setMode] = React.useState(examType === 'mains' ? 'mains' : 'pre');
     const ydata = PYQ_YEAR_DATA[subjectName] || {};
-    const useData = examType === 'both'
-      ? (mode === 'mains' ? ydata.mains : ydata.pre)
-      : (examType === 'mains' ? ydata.mains : ydata.pre);
-    const combined = ydata.combined || ydata.pre || {};
-    const srcData = (examType === 'both') ? (mode === 'mains' ? ydata.mains || {} : ydata.pre || {}) : (examType === 'mains' ? ydata.mains || {} : ydata.pre || {});
-    const allYears = Object.keys(srcData).map(Number).sort();
+    const srcData = examType === 'both'
+      ? (mode === 'mains' ? (ydata.mains || {}) : (ydata.pre || {}))
+      : (examType === 'mains' ? (ydata.mains || {}) : (ydata.pre || {}));
+    const allYears = Object.keys(srcData).filter(y => srcData[y] > 0).map(Number).sort();
     if (!allYears.length) return (
       <div style={{fontSize:12,color:'#9CA3AF',padding:'8px 0',textAlign:'center'}}>
         No year-wise PYQ data available yet
@@ -2962,10 +2960,11 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
     );
     const maxVal = Math.max(1, ...allYears.map(y => srcData[y]||0));
     const barColor = mode === 'mains' ? '#E65100' : '#1565C0';
+    const CHART_H = 70;
     return (
       <div style={{marginTop:8}}>
         {examType === 'both' && (
-          <div style={{display:'flex',gap:6,marginBottom:10}}>
+          <div style={{display:'flex',gap:6,marginBottom:8}}>
             {['pre','mains'].map(m => (
               <button key={m} onClick={e=>{e.stopPropagation();setMode(m);}}
                 style={{padding:'3px 10px',borderRadius:99,border:'none',cursor:'pointer',fontSize:11,fontWeight:700,
@@ -2976,22 +2975,23 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
             ))}
           </div>
         )}
-        <div style={{display:'flex',alignItems:'flex-end',gap:3,height:60,overflowX:'auto',paddingBottom:4}}>
-          {allYears.map(y => {
-            const val = srcData[y]||0;
-            const barH = maxVal > 0 ? Math.max(4, Math.round((val/maxVal)*52)) : 4;
-            return (
-              <div key={y} style={{display:'flex',flexDirection:'column',alignItems:'center',minWidth:22}}>
-                <div style={{fontSize:9,color:barColor,fontWeight:700,marginBottom:2}}>{val||''}</div>
-                <div style={{width:14,height:barH,background:barColor,borderRadius:'3px 3px 0 0',opacity:0.85}}/>
-                <div style={{fontSize:8,color:'#9CA3AF',marginTop:2,transform:'rotate(-45deg)',transformOrigin:'top left',
-                  whiteSpace:'nowrap',marginLeft:4}}>{String(y).slice(2)}</div>
-              </div>
-            );
-          })}
+        <div style={{overflowX:'auto',paddingBottom:28}}>
+          <div style={{display:'flex',alignItems:'flex-end',gap:4,height:CHART_H,minWidth: allYears.length * 30}}>
+            {allYears.map(y => {
+              const val = srcData[y] || 0;
+              const barH = maxVal > 0 ? Math.max(6, Math.round((val/maxVal)*(CHART_H-18))) : 6;
+              return (
+                <div key={y} style={{display:'flex',flexDirection:'column',alignItems:'center',flex:'1 0 26px'}}>
+                  <div style={{fontSize:10,color:barColor,fontWeight:800,marginBottom:3,lineHeight:1}}>{val}</div>
+                  <div style={{width:'100%',height:barH,background:barColor,borderRadius:'3px 3px 0 0'}}/>
+                  <div style={{fontSize:9,color:'#6B7280',marginTop:4,fontWeight:600}}>{y}</div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div style={{fontSize:10,color:'#9CA3AF',marginTop:8}}>
-          {mode==='mains'?'Mains':'Prelims'} PYQ frequency by year
+        <div style={{fontSize:10,color:'#9CA3AF',marginTop:4}}>
+          Estimated {mode==='mains'?'Mains':'Prelims'} questions per year
         </div>
       </div>
     );
