@@ -2975,16 +2975,16 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
             ))}
           </div>
         )}
-        <div style={{overflowX:'auto',paddingBottom:28}}>
-          <div style={{display:'flex',alignItems:'flex-end',gap:4,height:CHART_H,minWidth: allYears.length * 30}}>
+        <div style={{overflowX:'auto'}}>
+          <div style={{display:'flex',alignItems:'flex-end',gap:4,minWidth: allYears.length * 34, paddingBottom:4}}>
             {allYears.map(y => {
               const val = srcData[y] || 0;
-              const barH = maxVal > 0 ? Math.max(6, Math.round((val/maxVal)*(CHART_H-18))) : 6;
+              const barH = maxVal > 0 ? Math.max(6, Math.round((val/maxVal)*60)) : 6;
               return (
-                <div key={y} style={{display:'flex',flexDirection:'column',alignItems:'center',flex:'1 0 26px'}}>
+                <div key={y} style={{display:'flex',flexDirection:'column',alignItems:'center',flex:'1 0 30px'}}>
                   <div style={{fontSize:10,color:barColor,fontWeight:800,marginBottom:3,lineHeight:1}}>{val}</div>
                   <div style={{width:'100%',height:barH,background:barColor,borderRadius:'3px 3px 0 0'}}/>
-                  <div style={{fontSize:9,color:'#6B7280',marginTop:4,fontWeight:600}}>{y}</div>
+                  <div style={{fontSize:9,color:'#6B7280',marginTop:5,fontWeight:600,whiteSpace:'nowrap'}}>{y}</div>
                 </div>
               );
             })}
