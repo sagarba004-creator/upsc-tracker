@@ -2593,6 +2593,8 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
 
 
 // ── Subjects Tab ──────────────────────────────────────────────
+const CHAPTER_WEIGHTS = {"Ancient India": {"1. Pre-Historic India": {"pre": 9}, "2. Harappan Civilization / Bronze Age": {"pre": 9}, "3. The Vedic Age": {"pre": 9}, "4. The Mahajanapadas": {"pre": 18}, "5. The Maurya Empire": {"pre": 15}, "6. The Guptas and the Vakatakas": {"pre": 24}, "7. Post-Harsha Period & Regional Kingdoms": {"pre": 15}}, "Medieval History": {"1. Early Medieval India: Age of Regional Configurations (c. 600\u20131200 CE)": {"pre": 17}, "2. Early Medieval India: States of South India": {"pre": 6}, "3. Delhi Sultanate": {"pre": 20}, "4. Vijayanagara and Bahmani Kingdoms": {"pre": 23}, "5. The Mughal Empire": {"pre": 14}, "6. Society, Economy & Culture in Medieval India": {"pre": 11}, "7. Decline of the Mughal Empire": {"pre": 1}, "8. Advent of Europeans & Early Modern India": {"pre": 37}}, "Art and Culture": {"1. Indian Architecture": {"pre": 28, "mains": 38}, "2. Legendary Cities of Ancient & Medieval India": {"pre": 1, "mains": 1}, "3. Indian Sculpture and Pottery": {"pre": 2, "mains": 13}, "4. Edicts and Inscriptions": {"pre": 1, "mains": 1}, "5. Coins in Ancient and Medieval India": {"pre": 1, "mains": 1}, "6. Indian Paintings": {"pre": 4, "mains": 1}, "7. Indian Handicrafts": {"pre": 2, "mains": 1}, "8. UNESCO World Heritage Sites in India": {"pre": 1, "mains": 1}, "9. Indian Music": {"pre": 5, "mains": 1}, "10. Indian Dance Forms": {"pre": 6, "mains": 3}, "11. Indian Theatre": {"pre": 1, "mains": 1}, "12. Indian Puppetry": {"pre": 1, "mains": 1}, "13. Indian Circus": {"pre": 1, "mains": 1}, "14. Martial Arts in India": {"pre": 1, "mains": 1}, "15. UNESCO Intangible Cultural Heritage": {"pre": 1, "mains": 1}, "16. Tribal Culture in India": {"pre": 5, "mains": 1}, "17. Trade, Traders and Cultural Exchange": {"pre": 1, "mains": 1}, "18. Languages in India": {"pre": 3, "mains": 1}, "19. Religion in India": {"pre": 1, "mains": 6}, "20. Bhakti and Sufi Movements": {"pre": 6, "mains": 16}, "21. Buddhism and Jainism": {"pre": 14, "mains": 1}, "22. Indian Literature": {"pre": 10, "mains": 16}, "23. Education in Ancient and Medieval India": {"pre": 1, "mains": 9}, "24. Indian Schools of Philosophy": {"pre": 3, "mains": 1}, "25. Science and Technology through the Ages": {"pre": 2, "mains": 1}, "26. Indian Cinema": {"pre": 1, "mains": 1}, "27. Fairs and Festivals in India": {"pre": 1, "mains": 1}, "28. Awards and Honours": {"pre": 1, "mains": 1}, "29. Calendars in India": {"pre": 1, "mains": 1}, "30. Law and Culture": {"pre": 1, "mains": 1}, "31. Indian Culture Abroad": {"pre": 1, "mains": 1}, "32. India Through the Eyes of Foreign Travellers": {"pre": 1, "mains": 3}, "33. Cultural Institutions in India": {"pre": 1, "mains": 1}}};
+
 const PYQ_YEAR_DATA = {"Ancient India": {"pre": {"2005": 1, "2006": 3, "2011": 3, "2012": 2, "2013": 1, "2014": 1, "2016": 2, "2017": 1, "2019": 2, "2020": 6, "2021": 2, "2022": 2, "2023": 2, "2025": 5}, "mains": {}}, "Medieval History": {"pre": {"2005": 1, "2006": 6, "2008": 1, "2009": 1, "2010": 2, "2014": 2, "2015": 4, "2016": 3, "2019": 2, "2020": 1, "2021": 4, "2022": 5, "2023": 2, "2024": 1}, "mains": {}}, "Art and Culture": {"pre": {"2005": 1, "2006": 12, "2007": 1, "2008": 6, "2009": 12, "2010": 3, "2011": 1, "2012": 7, "2013": 10, "2014": 17, "2015": 2, "2016": 6, "2017": 5, "2018": 8, "2019": 6, "2020": 4, "2021": 8, "2022": 6, "2023": 7, "2024": 7, "2025": 3}, "mains": {"2013": 3, "2014": 4, "2015": 2, "2016": 2, "2017": 1, "2018": 3, "2019": 1, "2020": 4, "2021": 1, "2022": 3, "2023": 1, "2024": 2, "2025": 3}}};
 
 function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
@@ -2763,6 +2765,30 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                   <div style={{ width:10, height:10, borderRadius:'50%',
                     background:dotCol, flexShrink:0 }} />
                   <span style={{ flex:1, fontSize:14, fontWeight:500 }}>{ch.chapter}</span>
+                  {/* PYQ weight pills */}
+                  {(() => {
+                    const wts = (CHAPTER_WEIGHTS[subj.subject] || {})[ch.chapter];
+                    const exam = subj.exam_type || 'both';
+                    if (!wts) return null;
+                    return (
+                      <div style={{ display:'flex', gap:3, flexShrink:0 }}>
+                        {(exam === 'pre' || exam === 'both') && wts.pre && (
+                          <span style={{ background:'#EEF4FF', color:'#1565C0',
+                            border:'1px solid #90CAF9', fontSize:9, fontWeight:800,
+                            padding:'2px 7px', borderRadius:99, whiteSpace:'nowrap' }}>
+                            P {wts.pre}%
+                          </span>
+                        )}
+                        {(exam === 'mains' || exam === 'both') && wts.mains && (
+                          <span style={{ background:'#FFF3E0', color:'#E65100',
+                            border:'1px solid #FFCC80', fontSize:9, fontWeight:800,
+                            padding:'2px 7px', borderRadius:99, whiteSpace:'nowrap' }}>
+                            M {wts.mains}%
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <span style={{
                     background: pct>=70?col.bg: pct>=40?'#FFF3E0':'#F5F5F5',
                     color: pct>=70?col.text: pct>=40?'#E65100':'#9CA3AF',
