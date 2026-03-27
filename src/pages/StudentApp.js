@@ -2820,7 +2820,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                       );
                     })()}
                     {/* Micro-topic heatmap */}
-                    {subj.gs_paper !== 'CSAT' && <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} />}
+                    {subj.gs_paper !== 'CSAT' && <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} examType={subj.exam_type} />}
                   </div>
                 )}
               </div>
@@ -3159,10 +3159,11 @@ function EssayHeatmap({ subject, chapters }) {
 }
 
 // ── Micro Topic Heatmap ──────────────────────────────────────
-function MicroTopicHeatmap({ subject, chapter }) {
+function MicroTopicHeatmap({ subject, chapter, examType }) {
   const [topics, setTopics]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen]       = useState(false);
+  const [mode, setMode]       = useState('pre'); // 'pre' | 'mains' for both subjects
 
   useEffect(() => {
     setLoading(true);
@@ -3184,11 +3185,15 @@ function MicroTopicHeatmap({ subject, chapter }) {
     'Low':      { bg:'#388E3C', color:'#fff', label:'LOW' },
   };
 
-  const count = topics?.length || 0;
+  const isBoth = examType === 'both';
+  // For both subjects, filter by exam_type field; for pre/mains only, show all
+  const filtered = !topics ? [] : isBoth
+    ? topics.filter(t => (t.exam_type || 'pre') === mode)
+    : topics;
+  const count = filtered.length;
 
   return (
     <div style={{ marginTop:4 }}>
-      {/* Dropdown toggle */}
       <button
         onClick={() => setOpen(o => !o)}
         style={{
@@ -3199,43 +3204,70 @@ function MicroTopicHeatmap({ subject, chapter }) {
           cursor:'pointer', transition:'all 0.2s'
         }}>
         <span style={{ fontSize:12, fontWeight:700, color:'#4B5563' }}>
-          🔥 Heatmap {!loading && count > 0 ? `(${count})` : ''}
+          🔥 PYQ Heatmap {!loading && count > 0 ? `(${count})` : ''}
         </span>
         <span style={{ fontSize:11, color:'#9CA3AF', transform: open ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}>▼</span>
       </button>
 
-      {/* Dropdown content */}
       {open && (
         <div style={{
           border:'1.5px solid #E0E6EF', borderTop:'none',
           borderRadius:'0 0 8px 8px', padding:'10px',
           background:'#FAFAFA'
         }}>
+          {/* Pre/Mains toggle for both subjects */}
+          {isBoth && (
+            <div style={{ display:'flex', gap:6, marginBottom:10 }}>
+              {['pre','mains'].map(m => (
+                <button key={m} onClick={() => setMode(m)}
+                  style={{ padding:'3px 12px', borderRadius:99, border:'none', cursor:'pointer',
+                    fontSize:11, fontWeight:700,
+                    background: mode===m ? (m==='mains'?'#E65100':'#1565C0') : '#F3F4F6',
+                    color: mode===m ? '#fff' : '#6B7280' }}>
+                  {m === 'pre' ? 'Prelims' : 'Mains'}
+                </button>
+              ))}
+            </div>
+          )}
           {loading ? (
             <div style={{ fontSize:11, color:'#9CA3AF', textAlign:'center', padding:'8px' }}>⏳ Loading...</div>
-          ) : !topics || count === 0 ? (
+          ) : count === 0 ? (
             <div style={{ fontSize:11, color:'#9CA3AF', fontStyle:'italic', padding:'4px' }}>
-              No micro-topics defined yet
+              No PYQ topics for this chapter
             </div>
           ) : (
-            <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
-              {topics.map((t, i) => {
-                const cfg = priorityConfig[t.pyq_priority] || priorityConfig['Medium'];
+            <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              {filtered.map((t, i) => {
+                const cfg = priorityConfig[t.pyq_priority] || priorityConfig['Low'];
+                const years = t.pyq_years ? t.pyq_years.match(/\d{4}/g) || [] : [];
                 return (
                   <div key={i} style={{
-                    background:`${cfg.bg}18`,
-                    border:`1.5px solid ${cfg.bg}`,
+                    background:`${cfg.bg}12`,
+                    border:`1px solid ${cfg.bg}50`,
                     borderLeft:`4px solid ${cfg.bg}`,
-                    borderRadius:6, padding:'5px 8px',
-                    fontSize:11, color:'#1A1A2E', lineHeight:1.4,
-                    flex:'1 1 160px', maxWidth:'100%'
+                    borderRadius:6, padding:'7px 10px',
+                    fontSize:12, color:'#1A1A2E', lineHeight:1.4
                   }}>
-                    <span style={{
-                      display:'inline-block', background:cfg.bg, color:cfg.color,
-                      fontSize:8, fontWeight:700, padding:'1px 4px',
-                      borderRadius:3, marginRight:5, verticalAlign:'middle'
-                    }}>{cfg.label}</span>
-                    {t.micro_topic}
+                    <div style={{ display:'flex', alignItems:'flex-start', gap:6, marginBottom: years.length ? 4 : 0 }}>
+                      <span style={{
+                        display:'inline-block', background:cfg.bg, color:cfg.color,
+                        fontSize:8, fontWeight:700, padding:'2px 5px',
+                        borderRadius:3, flexShrink:0, marginTop:1
+                      }}>{cfg.label}</span>
+                      <span style={{ flex:1 }}>{t.micro_topic}</span>
+                    </div>
+                    {years.length > 0 && (
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:3, marginLeft:24 }}>
+                        {years.map(y => (
+                          <span key={y} style={{
+                            background: cfg.bg + '20',
+                            border: `1px solid ${cfg.bg}60`,
+                            color: cfg.bg,
+                            fontSize:9, fontWeight:700, padding:'1px 5px', borderRadius:4
+                          }}>{y}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })}
