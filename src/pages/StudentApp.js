@@ -2602,6 +2602,72 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
         )}
       </PillarCard>
 
+      {/* ── Study Hours Chart ── */}
+      {consistency?.heatmap && (() => {
+        const last10 = consistency.heatmap.slice(-10);
+        const totalMinsAll = consistency.heatmap.reduce((s,d) => s + (d.total_mins||0), 0);
+        const loggedDays   = consistency.heatmap.filter(d => (d.total_mins||0) > 0).length;
+        const avgDailyMins = loggedDays > 0 ? Math.round(totalMinsAll / loggedDays) : 0;
+        // Weekly avg: sum mins per week, avg across weeks that have logs
+        const weekMins = {}; let wIdx = 0;
+        consistency.heatmap.forEach((d,i) => {
+          const w = Math.floor(i/7);
+          weekMins[w] = (weekMins[w]||0) + (d.total_mins||0);
+        });
+        const weekVals = Object.values(weekMins);
+        const avgWeeklyMins = weekVals.length > 0 ? Math.round(weekVals.reduce((s,v)=>s+v,0)/weekVals.length) : 0;
+        const avgMonthlyMins = Math.round(totalMinsAll);
+        const maxMins = Math.max(1, ...last10.map(d => d.total_mins||0));
+        const fmtH = m => m >= 60 ? `${Math.floor(m/60)}h ${m%60}m` : `${m}m`;
+        return (
+          <div style={{ background:'#fff', borderRadius:14, padding:'16px',
+            boxShadow:'0 2px 8px rgba(0,0,0,0.07)', marginBottom:4 }}>
+            <div style={{ fontSize:13, fontWeight:800, color:'#1B3A6B', marginBottom:12 }}>
+              ⏱ Study Hours
+            </div>
+            {/* Stats row */}
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:16 }}>
+              {[
+                { label:'Avg Daily',   val: fmtH(avgDailyMins),   color:'#1565C0' },
+                { label:'Avg Weekly',  val: fmtH(avgWeeklyMins),  color:'#2E7D32' },
+                { label:'This Month',  val: fmtH(avgMonthlyMins), color:'#E65100' },
+              ].map(s => (
+                <div key={s.label} style={{ textAlign:'center', background:'#F8FAFF',
+                  borderRadius:10, padding:'10px 4px', border:'1px solid #E8EEFF' }}>
+                  <div style={{ fontSize:16, fontWeight:800, color:s.color }}>{s.val}</div>
+                  <div style={{ fontSize:10, color:'#6B7280', fontWeight:600, marginTop:2 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+            {/* Bar chart — last 10 days */}
+            <div style={{ fontSize:10, color:'#9CA3AF', marginBottom:8 }}>Last 10 days</div>
+            <div style={{ display:'flex', alignItems:'flex-end', gap:4, height:72 }}>
+              {last10.map(d => {
+                const mins = d.total_mins || 0;
+                const barH = maxMins > 0 ? Math.max(4, Math.round((mins/maxMins)*60)) : 4;
+                const dayLabel = d.date ? d.date.slice(5) : '';
+                const isToday = d.date === new Date().toISOString().slice(0,10);
+                const barColor = mins === 0 ? '#F0F0F0' : isToday ? '#1B3A6B' : '#1565C0';
+                return (
+                  <div key={d.date} style={{ flex:1, display:'flex', flexDirection:'column',
+                    alignItems:'center', gap:3 }}>
+                    <div style={{ fontSize:9, color:'#1565C0', fontWeight:700, lineHeight:1 }}>
+                      {mins > 0 ? fmtH(mins) : ''}
+                    </div>
+                    <div style={{ width:'100%', height:barH, background:barColor,
+                      borderRadius:'3px 3px 0 0', transition:'height 0.3s' }} />
+                    <div style={{ fontSize:8, color: isToday ? '#1B3A6B' : '#9CA3AF',
+                      fontWeight: isToday ? 800 : 500, whiteSpace:'nowrap' }}>
+                      {dayLabel}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Mentor Feedback ── */}
       {dashboard?.feedback?.length > 0 && (
         <div className="card">
