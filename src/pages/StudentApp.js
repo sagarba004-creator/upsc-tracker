@@ -3109,7 +3109,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
           const isOpen = selectedPaper === sec.key;
           // Overall completion for this section
           const avgPct = subjects.length
-            ? Math.round(subjects.reduce((sum, s) => sum + (s.completion_pct || 0), 0) / subjects.length * 100)
+            ? Math.round(subjects.reduce((sum, s) => sum + (s.completion_pct || 0), 0) / subjects.length)
             : 0;
           return (
             <div key={sec.key} style={{ borderRadius:14, overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.07)' }}>
@@ -3152,16 +3152,25 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                         boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
                         borderLeft:`4px solid ${sec.color}`
                       }}>
-                        {/* Row 1: name + pills */}
-                        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6,flexWrap:'wrap'}}>
+                        {/* Row 1: name + weight pills */}
+                        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6,flexWrap:'wrap'}}>
                           <div style={{flex:1,fontSize:14,fontWeight:700,color:'#1B3A6B',cursor:'pointer',minWidth:100}}
                             onClick={() => { setView({ paper: subj.gs_paper, subject: subj.subject }); setOpenChapter(null); }}>
                             {subj.subject}
                           </div>
-                          <span style={{background:badge.bg,color:badge.color,
-                            fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:99,flexShrink:0}}>
-                            {badge.label}
-                          </span>
+                          {/* Weight pills */}
+                          {(exam === 'pre' || exam === 'both') && subj.subject_pre_wt > 0 && (
+                            <span style={{background:'#EEF4FF',color:'#1565C0',border:'1px solid #90CAF9',
+                              fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:99,whiteSpace:'nowrap',flexShrink:0}}>
+                              Pre {Math.round((subj.subject_pre_wt||0)*100)}%
+                            </span>
+                          )}
+                          {(exam === 'mains' || exam === 'both') && subj.subject_mains_wt > 0 && (
+                            <span style={{background:'#FFF3E0',color:'#E65100',border:'1px solid #FFCC80',
+                              fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:99,whiteSpace:'nowrap',flexShrink:0}}>
+                              Mains {Math.round((subj.subject_mains_wt||0)*100)}%
+                            </span>
+                          )}
                         </div>
                         {/* Progress bar(s) */}
                         {exam === 'both' ? (
