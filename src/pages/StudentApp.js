@@ -2324,6 +2324,7 @@ export default function StudentApp({ user, onLogout }) {
             {tab === 'subjects'&& <SubjectsTab dashboard={dashboard} user={user} onUpdate={loadDashboard} gsSummary={dashboard?.gs_summary} />}
             {tab === 'daily'   && <DailyTab   dashboard={dashboard} user={user} onUpdate={loadDashboard} consistency={consistency} />}
             {tab === 'tests'   && <TestsTab   user={user} />}
+            {tab === 'profile' && <ProfileTab  user={user} dashboard={dashboard} consistency={consistency} />}
           </>
         )}
       </div>
@@ -2339,9 +2340,10 @@ export default function StudentApp({ user, onLogout }) {
           { key: 'subjects', icon: '📚', label: 'Subjects' },
           { key: 'daily',    icon: '📅', label: 'Daily' },
           { key: 'tests',    icon: '📝', label: 'Tests' },
+          { key: 'profile',  icon: '👤', label: 'Profile' },
         ].map(t => {
           const isActive = tab === t.key;
-          const COLOR = { home:'#2E7D32', subjects:'#1565C0', daily:'#E65100', tests:'#6A1B9A' };
+          const COLOR = { home:'#2E7D32', subjects:'#1565C0', daily:'#E65100', tests:'#6A1B9A', profile:'#00838F' };
           const c = COLOR[t.key] || '#1B3A6B';
           return (
             <button key={t.key} onClick={() => setTab(t.key)}
@@ -3891,6 +3893,173 @@ function DailyTab({ dashboard, user, onUpdate, consistency }) {
         </div>
       )}
     </>
+  );
+}
+
+// ── Profile Tab ─────────────────────────────────────────────
+function ProfileTab({ user, dashboard, consistency }) {
+  const proficiency   = dashboard?.proficiency_score  || 0;
+  const readiness     = dashboard?.exam_readiness      || 0;
+  const consistScore  = consistency?.overall?.consistency_score || 0;
+  const successProb   = Math.round(proficiency*0.40 + readiness*0.35 + consistScore*0.25);
+
+  // Exam countdown
+  const targetYear = Number(user.target_year) || new Date().getFullYear()+1;
+  const preDate    = new Date(targetYear, 4, 25); // ~May 25
+  const mainsDate  = new Date(targetYear, 8, 20); // ~Sep 20
+  const today      = new Date();
+  const daysToPreH = Math.max(0, Math.ceil((preDate - today)/(1000*60*60*24)));
+  const daysToMain = Math.max(0, Math.ceil((mainsDate - today)/(1000*60*60*24)));
+
+  // Overall subject progress
+  const subjects = dashboard?.subjects || [];
+  const totalSubj = subjects.length;
+  const avgCompl  = totalSubj > 0
+    ? Math.round(subjects.reduce((s,sb)=>s+(sb.completion_pct||0),0)/totalSubj)
+    : 0;
+  const fullDone = subjects.filter(sb=>(sb.completion_pct||0)>=100).length;
+
+  // Study hours from heatmap
+  const heatmap = consistency?.heatmap || [];
+  const totalMins = heatmap.reduce((s,d)=>s+(d.total_mins||0),0);
+  const loggedDays = heatmap.filter(d=>(d.total_mins||0)>0).length;
+  const avgDaily = loggedDays>0 ? Math.round(totalMins/loggedDays) : 0;
+  const fmtH = m => m>=60 ? `${Math.floor(m/60)}h ${m%60>0?m%60+'m':''}`.trim() : `${m}m`;
+
+  const TEAL = '#00838F';
+  const Card = ({children, style={}}) => (
+    <div style={{background:'#fff',borderRadius:14,padding:'16px',
+      boxShadow:'0 2px 8px rgba(0,0,0,0.07)',marginBottom:12,...style}}>
+      {children}
+    </div>
+  );
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:0,paddingBottom:80}}>
+
+      {/* Avatar + name card */}
+      <Card>
+        <div style={{display:'flex',alignItems:'center',gap:16}}>
+          <div style={{width:64,height:64,borderRadius:'50%',background:'linear-gradient(135deg,#1B3A6B,#00838F)',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            fontSize:28,flexShrink:0,boxShadow:'0 4px 12px rgba(0,131,143,0.3)'}}>
+            {user.name?.[0]?.toUpperCase() || '?'}
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:18,fontWeight:800,color:'#1B3A6B'}}>{user.name}</div>
+            <div style={{fontSize:12,color:'#6B7280',marginTop:2}}>📱 {user.phone}</div>
+            <div style={{display:'flex',gap:8,marginTop:6,flexWrap:'wrap'}}>
+              <span style={{background:'#E3F0FF',color:'#1565C0',fontSize:10,fontWeight:700,
+                padding:'2px 8px',borderRadius:99}}>Batch {user.batch||'—'}</span>
+              <span style={{background:'#E8F5E9',color:'#2E7D32',fontSize:10,fontWeight:700,
+                padding:'2px 8px',borderRadius:99}}>Target {user.target_year||'—'}</span>
+              {user.optional && <span style={{background:'#FFF3E0',color:'#E65100',fontSize:10,fontWeight:700,
+                padding:'2px 8px',borderRadius:99}}>{user.optional}</span>}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Exam countdown */}
+      <Card>
+        <div style={{fontSize:12,fontWeight:800,color:'#1B3A6B',marginBottom:12}}>🗓 Exam Countdown</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+          {[
+            {label:'Prelims',date:`~May ${targetYear}`,days:daysToPreH,color:'#1565C0',bg:'#EEF4FF'},
+            {label:'Mains',  date:`~Sep ${targetYear}`, days:daysToMain,color:'#E65100',bg:'#FFF3E0'},
+          ].map(e=>(
+            <div key={e.label} style={{background:e.bg,borderRadius:12,padding:'12px',textAlign:'center'}}>
+              <div style={{fontSize:28,fontWeight:900,color:e.color,lineHeight:1}}>{e.days}</div>
+              <div style={{fontSize:10,color:e.color,fontWeight:700,marginTop:2}}>days to go</div>
+              <div style={{fontSize:12,fontWeight:800,color:'#374151',marginTop:6}}>{e.label}</div>
+              <div style={{fontSize:10,color:'#9CA3AF',marginTop:2}}>{e.date}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Scores summary */}
+      <Card>
+        <div style={{fontSize:12,fontWeight:800,color:'#1B3A6B',marginBottom:12}}>📊 Score Summary</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
+          {[
+            {label:'Success Probability', val:successProb,  color:'#1B3A6B'},
+            {label:'Proficiency',         val:proficiency,  color:'#2E7D32'},
+            {label:'Exam Readiness',      val:readiness,    color:'#E65100'},
+            {label:'Consistency',         val:consistScore, color:TEAL},
+          ].map(s=>(
+            <div key={s.label} style={{background:'#F8FAFF',borderRadius:10,padding:'10px 8px',textAlign:'center'}}>
+              <div style={{fontSize:22,fontWeight:900,color:s.color}}>{s.val}%</div>
+              <div style={{fontSize:9,color:'#6B7280',fontWeight:600,marginTop:2}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+        {/* Progress bar for each */}
+        {[
+          {label:'Proficiency',    val:proficiency,  color:'#2E7D32'},
+          {label:'Exam Readiness', val:readiness,    color:'#E65100'},
+          {label:'Consistency',    val:consistScore, color:TEAL},
+        ].map(s=>(
+          <div key={s.label} style={{marginBottom:8}}>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#6B7280',marginBottom:3}}>
+              <span>{s.label}</span><span style={{fontWeight:700,color:s.color}}>{s.val}%</span>
+            </div>
+            <div style={{height:6,background:'#F0F0F0',borderRadius:99}}>
+              <div style={{height:'100%',width:`${s.val}%`,background:s.color,borderRadius:99,transition:'width 0.4s'}}/>
+            </div>
+          </div>
+        ))}
+      </Card>
+
+      {/* Subject progress */}
+      <Card>
+        <div style={{fontSize:12,fontWeight:800,color:'#1B3A6B',marginBottom:12}}>📚 Subject Progress</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
+          {[
+            {label:'Total Subjects', val:totalSubj,  color:'#1565C0'},
+            {label:'Avg Completion', val:avgCompl+'%',color:'#2E7D32'},
+            {label:'Fully Done',     val:fullDone,   color:'#E65100'},
+          ].map(s=>(
+            <div key={s.label} style={{background:'#F8FAFF',borderRadius:10,padding:'10px 4px',textAlign:'center'}}>
+              <div style={{fontSize:22,fontWeight:900,color:s.color}}>{s.val}</div>
+              <div style={{fontSize:9,color:'#6B7280',fontWeight:600,marginTop:2,lineHeight:1.3}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Study hours */}
+      <Card>
+        <div style={{fontSize:12,fontWeight:800,color:'#1B3A6B',marginBottom:12}}>⏱ Study Hours (30 days)</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
+          {[
+            {label:'Total',      val:fmtH(totalMins), color:'#1565C0'},
+            {label:'Avg Daily',  val:fmtH(avgDaily),  color:'#2E7D32'},
+            {label:'Days Logged',val:loggedDays,       color:TEAL},
+          ].map(s=>(
+            <div key={s.label} style={{background:'#F8FAFF',borderRadius:10,padding:'10px 4px',textAlign:'center'}}>
+              <div style={{fontSize:18,fontWeight:900,color:s.color}}>{s.val}</div>
+              <div style={{fontSize:9,color:'#6B7280',fontWeight:600,marginTop:2}}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Mentor feedback */}
+      {dashboard?.feedback?.length > 0 && (
+        <Card>
+          <div style={{fontSize:12,fontWeight:800,color:'#1B3A6B',marginBottom:12}}>💬 Latest Mentor Feedback</div>
+          {dashboard.feedback.slice(0,2).map((f,i)=>(
+            <div key={i} style={{background:'#F0FDF4',borderRadius:10,padding:'10px 12px',marginBottom:8,
+              borderLeft:'3px solid #2E7D32'}}>
+              <div style={{fontSize:12,color:'#374151',lineHeight:1.5}}>{f.feedback}</div>
+              <div style={{fontSize:10,color:'#9CA3AF',marginTop:4}}>{f.mentor_name} · {f.date}</div>
+            </div>
+          ))}
+        </Card>
+      )}
+
+    </div>
   );
 }
 
