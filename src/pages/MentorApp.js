@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../utils/api';
+import { SubjectsTab, TestsTab, DailyTab } from './StudentApp';
 
 // ── Design tokens (matching StudentApp) ──────────────────────
 const NAVY   = '#1B3A6B';
@@ -798,16 +799,25 @@ function NotesTab({ feedback, setFeedback, mentorId, studentPhone }) {
 // ══════════════════════════════════════════════════════════════
 function StudentDetail({ phone, mentorId, students, onBack }) {
   const studentMeta = students.find(s => s.phone === phone) || {};
-  const [dash, setDash]         = useState(null);
-  const [loading, setLoading]   = useState(true);
-  const [tab, setTab]           = useState('overview');
-  const [feedback, setFeedback] = useState([]);
+  const [dash, setDash]               = useState(null);
+  const [consistency, setConsistency] = useState(null);
+  const [loading, setLoading]         = useState(true);
+  const [tab, setTab]                 = useState('overview');
+  const [feedback, setFeedback]       = useState([]);
+
+  // Read-only user object passed to StudentApp tab components
+  const studentUser = { phone, name: studentMeta.name, batch: studentMeta.batch,
+    target_year: studentMeta.target_year, optional: studentMeta.optional };
 
   useEffect(() => {
-    api('mentorGetStudentDetail', { mentor_id: mentorId, phone })
-      .then(d => { setDash(d); setFeedback(d.feedback||[]); })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    Promise.all([
+      api('mentorGetStudentDetail', { mentor_id: mentorId, phone }),
+      api('getConsistency', { phone }),
+    ]).then(([d, cons]) => {
+      setDash(d);
+      setFeedback(d.feedback || []);
+      setConsistency(cons);
+    }).catch(console.error).finally(() => setLoading(false));
   }, [phone, mentorId]);
 
 
@@ -931,146 +941,28 @@ function StudentDetail({ phone, mentorId, students, onBack }) {
 
             {/* ── Subjects ── */}
             {tab === 'subjects' && (
-              <div>
-                {(() => {
-                  // Group subjects by GS paper
-                  const byPaper = {};
-                  (dash.subjects||[]).forEach(s => {
-                    if (!byPaper[s.gs_paper]) byPaper[s.gs_paper] = [];
-                    byPaper[s.gs_paper].push(s);
-                  });
-                  return Object.entries(byPaper).map(([paper, subs]) => {
-                    const col = PAPER_COL[paper] || PAPER_COL['GS Paper 1'];
-                    const avg = Math.round(subs.reduce((s,sb)=>s+(sb.completion_pct||0),0)/subs.length);
-                    return (
-                      <Card key={paper} style={{ borderTop:`4px solid ${col.top}` }}>
-                        <div style={{ display:'flex', justifyContent:'space-between',
-                          alignItems:'center', marginBottom:10 }}>
-                          <div style={{ fontSize:13, fontWeight:800, color:col.text }}>
-                            {paper}
-                          </div>
-                          <div style={{ fontSize:12, fontWeight:800, color:col.text }}>
-                            {avg}% avg
-                          </div>
-                        </div>
-                        {subs.map(s => (
-                          <div key={s.subject} style={{ marginBottom:8 }}>
-                            <div style={{ display:'flex', justifyContent:'space-between',
-                              marginBottom:3 }}>
-                              <div style={{ fontSize:11, fontWeight:600, color:NAVY }}>
-                                {s.subject}
-                              </div>
-                              <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                                {s.exam_type === 'both' ? (
-                                  <span style={{ fontSize:10, color:'#9CA3AF' }}>
-                                    P:{s.pre_pct||0}% M:{s.mains_pct||0}%
-                                  </span>
-                                ) : (
-                                  <span style={{ fontSize:11, fontWeight:700, color:col.top }}>
-                                    {s.completion_pct||0}%
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <Bar pct={s.completion_pct||0} color={col.top} height={4} />
-                          </div>
-                        ))}
-                      </Card>
-                    );
-                  });
-                })()}
-              </div>
+              <SubjectsTab
+                dashboard={dash}
+                user={studentUser}
+                onUpdate={() => {}}
+                gsSummary={dash?.gs_summary}
+              />
             )}
 
             {/* ── Consistency ── */}
             {tab === 'consistency' && (
-              <div>
-                <Card>
-                  <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:12 }}>
-                    📊 Consistency Overview
-                  </div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
-                    {[
-                      { label:'This Week',  val:`${dash.consistency?.weekly?.consistency_pct||0}%`,  color:BLUE  },
-                      { label:'This Month', val:`${dash.consistency?.monthly?.consistency_pct||0}%`, color:GREEN },
-                      { label:'Overall',    val:`${dash.consistency?.overall?.consistency_pct||0}%`, color:TEAL  },
-                    ].map(m => (
-                      <div key={m.label} style={{ background:'#F8FAFF', borderRadius:10,
-                        padding:'10px 4px', textAlign:'center' }}>
-                        <div style={{ fontSize:18, fontWeight:900, color:m.color }}>{m.val}</div>
-                        <div style={{ fontSize:9, color:'#6B7280', marginTop:2 }}>{m.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-
-                {/* 30-day heatmap */}
-                {dash.consistency?.heatmap && (
-                  <Card>
-                    <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:10 }}>
-                      🔥 30-Day Activity
-                    </div>
-                    <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>
-                      {dash.consistency.heatmap.map((d,i) => {
-                        const s = d.score;
-                        const bg = s===null?'#F0F0F0': s>=100?'#1B5E20': s>=60?'#F5A623':'#FECACA';
-                        return (
-                          <div key={i} title={`${d.date}: ${s!==null?s+'%':'No log'}`}
-                            style={{ width:16, height:16, borderRadius:3, background:bg }} />
-                        );
-                      })}
-                    </div>
-                    <div style={{ display:'flex', gap:10, marginTop:10,
-                      fontSize:10, color:'#6B7280', flexWrap:'wrap' }}>
-                      {[['#1B5E20','Qualifying'],['#F5A623','Partial'],
-                        ['#FECACA','Low'],['#F0F0F0','No log']].map(([c,l])=>(
-                        <div key={l} style={{ display:'flex', gap:4, alignItems:'center' }}>
-                          <div style={{ width:10, height:10, borderRadius:2, background:c }} />
-                          <span>{l}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </Card>
-                )}
-              </div>
+              <DailyTab
+                dashboard={dash}
+                user={studentUser}
+                onUpdate={() => {}}
+                consistency={consistency}
+                readOnly={true}
+              />
             )}
 
             {/* ── Tests ── */}
             {tab === 'tests' && (
-              <div>
-                {[
-                  { label:'📝 Prelims Tests', data:dash.test_scores?.prelims },
-                  { label:'✍️ Mains Tests',   data:dash.test_scores?.mains   },
-                ].map(({ label, data }) => (
-                  <Card key={label}>
-                    <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:10 }}>
-                      {label}
-                    </div>
-                    {data?.length ? data.slice(0,10).map((t,i) => (
-                      <div key={i} style={{ display:'flex', justifyContent:'space-between',
-                        padding:'8px 0', borderBottom:'1px solid #F0F0F0', fontSize:12 }}>
-                        <div style={{ flex:1, marginRight:10 }}>
-                          <div style={{ fontWeight:600, color:NAVY }}>{t.test_name||t.test_code}</div>
-                          <div style={{ fontSize:10, color:'#9CA3AF', marginTop:1 }}>{t.date}</div>
-                        </div>
-                        <div style={{ textAlign:'right', flexShrink:0 }}>
-                          <div style={{ fontWeight:800, color:BLUE }}>
-                            {t.marks_scored}/{t.marks_total}
-                          </div>
-                          <div style={{ fontSize:10, color:'#9CA3AF' }}>
-                            {t.marks_total>0
-                              ? Math.round(t.marks_scored/t.marks_total*100)+'%' : '—'}
-                          </div>
-                        </div>
-                      </div>
-                    )) : (
-                      <div style={{ fontSize:12, color:'#9CA3AF', textAlign:'center', padding:12 }}>
-                        No tests attempted yet
-                      </div>
-                    )}
-                  </Card>
-                ))}
-              </div>
+              <TestsTab user={studentUser} readOnly={true} />
             )}
 
             {/* ── Notes ── */}
