@@ -3903,13 +3903,16 @@ function ProfileTab({ user, dashboard, consistency }) {
   const consistScore  = consistency?.overall?.consistency_score || 0;
   const successProb   = Math.round(proficiency*0.40 + readiness*0.35 + consistScore*0.25);
 
-  // Exam countdown
-  const targetYear = Number(user.target_year) || new Date().getFullYear()+1;
-  const preDate    = new Date(targetYear, 4, 25); // ~May 25
-  const mainsDate  = new Date(targetYear, 8, 20); // ~Sep 20
-  const today      = new Date();
-  const daysToPreH = Math.max(0, Math.ceil((preDate - today)/(1000*60*60*24)));
-  const daysToMain = Math.max(0, Math.ceil((mainsDate - today)/(1000*60*60*24)));
+  // Exam countdown — use admin-configured dates from consistency API
+  const targetYear  = Number(user.target_year) || new Date().getFullYear()+1;
+  const preStr      = consistency?.overall?.prelims_date;
+  const mainStr     = consistency?.overall?.mains_date;
+  const preDate     = preStr  ? new Date(preStr)  : new Date(targetYear, 4, 25);
+  const mainsDate   = mainStr ? new Date(mainStr) : new Date(targetYear, 8, 20);
+  const today       = new Date();
+  const daysToPreH  = Math.max(0, Math.ceil((preDate  - today)/(1000*60*60*24)));
+  const daysToMain  = Math.max(0, Math.ceil((mainsDate - today)/(1000*60*60*24)));
+  const fmtDate = d => d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
 
   // Overall subject progress
   const subjects = dashboard?.subjects || [];
@@ -3965,8 +3968,8 @@ function ProfileTab({ user, dashboard, consistency }) {
         <div style={{fontSize:12,fontWeight:800,color:'#1B3A6B',marginBottom:12}}>🗓 Exam Countdown</div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
           {[
-            {label:'Prelims',date:`~May ${targetYear}`,days:daysToPreH,color:'#1565C0',bg:'#EEF4FF'},
-            {label:'Mains',  date:`~Sep ${targetYear}`, days:daysToMain,color:'#E65100',bg:'#FFF3E0'},
+            {label:'Prelims',date:fmtDate(preDate),  days:daysToPreH,color:'#1565C0',bg:'#EEF4FF'},
+            {label:'Mains',  date:fmtDate(mainsDate),days:daysToMain,color:'#E65100',bg:'#FFF3E0'},
           ].map(e=>(
             <div key={e.label} style={{background:e.bg,borderRadius:12,padding:'12px',textAlign:'center'}}>
               <div style={{fontSize:28,fontWeight:900,color:e.color,lineHeight:1}}>{e.days}</div>
