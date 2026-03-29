@@ -3014,7 +3014,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   const EXAM_BADGE = {
     'pre':   { label:'PRE',    bg:'#1565C0', color:'#fff' },
     'mains': { label:'MAINS',  bg:'#E65100', color:'#fff' },
-    'both':  { label:'PRE+M',  bg:'#2E7D32', color:'#fff' },
+    'both':  { label:'Pre+Mains', bg:'#2E7D32', color:'#fff' },
   };
 
   // Flat ordered subject list
