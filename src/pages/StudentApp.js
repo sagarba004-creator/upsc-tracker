@@ -2610,6 +2610,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   const [localData, setLocalData] = useState(null);
   const [saving, setSaving]       = useState('');
   const [view, setView]           = useState(null); // null | { paper } | { paper, subject }
+  const [selectedPaper, setSelectedPaper] = useState('All');
   const [openChapter, setOpenChapter] = useState(null);
   const [openTrend, setOpenTrend] = useState(null);   // subject name with open trend
   const [trendMode, setTrendMode] = useState('pre');  // 'pre' | 'mains'
@@ -2735,7 +2736,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
         {/* Header */}
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16,
           background:col.bg, borderRadius:12, padding:'12px 14px' }}>
-          <button onClick={() => { setView({ paper: view.paper }); setOpenChapter(null); }}
+          <button onClick={() => { setView(null); setOpenChapter(null); }}
             style={{ background:'none', border:'none', color:col.text, fontSize:22,
               cursor:'pointer', padding:0, lineHeight:1, flexShrink:0 }}>←</button>
           <div style={{ flex:1 }}>
@@ -2991,7 +2992,18 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
   // Flat ordered subject list
   // Deduplicate by subject name (in case old sheet rows linger)
   const _seen = new Set();
-  const allSubjects = paperOrder.flatMap(p => grouped[p] || []).filter(s => {
+  const SECTION_LABELS = [
+    { key:'All',         label:'All Subjects' },
+    { key:'GS Paper 1',  label:'GS 1 — History, Geography & Society' },
+    { key:'GS Paper 2',  label:'GS 2 — Polity, Governance & IR' },
+    { key:'GS Paper 3',  label:'GS 3 — Economy, Environment & S&T' },
+    { key:'GS Paper 4',  label:'GS 4 — Ethics' },
+    { key:'Essay',       label:'Essay' },
+    { key:'CSAT',        label:'CSAT' },
+    { key:'Optional',    label:'Optional' },
+  ];
+  const filteredPapers = selectedPaper === 'All' ? paperOrder : [selectedPaper];
+  const allSubjects = filteredPapers.flatMap(p => grouped[p] || []).filter(s => {
     if (_seen.has(s.subject)) return false;
     _seen.add(s.subject);
     return true;
@@ -3051,6 +3063,46 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+      {/* Section filter */}
+      {!view && (
+        <div style={{ overflowX:'auto', paddingBottom:4 }}>
+          <div style={{ display:'flex', gap:8, minWidth:'max-content' }}>
+            {SECTION_LABELS.map(sec => {
+              const isActive = selectedPaper === sec.key;
+              const col = sec.key === 'All' ? { bg:'#1B3A6B', text:'#fff', inact:'#F1F5F9', inactText:'#64748B' }
+                : sec.key === 'GS Paper 1' ? { bg:'#2E7D32', text:'#fff', inact:'#F1FBF2', inactText:'#2E7D32' }
+                : sec.key === 'GS Paper 2' ? { bg:'#1565C0', text:'#fff', inact:'#EEF6FF', inactText:'#1565C0' }
+                : sec.key === 'GS Paper 3' ? { bg:'#E65100', text:'#fff', inact:'#FFF8F0', inactText:'#E65100' }
+                : sec.key === 'GS Paper 4' ? { bg:'#6A1B9A', text:'#fff', inact:'#FAF0FF', inactText:'#6A1B9A' }
+                : { bg:'#374151', text:'#fff', inact:'#F9FAFB', inactText:'#374151' };
+              const count = sec.key === 'All'
+                ? paperOrder.flatMap(p => grouped[p] || []).length
+                : (grouped[sec.key] || []).length;
+              if (sec.key !== 'All' && count === 0) return null;
+              return (
+                <button key={sec.key}
+                  onClick={() => { setSelectedPaper(sec.key); setView(null); setOpenChapter(null); }}
+                  style={{
+                    padding:'7px 14px', borderRadius:99, border:'none', cursor:'pointer',
+                    background: isActive ? col.bg : col.inact,
+                    color: isActive ? col.text : col.inactText,
+                    fontSize:11, fontWeight:700, whiteSpace:'nowrap',
+                    boxShadow: isActive ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
+                    transition:'all 0.15s'
+                  }}>
+                  {sec.label}
+                  <span style={{
+                    marginLeft:6, fontSize:9, fontWeight:800,
+                    background: isActive ? 'rgba(255,255,255,0.25)' : (col.bg + '20'),
+                    color: isActive ? col.text : col.bg,
+                    padding:'1px 5px', borderRadius:99
+                  }}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       {allSubjects.map((subj, idx) => {
         const col     = PAPER_COL[subj.gs_paper] || PAPER_COL['GS Paper 1'];
         const sc      = SUBJ_COLORS[idx % SUBJ_COLORS.length];
