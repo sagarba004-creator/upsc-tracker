@@ -3129,11 +3129,30 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                   background: isOpen ? 'rgba(255,255,255,0.2)' : sec.color + '20',
                   color: isOpen ? '#fff' : sec.color
                 }}>{subjects.length} subjects</span>
-                <span style={{
-                  fontSize:10, fontWeight:800, padding:'3px 9px', borderRadius:99,
-                  background: isOpen ? 'rgba(255,255,255,0.2)' : (avgPct >= 70 ? sec.color + '30' : '#F3F4F6'),
-                  color: isOpen ? '#fff' : (avgPct >= 70 ? sec.color : '#9CA3AF')
-                }}>{avgPct}%</span>
+                {(() => {
+                  const secPreWt  = subjects.reduce((s,sub) => s + (sub.subject_pre_wt  || 0), 0);
+                  const secMainsWt = subjects.reduce((s,sub) => s + (sub.subject_mains_wt || 0), 0);
+                  return (
+                    <div style={{display:'flex',gap:4}}>
+                      {secPreWt > 0.001 && (
+                        <span style={{
+                          fontSize:10, fontWeight:800, padding:'3px 8px', borderRadius:99,
+                          background: isOpen ? 'rgba(255,255,255,0.2)' : '#EEF4FF',
+                          color: isOpen ? '#fff' : '#1565C0',
+                          border: isOpen ? 'none' : '1px solid #90CAF9'
+                        }}>Pre {+(secPreWt*100).toFixed(1)}%</span>
+                      )}
+                      {secMainsWt > 0.001 && (
+                        <span style={{
+                          fontSize:10, fontWeight:800, padding:'3px 8px', borderRadius:99,
+                          background: isOpen ? 'rgba(255,255,255,0.2)' : '#FFF3E0',
+                          color: isOpen ? '#fff' : '#E65100',
+                          border: isOpen ? 'none' : '1px solid #FFCC80'
+                        }}>Mains {+(secMainsWt*100).toFixed(1)}%</span>
+                      )}
+                    </div>
+                  );
+                })()}
                 <span style={{ color: isOpen ? '#fff' : sec.color, fontSize:12,
                   transform: isOpen ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}>▼</span>
               </div>
