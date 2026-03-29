@@ -3559,7 +3559,7 @@ function BreadCrumb({ items, onBack, color }) {
 
 
 // ── Daily Tab ─────────────────────────────────────────────────
-function DailyTab({ dashboard, user, onUpdate, consistency }) {
+function DailyTab({ dashboard, user, onUpdate, consistency, readOnly=false }) {
   // Date picker — default to today in IST
   const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // yyyy-MM-dd
   const [selectedDate, setSelectedDate] = useState(todayIST);
@@ -3672,6 +3672,26 @@ function DailyTab({ dashboard, user, onUpdate, consistency }) {
         ) : isFuture ? (
           <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 13, padding: 16 }}>
             Can't log future dates
+          </div>
+        ) : readOnly ? (
+          <div>
+            {TASKS_DAILY.map(t => {
+              const val = Number(vals[t.key]) || 0;
+              const pct = Math.min(100, Math.round((val / t.optimal) * 100));
+              return (
+                <div key={t.key} style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500 }}>{t.label}</span>
+                    <span style={{ fontSize: 12, color: '#6B7280' }}>{val} / {t.optimal} min</span>
+                  </div>
+                  <div className="progress-bar-wrap">
+                    <div className="progress-bar-fill" style={{ width: `${pct}%`,
+                      background: pct >= 100 ? '#2E7D32' : pct >= 60 ? '#F5A623' : '#E65100' }} />
+                  </div>
+                  <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>{pct}% of target</div>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
@@ -4086,7 +4106,7 @@ function FeedbackTab({ feedback }) {
 }
 
 // ── Tests Tab ─────────────────────────────────────────────────
-function TestsTab({ user }) {
+function TestsTab({ user, readOnly=false }) {
   const [scores, setScores]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding]   = useState(null);
@@ -4162,16 +4182,16 @@ function TestsTab({ user }) {
     <>
       {SECTIONS.map(sec => (
         <TestSection key={sec.key} section={sec} scores={scores}
-          onAdd={(series, preSubject) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm(preSubject ? { subject_name: preSubject } : {}); }}
-          onEdit={(series, entry) => startEdit(sec, series, entry)}
-          onDelete={(series, entry) => {
+          onAdd={readOnly ? null : (series, preSubject) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm(preSubject ? { subject_name: preSubject } : {}); }}
+          onEdit={readOnly ? null : (series, entry) => startEdit(sec, series, entry)}
+          onDelete={readOnly ? null : (series, entry) => {
             const testType = series === 'CMT' ? 'cmt' : series === 'AWP' ? 'awp' : sec.key;
             deleteTest(testType, entry.row_id);
           }}
         />
       ))}
 
-      {adding && (
+      {!readOnly && adding && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center' }}
           onClick={e => e.target===e.currentTarget && setAdding(null)}>
           <div style={{ background:'#fff', borderRadius:18, padding:24, width:'92%', maxWidth:480, maxHeight:'90vh', overflowY:'auto' }}>
@@ -4443,7 +4463,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
       {section.isCMT ? (
         <>
           <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:12 }}>
-            <button className="btn btn-sm btn-saffron" onClick={() => onAdd('CMT')}>+ Add</button>
+            {onAdd && <button className="btn btn-sm btn-saffron" onClick={() => onAdd('CMT')}>+ Add</button>}
           </div>
           {dedupe(scores?.cmt||[]).length ? dedupe(scores?.cmt||[]).map((r,i) => {
             // Derive correct max marks from section: CSAT CMT = 50, GS CMT = 40
@@ -4469,8 +4489,8 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                       {full ? '✅' : '⚠️'}
                     </div>
                   </div>
-                  <button onClick={() => onEdit('CMT', r)} style={editBtnStyle}>✏️</button>
-                  <button onClick={() => onDelete('CMT', r)} style={deleteBtnStyle}>🗑</button>
+                  {onEdit && <button onClick={() => onEdit('CMT', r)} style={editBtnStyle}>✏️</button>}
+                  {onDelete && <button onClick={() => onDelete('CMT', r)} style={deleteBtnStyle}>🗑</button>}
                 </div>
               </div>
             );
@@ -4491,7 +4511,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                 </button>
               );
             })}
-            <button className="btn btn-sm btn-saffron" style={{ marginLeft:'auto' }} onClick={() => onAdd(activeSeries)}>+ Add</button>
+            {onAdd && <button className="btn btn-sm btn-saffron" style={{ marginLeft:'auto' }} onClick={() => onAdd(activeSeries)}>+ Add</button>}
           </div>
 
           {activeSeries === 'AWP' ? (() => {
@@ -4528,7 +4548,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                             <div style={{ fontSize:10, color: done?'#2E7D32':'#9CA3AF' }}>{done?'✅':''}</div>
                           </div>
                           <button
-                            onClick={() => onAdd('AWP', subj.name)}
+                            onClick={() => onAdd && onAdd('AWP', subj.name)}
                             style={{ background:'#FFF3E0', border:'none', borderRadius:6, padding:'4px 8px', fontSize:12, cursor:'pointer', color:'#E65100', fontWeight:600 }}>
                             + Log
                           </button>
@@ -4596,8 +4616,8 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                       {r.attempted==='Yes'?'Done':'Not Done'}
                     </span>
                   )}
-                  <button onClick={() => onEdit(activeSeries, r)} style={editBtnStyle} title="Edit">✏️</button>
-                  <button onClick={() => onDelete(activeSeries, r)} style={deleteBtnStyle} title="Delete">🗑</button>
+                  {onEdit && <button onClick={() => onEdit(activeSeries, r)} style={editBtnStyle} title="Edit">✏️</button>}
+                  {onDelete && <button onClick={() => onDelete(activeSeries, r)} style={deleteBtnStyle} title="Delete">🗑</button>}
                 </div>
               </div>
             </div>
@@ -4619,3 +4639,6 @@ function getScoreColor(scored, total) {
 }
 
 
+
+// Named exports for MentorApp shared tab components
+export { SubjectsTab, TestsTab, DailyTab };
