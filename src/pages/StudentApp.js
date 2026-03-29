@@ -2328,18 +2328,46 @@ export default function StudentApp({ user, onLogout }) {
         )}
       </div>
 
-      <nav className="bottom-nav">
+      <nav style={{
+        display:'flex', justifyContent:'space-around', alignItems:'center',
+        background:'#fff', borderTop:'1px solid #E5E7EB',
+        padding:'6px 0 10px', position:'fixed', bottom:0, left:0, right:0,
+        zIndex:100, boxShadow:'0 -2px 8px rgba(0,0,0,0.06)'
+      }}>
         {[
           { key: 'home',     icon: '🏠', label: 'Home' },
           { key: 'subjects', icon: '📚', label: 'Subjects' },
           { key: 'daily',    icon: '📅', label: 'Daily' },
           { key: 'tests',    icon: '📝', label: 'Tests' },
-        ].map(t => (
-          <button key={t.key} className={tab === t.key ? 'active' : ''} onClick={() => setTab(t.key)}>
-            <span style={{ fontSize: 20 }}>{t.icon}</span>
-            {t.label}
-          </button>
-        ))}
+        ].map(t => {
+          const isActive = tab === t.key;
+          const COLOR = { home:'#2E7D32', subjects:'#1565C0', daily:'#E65100', tests:'#6A1B9A' };
+          const c = COLOR[t.key] || '#1B3A6B';
+          return (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              style={{
+                display:'flex', flexDirection:'column', alignItems:'center', gap:2,
+                background:'none', border:'none', cursor:'pointer',
+                padding:'4px 16px', borderRadius:12,
+                color: isActive ? c : '#9CA3AF',
+                transition:'all 0.15s',
+                position:'relative'
+              }}>
+              {isActive && (
+                <div style={{
+                  position:'absolute', top:-6, left:'50%', transform:'translateX(-50%)',
+                  width:32, height:3, borderRadius:99, background:c
+                }}/>
+              )}
+              <span style={{ fontSize:22, filter: isActive ? 'none' : 'grayscale(60%) opacity(0.6)' }}>
+                {t.icon}
+              </span>
+              <span style={{ fontSize:10, fontWeight: isActive ? 800 : 500 }}>
+                {t.label}
+              </span>
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
