@@ -3194,15 +3194,24 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                         {/* Progress bar(s) */}
                         {exam === 'both' ? (
                           <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:6}}>
-                            {[{label:'Pre',pct:(subj.pre_pct||0),color:'#1565C0'},{label:'Mains',pct:(subj.mains_pct||0),color:'#E65100'}].map(({label,pct,color})=>(
+                            {[
+                              {label:'Pre',  pct:(subj.pre_pct||0),   wt:(subj.subject_pre_wt||0),  color:'#1565C0'},
+                              {label:'Mains',pct:(subj.mains_pct||0), wt:(subj.subject_mains_wt||0),color:'#E65100'}
+                            ].map(({label,pct,wt,color})=>{
+                              const absContrib = +((pct/100)*wt*100).toFixed(1);
+                              const maxWt = +(wt*100).toFixed(1);
+                              const barW = maxWt > 0 ? Math.min(100, (absContrib/maxWt)*100) : 0;
+                              if (maxWt === 0) return null;
+                              return (
                               <div key={label} style={{display:'flex',alignItems:'center',gap:6}}>
                                 <span style={{fontSize:9,fontWeight:800,color,whiteSpace:'nowrap',marginRight:2}}>{label}</span>
                                 <div style={{flex:1,height:5,background:'#F0F0F0',borderRadius:99}}>
-                                  <div style={{height:'100%',width:`${pct}%`,background:color,borderRadius:99,transition:'width 0.4s'}}/>
+                                  <div style={{height:'100%',width:`${barW}%`,background:color,borderRadius:99,transition:'width 0.4s'}}/>
                                 </div>
-                                <span style={{fontSize:10,fontWeight:700,color,width:30,textAlign:'right'}}>{pct}%</span>
+                                <span style={{fontSize:10,fontWeight:700,color,width:36,textAlign:'right'}}>{absContrib}%</span>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         ) : (
                           <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
