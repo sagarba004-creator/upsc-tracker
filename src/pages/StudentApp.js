@@ -3162,13 +3162,13 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                           {(exam === 'pre' || exam === 'both') && subj.subject_pre_wt > 0 && (
                             <span style={{background:'#EEF4FF',color:'#1565C0',border:'1px solid #90CAF9',
                               fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:99,whiteSpace:'nowrap',flexShrink:0}}>
-                              Pre {Math.round((subj.subject_pre_wt||0)*100)}%
+                              Pre {+((subj.subject_pre_wt||0)*100).toFixed(1)}%
                             </span>
                           )}
                           {(exam === 'mains' || exam === 'both') && subj.subject_mains_wt > 0 && (
                             <span style={{background:'#FFF3E0',color:'#E65100',border:'1px solid #FFCC80',
                               fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:99,whiteSpace:'nowrap',flexShrink:0}}>
-                              Mains {Math.round((subj.subject_mains_wt||0)*100)}%
+                              Mains {+((subj.subject_mains_wt||0)*100).toFixed(1)}%
                             </span>
                           )}
                         </div>
