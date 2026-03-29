@@ -3063,47 +3063,127 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-      {/* Section filter */}
-      {!view && (
-        <div style={{ overflowX:'auto', paddingBottom:4 }}>
-          <div style={{ display:'flex', gap:8, minWidth:'max-content' }}>
-            {SECTION_LABELS.map(sec => {
-              const isActive = selectedPaper === sec.key;
-              const col = sec.key === 'All' ? { bg:'#1B3A6B', text:'#fff', inact:'#F1F5F9', inactText:'#64748B' }
-                : sec.key === 'GS Paper 1' ? { bg:'#2E7D32', text:'#fff', inact:'#F1FBF2', inactText:'#2E7D32' }
-                : sec.key === 'GS Paper 2' ? { bg:'#1565C0', text:'#fff', inact:'#EEF6FF', inactText:'#1565C0' }
-                : sec.key === 'GS Paper 3' ? { bg:'#E65100', text:'#fff', inact:'#FFF8F0', inactText:'#E65100' }
-                : sec.key === 'GS Paper 4' ? { bg:'#6A1B9A', text:'#fff', inact:'#FAF0FF', inactText:'#6A1B9A' }
-                : { bg:'#374151', text:'#fff', inact:'#F9FAFB', inactText:'#374151' };
-              const count = sec.key === 'All'
-                ? paperOrder.flatMap(p => grouped[p] || []).length
-                : (grouped[sec.key] || []).length;
-              if (sec.key !== 'All' && count === 0) return null;
-              return (
-                <button key={sec.key}
-                  onClick={() => { setSelectedPaper(sec.key); setView(null); setOpenChapter(null); }}
-                  style={{
-                    padding:'7px 14px', borderRadius:99, border:'none', cursor:'pointer',
-                    background: isActive ? col.bg : col.inact,
-                    color: isActive ? col.text : col.inactText,
-                    fontSize:11, fontWeight:700, whiteSpace:'nowrap',
-                    boxShadow: isActive ? '0 2px 6px rgba(0,0,0,0.15)' : 'none',
-                    transition:'all 0.15s'
-                  }}>
-                  {sec.label}
-                  <span style={{
-                    marginLeft:6, fontSize:9, fontWeight:800,
-                    background: isActive ? 'rgba(255,255,255,0.25)' : (col.bg + '20'),
-                    color: isActive ? col.text : col.bg,
-                    padding:'1px 5px', borderRadius:99
-                  }}>{count}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-      {allSubjects.map((subj, idx) => {
+      {/* Collapsible sections — only shown in flat list view (not inside a subject) */}
+      {!view && (() => {
+        const SECTIONS = [
+          { key:'GS Paper 1', label:'General Studies 1', subtitle:'History, Geography & Society',   color:'#2E7D32', bg:'#E8F5E9', light:'#F1FBF2' },
+          { key:'GS Paper 2', label:'General Studies 2', subtitle:'Polity, Governance & IR',        color:'#1565C0', bg:'#E3F0FF', light:'#EEF6FF' },
+          { key:'GS Paper 3', label:'General Studies 3', subtitle:'Economy, Environment & S&T',     color:'#E65100', bg:'#FFF3E0', light:'#FFF8F0' },
+          { key:'GS Paper 4', label:'General Studies 4', subtitle:'Ethics & Integrity',             color:'#6A1B9A', bg:'#F3E5FF', light:'#FAF0FF' },
+          { key:'Essay',      label:'Essay',             subtitle:'Essay Paper',                    color:'#374151', bg:'#F3F4F6', light:'#F9FAFB' },
+          { key:'CSAT',       label:'CSAT',              subtitle:'Civil Services Aptitude Test',   color:'#374151', bg:'#F3F4F6', light:'#F9FAFB' },
+          { key:'Optional',   label:'Optional',          subtitle:'Optional Subject',               color:'#374151', bg:'#F3F4F6', light:'#F9FAFB' },
+        ];
+        return SECTIONS.map(sec => {
+          const subjects = grouped[sec.key] || [];
+          if (subjects.length === 0) return null;
+          const isOpen = selectedPaper === sec.key;
+          // Overall completion for this section
+          const avgPct = subjects.length
+            ? Math.round(subjects.reduce((sum, s) => sum + (s.completion_pct || 0), 0) / subjects.length * 100)
+            : 0;
+          return (
+            <div key={sec.key} style={{ borderRadius:14, overflow:'hidden', boxShadow:'0 2px 8px rgba(0,0,0,0.07)' }}>
+              {/* Section header */}
+              <div onClick={() => setSelectedPaper(isOpen ? '' : sec.key)}
+                style={{
+                  display:'flex', alignItems:'center', gap:10,
+                  background: isOpen ? sec.color : sec.bg,
+                  padding:'13px 16px', cursor:'pointer', transition:'all 0.2s'
+                }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:13, fontWeight:800, color: isOpen ? '#fff' : sec.color }}>{sec.label}</div>
+                  <div style={{ fontSize:11, color: isOpen ? 'rgba(255,255,255,0.75)' : '#9CA3AF', marginTop:1 }}>{sec.subtitle}</div>
+                </div>
+                <span style={{
+                  fontSize:10, fontWeight:800, padding:'3px 9px', borderRadius:99,
+                  background: isOpen ? 'rgba(255,255,255,0.2)' : sec.color + '20',
+                  color: isOpen ? '#fff' : sec.color
+                }}>{subjects.length} subjects</span>
+                <span style={{
+                  fontSize:10, fontWeight:800, padding:'3px 9px', borderRadius:99,
+                  background: isOpen ? 'rgba(255,255,255,0.2)' : (avgPct >= 70 ? sec.color + '30' : '#F3F4F6'),
+                  color: isOpen ? '#fff' : (avgPct >= 70 ? sec.color : '#9CA3AF')
+                }}>{avgPct}%</span>
+                <span style={{ color: isOpen ? '#fff' : sec.color, fontSize:12,
+                  transform: isOpen ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}>▼</span>
+              </div>
+              {/* Subjects list inside section */}
+              {isOpen && (
+                <div style={{ background: sec.light, display:'flex', flexDirection:'column', gap:8, padding:'10px 10px' }}>
+                  {subjects.map((subj, idx) => {
+                    const col    = PAPER_COL[subj.gs_paper] || PAPER_COL['GS Paper 1'];
+                    const exam   = subj.exam_type || 'both';
+                    const badge  = EXAM_BADGE[exam] || EXAM_BADGE['both'];
+                    const isOpenTrend2 = openTrend === subj.subject;
+                    const hasPYQ = !!PYQ_YEAR_DATA[subj.subject];
+                    return (
+                      <div key={subj.subject} style={{
+                        background:'#fff', borderRadius:12, padding:'12px 14px',
+                        boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
+                        borderLeft:`4px solid ${sec.color}`
+                      }}>
+                        {/* Row 1: name + pills */}
+                        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6,flexWrap:'wrap'}}>
+                          <div style={{flex:1,fontSize:14,fontWeight:700,color:'#1B3A6B',cursor:'pointer',minWidth:100}}
+                            onClick={() => { setView({ paper: subj.gs_paper, subject: subj.subject }); setOpenChapter(null); }}>
+                            {subj.subject}
+                          </div>
+                          <span style={{background:badge.bg,color:badge.color,
+                            fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:99,flexShrink:0}}>
+                            {badge.label}
+                          </span>
+                        </div>
+                        {/* Progress bar(s) */}
+                        {exam === 'both' ? (
+                          <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:6}}>
+                            {[{label:'P',pct:Math.round((subj.pre_pct||0)*100),color:'#1565C0'},{label:'M',pct:Math.round((subj.mains_pct||0)*100),color:'#E65100'}].map(({label,pct,color})=>(
+                              <div key={label} style={{display:'flex',alignItems:'center',gap:6}}>
+                                <span style={{fontSize:9,fontWeight:800,color,width:10}}>{label}</span>
+                                <div style={{flex:1,height:5,background:'#F0F0F0',borderRadius:99}}>
+                                  <div style={{height:'100%',width:`${pct}%`,background:color,borderRadius:99,transition:'width 0.4s'}}/>
+                                </div>
+                                <span style={{fontSize:10,fontWeight:700,color,width:30,textAlign:'right'}}>{pct}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+                            <div style={{flex:1,height:6,background:'#F0F0F0',borderRadius:99}}>
+                              <div style={{height:'100%',width:`${Math.round((subj.completion_pct||0)*100)}%`,
+                                background:exam==='mains'?'#E65100':'#1565C0',borderRadius:99,transition:'width 0.4s'}}/>
+                            </div>
+                            <span style={{fontSize:11,fontWeight:700,color:exam==='mains'?'#E65100':'#1565C0',width:35,textAlign:'right'}}>
+                              {Math.round((subj.completion_pct||0)*100)}%
+                            </span>
+                          </div>
+                        )}
+                        {/* PYQ Trend toggle */}
+                        {hasPYQ && (
+                          <div>
+                            <button onClick={e=>{e.stopPropagation();setOpenTrend(isOpenTrend2?null:subj.subject);}}
+                              style={{display:'flex',alignItems:'center',gap:5,padding:'4px 10px',
+                                border:`1px solid ${sec.color}40`,borderRadius:99,background:isOpenTrend2?sec.color+'15':'#fff',
+                                cursor:'pointer',fontSize:11,fontWeight:600,color:sec.color}}>
+                              <span>📊</span> PYQ Trend
+                            </button>
+                            {isOpenTrend2 && (
+                              <div style={{marginTop:8,padding:'8px 0'}}>
+                                <TrendChart subjectName={subj.subject} examType={exam} />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        });
+      })()}
+      {false && allSubjects.map((subj, idx) => {
         const col     = PAPER_COL[subj.gs_paper] || PAPER_COL['GS Paper 1'];
         const sc      = SUBJ_COLORS[idx % SUBJ_COLORS.length];
         const exam    = subj.exam_type || 'both';
