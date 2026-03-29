@@ -3065,14 +3065,15 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
     <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
       {/* Collapsible sections — only shown in flat list view (not inside a subject) */}
       {!view && (() => {
+        const optSubjects = (grouped['Optional'] || []).map(s => s.subject).join(' & ') || 'Optional Subject';
         const SECTIONS = [
-          { key:'GS Paper 1', label:'General Studies 1', subtitle:'History, Geography & Society',   color:'#2E7D32', bg:'#E8F5E9', light:'#F1FBF2' },
-          { key:'GS Paper 2', label:'General Studies 2', subtitle:'Polity, Governance & IR',        color:'#1565C0', bg:'#E3F0FF', light:'#EEF6FF' },
-          { key:'GS Paper 3', label:'General Studies 3', subtitle:'Economy, Environment & S&T',     color:'#E65100', bg:'#FFF3E0', light:'#FFF8F0' },
-          { key:'GS Paper 4', label:'General Studies 4', subtitle:'Ethics & Integrity',             color:'#6A1B9A', bg:'#F3E5FF', light:'#FAF0FF' },
-          { key:'Essay',      label:'Essay',             subtitle:'Essay Paper',                    color:'#374151', bg:'#F3F4F6', light:'#F9FAFB' },
-          { key:'CSAT',       label:'CSAT',              subtitle:'Civil Services Aptitude Test',   color:'#374151', bg:'#F3F4F6', light:'#F9FAFB' },
-          { key:'Optional',   label:'Optional',          subtitle:'Optional Subject',               color:'#374151', bg:'#F3F4F6', light:'#F9FAFB' },
+          { key:'GS Paper 1', label:'General Studies 1', subtitle:'History, Geography, Society & Culture',           color:'#2E7D32', bg:'#E8F5E9', light:'#F1FBF2' },
+          { key:'GS Paper 2', label:'General Studies 2', subtitle:'Polity, Governance, Social Justice & IR',         color:'#1565C0', bg:'#E3F0FF', light:'#EEF6FF' },
+          { key:'GS Paper 3', label:'General Studies 3', subtitle:'Economy, Environment, S&T, ISC & Disaster Mgmt',  color:'#BF6000', bg:'#FFF3E0', light:'#FFF8F0' },
+          { key:'GS Paper 4', label:'General Studies 4', subtitle:'Ethics, Integrity & Aptitude',                    color:'#6A1B9A', bg:'#F3E5FF', light:'#FAF0FF' },
+          { key:'Essay',      label:'Essay',             subtitle:'Socio-Politico-Economic & Philosophical',          color:'#00695C', bg:'#E0F2F1', light:'#F0FAFA' },
+          { key:'CSAT',       label:'CSAT',              subtitle:'Basic Numeracy, Reasoning & Reading Comprehension',color:'#1565C0', bg:'#E8EAF6', light:'#F3F4FC' },
+          { key:'Optional',   label:'Optional',          subtitle: optSubjects,                                       color:'#7B3F00', bg:'#FFF8F0', light:'#FFFAF5' },
         ];
         return SECTIONS.map(sec => {
           const subjects = grouped[sec.key] || [];
