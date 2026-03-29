@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { api } from '../utils/api';
-import { SubjectsTab, TestsTab, DailyTab } from './StudentApp';
 
 // ── Design tokens (matching StudentApp) ──────────────────────
 const NAVY   = '#1B3A6B';
@@ -644,48 +643,174 @@ function AlertRow({ alert: a, onSelect, color=RED }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════════
-// STUDENT DETAIL (drill-down)
-// ══════════════════════════════════════════════════════════════
-function StudentDetail({ phone, mentorId, students, onBack }) {
-  const studentMeta = students.find(s => s.phone === phone) || {};
-  const [dash, setDash]               = useState(null);
-  const [consistency, setConsistency] = useState(null);
-  const [loading, setLoading]         = useState(true);
-  const [tab, setTab]                 = useState('overview');
-  const [note, setNote]               = useState('');
-  const [saving, setSaving]           = useState(false);
-  const [feedback, setFeedback]       = useState([]);
 
-  // Read-only user object passed to StudentApp tab components
-  const studentUser = { phone, name: studentMeta.name, batch: studentMeta.batch,
-    target_year: studentMeta.target_year, optional: studentMeta.optional };
+// ══════════════════════════════════════════════════════════════
+// NOTES TAB — add + edit feedback (date locked)
+// ══════════════════════════════════════════════════════════════
+function NotesTab({ feedback, setFeedback, mentorId, studentPhone }) {
+  const [note, setNote]         = useState('');
+  const [saving, setSaving]     = useState(false);
+  const [editId, setEditId]     = useState(null);  // id of entry being edited
+  const [editText, setEditText] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
-  useEffect(() => {
-    Promise.all([
-      api('mentorGetStudentDetail', { mentor_id: mentorId, phone }),
-      api('getConsistency', { phone }),
-    ]).then(([d, cons]) => {
-      setDash(d);
-      setFeedback(d.feedback||[]);
-      setConsistency(cons);
-    }).catch(console.error).finally(() => setLoading(false));
-  }, [phone, mentorId]);
+  const fmtDate = str => {
+    if (!str) return '';
+    try {
+      return new Date(str.slice(0,10)).toLocaleDateString('en-IN',
+        { day:'numeric', month:'long', year:'numeric' });
+    } catch { return str; }
+  };
+
+  // Group by date
+  const grouped = {};
+  (feedback || []).forEach(f => {
+    const date = f.created_date ? f.created_date.slice(0,10) : 'Unknown';
+    if (!grouped[date]) grouped[date] = [];
+    grouped[date].push(f);
+  });
+  const dates = Object.keys(grouped).sort((a,b) => b.localeCompare(a));
 
   async function addNote() {
     if (!note.trim()) return;
     setSaving(true);
     try {
       const res = await api('mentorAddFeedback', {
-        mentor_id: mentorId, student_phone: phone, note: note.trim()
+        mentor_id: mentorId, student_phone: studentPhone, note: note.trim()
       });
-      const now = new Date().toLocaleString('en-IN');
-      setFeedback(f => [{ id:res.id, mentor_id:mentorId,
-        student_phone:phone, note:note.trim(), created_date:now }, ...f]);
+      const now = res.created_date || new Date().toLocaleString('en-IN');
+      setFeedback(f => [{ id: res.id, mentor_id: mentorId,
+        student_phone: studentPhone, note: note.trim(), created_date: now }, ...f]);
       setNote('');
-    } catch(e) { alert('Failed to save'); }
+    } catch(e) { alert('Failed to save note'); }
     setSaving(false);
   }
+
+  async function saveEdit(f) {
+    if (!editText.trim()) return;
+    setSavingEdit(true);
+    try {
+      await api('mentorUpdateFeedback', {
+        mentor_id: mentorId, feedback_id: f.id, note: editText.trim()
+      });
+      setFeedback(prev => prev.map(fb => fb.id === f.id ? { ...fb, note: editText.trim() } : fb));
+      setEditId(null); setEditText('');
+    } catch(e) { alert('Failed to update note'); }
+    setSavingEdit(false);
+  }
+
+  return (
+    <div style={{ paddingBottom: 80 }}>
+      {/* Add new note */}
+      <Card>
+        <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:10 }}>
+          📝 Add Note / Feedback
+        </div>
+        <textarea
+          value={note} onChange={e => setNote(e.target.value)}
+          placeholder="Write feedback, observations or action items…"
+          style={{ width:'100%', minHeight:90, padding:'10px 12px',
+            borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13,
+            fontFamily:'inherit', resize:'vertical',
+            boxSizing:'border-box', outline:'none', marginBottom:10 }} />
+        <button onClick={addNote} disabled={saving || !note.trim()}
+          style={{ width:'100%', padding:'12px', borderRadius:10,
+            border:'none', cursor: saving||!note.trim() ? 'not-allowed':'pointer',
+            background: saving||!note.trim() ? '#E5E7EB' : NAVY,
+            color: saving||!note.trim() ? '#9CA3AF' : '#fff',
+            fontSize:13, fontWeight:700 }}>
+          {saving ? 'Saving…' : '💾 Save Note'}
+        </button>
+      </Card>
+
+      {/* Feedback log grouped by date */}
+      <div style={{ fontSize:12, color:'#9CA3AF', marginBottom:6, fontWeight:600, padding:'0 4px' }}>
+        Feedback Log ({feedback.length})
+      </div>
+
+      {dates.length === 0
+        ? <Empty icon="📝" text="No notes yet — add the first one above" />
+        : dates.map(date => (
+          <div key={date}>
+            {/* Date group header */}
+            <div style={{ fontSize:11, fontWeight:700, color:'#6B7280',
+              textTransform:'uppercase', letterSpacing:0.5,
+              padding:'8px 4px 4px' }}>
+              📅 {fmtDate(date)}
+            </div>
+            {grouped[date].map(f => (
+              <Card key={f.id} style={{ borderLeft:`3px solid ${TEAL}`, marginBottom:8 }}>
+                {editId === f.id ? (
+                  <>
+                    <textarea
+                      value={editText} onChange={e => setEditText(e.target.value)}
+                      style={{ width:'100%', minHeight:80, padding:'8px 10px',
+                        borderRadius:8, border:'1.5px solid #00838F', fontSize:13,
+                        fontFamily:'inherit', resize:'vertical',
+                        boxSizing:'border-box', outline:'none', marginBottom:8 }} />
+                    <div style={{ display:'flex', gap:8 }}>
+                      <button onClick={() => saveEdit(f)} disabled={savingEdit || !editText.trim()}
+                        style={{ flex:1, padding:'8px', borderRadius:8, border:'none',
+                          background: savingEdit||!editText.trim() ? '#E5E7EB' : TEAL,
+                          color: savingEdit||!editText.trim() ? '#9CA3AF' : '#fff',
+                          fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                        {savingEdit ? 'Saving…' : '✓ Update'}
+                      </button>
+                      <button onClick={() => { setEditId(null); setEditText(''); }}
+                        style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #E5E7EB',
+                          background:'#fff', fontSize:12, fontWeight:600, cursor:'pointer',
+                          color:'#6B7280' }}>
+                        Cancel
+                      </button>
+                    </div>
+                    {/* Date locked notice */}
+                    <div style={{ fontSize:10, color:'#9CA3AF', marginTop:6 }}>
+                      🔒 Date locked · {f.created_date}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize:13, color:NAVY, lineHeight:1.6,
+                      whiteSpace:'pre-wrap', marginBottom:6 }}>
+                      {f.note}
+                    </div>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <span style={{ fontSize:10, color:'#9CA3AF' }}>{f.created_date}</span>
+                      <button onClick={() => { setEditId(f.id); setEditText(f.note); }}
+                        style={{ fontSize:11, color:TEAL, background:'none', border:'none',
+                          cursor:'pointer', fontWeight:600, padding:'2px 6px' }}>
+                        ✏️ Edit
+                      </button>
+                    </div>
+                  </>
+                )}
+              </Card>
+            ))}
+          </div>
+        ))
+      }
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STUDENT DETAIL (drill-down)
+// ══════════════════════════════════════════════════════════════
+function StudentDetail({ phone, mentorId, students, onBack }) {
+  const studentMeta = students.find(s => s.phone === phone) || {};
+  const [dash, setDash]         = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [tab, setTab]           = useState('overview');
+  const [feedback, setFeedback] = useState([]);
+
+  useEffect(() => {
+    api('mentorGetStudentDetail', { mentor_id: mentorId, phone })
+      .then(d => { setDash(d); setFeedback(d.feedback||[]); })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [phone, mentorId]);
+
+
 
   const DTABS = [
     { key:'overview',    label:'Overview'    },
@@ -804,70 +929,158 @@ function StudentDetail({ phone, mentorId, students, onBack }) {
               </div>
             )}
 
-            {/* ── Subjects ── (identical to student view) */}
+            {/* ── Subjects ── */}
             {tab === 'subjects' && (
-              <SubjectsTab
-                dashboard={dash}
-                user={studentUser}
-                onUpdate={() => {}}
-                gsSummary={dash?.gs_summary}
-              />
+              <div>
+                {(() => {
+                  // Group subjects by GS paper
+                  const byPaper = {};
+                  (dash.subjects||[]).forEach(s => {
+                    if (!byPaper[s.gs_paper]) byPaper[s.gs_paper] = [];
+                    byPaper[s.gs_paper].push(s);
+                  });
+                  return Object.entries(byPaper).map(([paper, subs]) => {
+                    const col = PAPER_COL[paper] || PAPER_COL['GS Paper 1'];
+                    const avg = Math.round(subs.reduce((s,sb)=>s+(sb.completion_pct||0),0)/subs.length);
+                    return (
+                      <Card key={paper} style={{ borderTop:`4px solid ${col.top}` }}>
+                        <div style={{ display:'flex', justifyContent:'space-between',
+                          alignItems:'center', marginBottom:10 }}>
+                          <div style={{ fontSize:13, fontWeight:800, color:col.text }}>
+                            {paper}
+                          </div>
+                          <div style={{ fontSize:12, fontWeight:800, color:col.text }}>
+                            {avg}% avg
+                          </div>
+                        </div>
+                        {subs.map(s => (
+                          <div key={s.subject} style={{ marginBottom:8 }}>
+                            <div style={{ display:'flex', justifyContent:'space-between',
+                              marginBottom:3 }}>
+                              <div style={{ fontSize:11, fontWeight:600, color:NAVY }}>
+                                {s.subject}
+                              </div>
+                              <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                                {s.exam_type === 'both' ? (
+                                  <span style={{ fontSize:10, color:'#9CA3AF' }}>
+                                    P:{s.pre_pct||0}% M:{s.mains_pct||0}%
+                                  </span>
+                                ) : (
+                                  <span style={{ fontSize:11, fontWeight:700, color:col.top }}>
+                                    {s.completion_pct||0}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Bar pct={s.completion_pct||0} color={col.top} height={4} />
+                          </div>
+                        ))}
+                      </Card>
+                    );
+                  });
+                })()}
+              </div>
             )}
 
-            {/* ── Consistency ── (identical to student view) */}
+            {/* ── Consistency ── */}
             {tab === 'consistency' && (
-              <DailyTab
-                dashboard={dash}
-                user={studentUser}
-                onUpdate={() => {}}
-                consistency={consistency}
-                readOnly={true}
-              />
+              <div>
+                <Card>
+                  <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:12 }}>
+                    📊 Consistency Overview
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+                    {[
+                      { label:'This Week',  val:`${dash.consistency?.weekly?.consistency_pct||0}%`,  color:BLUE  },
+                      { label:'This Month', val:`${dash.consistency?.monthly?.consistency_pct||0}%`, color:GREEN },
+                      { label:'Overall',    val:`${dash.consistency?.overall?.consistency_pct||0}%`, color:TEAL  },
+                    ].map(m => (
+                      <div key={m.label} style={{ background:'#F8FAFF', borderRadius:10,
+                        padding:'10px 4px', textAlign:'center' }}>
+                        <div style={{ fontSize:18, fontWeight:900, color:m.color }}>{m.val}</div>
+                        <div style={{ fontSize:9, color:'#6B7280', marginTop:2 }}>{m.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* 30-day heatmap */}
+                {dash.consistency?.heatmap && (
+                  <Card>
+                    <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:10 }}>
+                      🔥 30-Day Activity
+                    </div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>
+                      {dash.consistency.heatmap.map((d,i) => {
+                        const s = d.score;
+                        const bg = s===null?'#F0F0F0': s>=100?'#1B5E20': s>=60?'#F5A623':'#FECACA';
+                        return (
+                          <div key={i} title={`${d.date}: ${s!==null?s+'%':'No log'}`}
+                            style={{ width:16, height:16, borderRadius:3, background:bg }} />
+                        );
+                      })}
+                    </div>
+                    <div style={{ display:'flex', gap:10, marginTop:10,
+                      fontSize:10, color:'#6B7280', flexWrap:'wrap' }}>
+                      {[['#1B5E20','Qualifying'],['#F5A623','Partial'],
+                        ['#FECACA','Low'],['#F0F0F0','No log']].map(([c,l])=>(
+                        <div key={l} style={{ display:'flex', gap:4, alignItems:'center' }}>
+                          <div style={{ width:10, height:10, borderRadius:2, background:c }} />
+                          <span>{l}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+              </div>
             )}
 
-            {/* ── Tests ── (identical to student view) */}
+            {/* ── Tests ── */}
             {tab === 'tests' && (
-              <TestsTab user={studentUser} readOnly={true} />
+              <div>
+                {[
+                  { label:'📝 Prelims Tests', data:dash.test_scores?.prelims },
+                  { label:'✍️ Mains Tests',   data:dash.test_scores?.mains   },
+                ].map(({ label, data }) => (
+                  <Card key={label}>
+                    <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:10 }}>
+                      {label}
+                    </div>
+                    {data?.length ? data.slice(0,10).map((t,i) => (
+                      <div key={i} style={{ display:'flex', justifyContent:'space-between',
+                        padding:'8px 0', borderBottom:'1px solid #F0F0F0', fontSize:12 }}>
+                        <div style={{ flex:1, marginRight:10 }}>
+                          <div style={{ fontWeight:600, color:NAVY }}>{t.test_name||t.test_code}</div>
+                          <div style={{ fontSize:10, color:'#9CA3AF', marginTop:1 }}>{t.date}</div>
+                        </div>
+                        <div style={{ textAlign:'right', flexShrink:0 }}>
+                          <div style={{ fontWeight:800, color:BLUE }}>
+                            {t.marks_scored}/{t.marks_total}
+                          </div>
+                          <div style={{ fontSize:10, color:'#9CA3AF' }}>
+                            {t.marks_total>0
+                              ? Math.round(t.marks_scored/t.marks_total*100)+'%' : '—'}
+                          </div>
+                        </div>
+                      </div>
+                    )) : (
+                      <div style={{ fontSize:12, color:'#9CA3AF', textAlign:'center', padding:12 }}>
+                        No tests attempted yet
+                      </div>
+                    )}
+                  </Card>
+                ))}
+              </div>
             )}
 
             {/* ── Notes ── */}
             {tab === 'notes' && (
-              <div>
-                <Card>
-                  <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:10 }}>
-                    📝 Add Note / Feedback
-                  </div>
-                  <textarea
-                    value={note} onChange={e=>setNote(e.target.value)}
-                    placeholder="Write feedback, observations or action items…"
-                    style={{ width:'100%', minHeight:90, padding:'10px 12px',
-                      borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13,
-                      fontFamily:'inherit', resize:'vertical',
-                      boxSizing:'border-box', outline:'none', marginBottom:10 }} />
-                  <button
-                    onClick={addNote}
-                    disabled={saving || !note.trim()}
-                    style={{ width:'100%', padding:'12px', borderRadius:10,
-                      border:'none', cursor: saving||!note.trim() ? 'not-allowed':'pointer',
-                      background: saving||!note.trim() ? '#E5E7EB' : NAVY,
-                      color: saving||!note.trim() ? '#9CA3AF' : '#fff',
-                      fontSize:13, fontWeight:700 }}>
-                    {saving ? 'Saving…' : '💾 Save Note'}
-                  </button>
-                </Card>
-
-                <div style={{ fontSize:12, color:'#9CA3AF', marginBottom:8, fontWeight:600 }}>
-                  Previous Notes ({feedback.length})
-                </div>
-                {feedback.length ? feedback.map(f => (
-                  <Card key={f.id} style={{ borderLeft:`3px solid ${TEAL}` }}>
-                    <div style={{ fontSize:13, color:NAVY, lineHeight:1.5, marginBottom:6 }}>
-                      {f.note}
-                    </div>
-                    <div style={{ fontSize:10, color:'#9CA3AF' }}>{f.created_date}</div>
-                  </Card>
-                )) : <Empty icon="📝" text="No notes yet — add the first one above" />}
-              </div>
+              <NotesTab
+                feedback={feedback}
+                setFeedback={setFeedback}
+                mentorId={mentorId}
+                studentPhone={phone}
+              />
             )}
           </>
         }

@@ -2286,15 +2286,19 @@ export default function StudentApp({ user, onLogout }) {
   const [consistency, setConsistency] = useState(null);
   const [loading, setLoading]   = useState(true);
 
+  const [feedback, setFeedback] = useState([]);
+
   const loadDashboard = useCallback(async (silent=false) => {
     try {
       if (!silent) setLoading(true);
-      const [dash, cons] = await Promise.all([
+      const [dash, cons, fb] = await Promise.all([
         api('getStudentDashboard', { phone: user.phone }),
         api('getConsistency', { phone: user.phone }),
+        api('studentGetFeedback', { phone: user.phone }),
       ]);
       setDashboard(dash);
       setConsistency(cons);
+      setFeedback(Array.isArray(fb) ? fb : []);
     } catch (e) { console.error(e); }
     finally { if (!silent) setLoading(false); }
   }, [user.phone]);
@@ -2320,11 +2324,12 @@ export default function StudentApp({ user, onLogout }) {
           </div>
         ) : (
           <>
-            {tab === 'home'    && <HomeTab    dashboard={dashboard} consistency={consistency} user={user} onTabChange={setTab} />}
-            {tab === 'subjects'&& <SubjectsTab dashboard={dashboard} user={user} onUpdate={loadDashboard} gsSummary={dashboard?.gs_summary} />}
-            {tab === 'daily'   && <DailyTab   dashboard={dashboard} user={user} onUpdate={loadDashboard} consistency={consistency} />}
-            {tab === 'tests'   && <TestsTab   user={user} />}
-            {tab === 'profile' && <ProfileTab  user={user} dashboard={dashboard} consistency={consistency} />}
+            {tab === 'home'     && <HomeTab    dashboard={dashboard} consistency={consistency} user={user} onTabChange={setTab} />}
+            {tab === 'subjects' && <SubjectsTab dashboard={dashboard} user={user} onUpdate={loadDashboard} gsSummary={dashboard?.gs_summary} />}
+            {tab === 'daily'    && <DailyTab   dashboard={dashboard} user={user} onUpdate={loadDashboard} consistency={consistency} />}
+            {tab === 'tests'    && <TestsTab   user={user} />}
+            {tab === 'feedback' && <FeedbackTab feedback={feedback} />}
+            {tab === 'profile'  && <ProfileTab  user={user} dashboard={dashboard} consistency={consistency} />}
           </>
         )}
       </div>
@@ -2340,10 +2345,11 @@ export default function StudentApp({ user, onLogout }) {
           { key: 'subjects', icon: '📚', label: 'Subjects' },
           { key: 'daily',    icon: '📅', label: 'Daily' },
           { key: 'tests',    icon: '📝', label: 'Tests' },
+          { key: 'feedback', icon: '💬', label: 'Feedback' },
           { key: 'profile',  icon: '👤', label: 'Profile' },
         ].map(t => {
           const isActive = tab === t.key;
-          const COLOR = { home:'#2E7D32', subjects:'#1565C0', daily:'#E65100', tests:'#6A1B9A', profile:'#00838F' };
+          const COLOR = { home:'#2E7D32', subjects:'#1565C0', daily:'#E65100', tests:'#6A1B9A', feedback:'#00695C', profile:'#00838F' };
           const c = COLOR[t.key] || '#1B3A6B';
           return (
             <button key={t.key} onClick={() => setTab(t.key)}
@@ -3553,7 +3559,7 @@ function BreadCrumb({ items, onBack, color }) {
 
 
 // ── Daily Tab ─────────────────────────────────────────────────
-function DailyTab({ dashboard, user, onUpdate, consistency, readOnly=false }) {
+function DailyTab({ dashboard, user, onUpdate, consistency }) {
   // Date picker — default to today in IST
   const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // yyyy-MM-dd
   const [selectedDate, setSelectedDate] = useState(todayIST);
@@ -3667,35 +3673,6 @@ function DailyTab({ dashboard, user, onUpdate, consistency, readOnly=false }) {
           <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 13, padding: 16 }}>
             Can't log future dates
           </div>
-        ) : readOnly ? (
-          // Read-only view for mentors
-          <div>
-            {TASKS_DAILY.map(t => {
-              const val = Number(vals[t.key]) || 0;
-              const pct = Math.min(100, Math.round((val / t.optimal) * 100));
-              return (
-                <div key={t.key} style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <span style={{ fontSize: 14, fontWeight: 500 }}>{t.label}</span>
-                    <span style={{ fontSize: 12, color: '#6B7280' }}>{val} / {t.optimal} min</span>
-                  </div>
-                  <div className="progress-bar-wrap">
-                    <div className="progress-bar-fill" style={{
-                      width: `${pct}%`,
-                      background: pct >= 100 ? '#2E7D32' : pct >= 60 ? '#F5A623' : '#E65100'
-                    }} />
-                  </div>
-                  <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>{pct}% of target</div>
-                </div>
-              );
-            })}
-            {totalPct >= 100 && (
-              <div style={{ background: '#E8F5E9', border: '1.5px solid #2E7D32', borderRadius: 8,
-                padding: '8px 12px', fontSize: 13, color: '#2E7D32', fontWeight: 600 }}>
-                ✅ All targets met — qualifying day
-              </div>
-            )}
-          </div>
         ) : (
           <form onSubmit={handleSubmit}>
             {TASKS_DAILY.map(t => {
@@ -3779,11 +3756,9 @@ function DailyTab({ dashboard, user, onUpdate, consistency, readOnly=false }) {
               <span>No log</span>
             </div>
           </div>
-          {!readOnly && (
-            <div style={{ fontSize: 11, color: '#6B7280', marginTop: 8 }}>
-              Tap any cell to edit that day's log
-            </div>
-          )}
+          <div style={{ fontSize: 11, color: '#6B7280', marginTop: 8 }}>
+            Tap any cell to edit that day's log
+          </div>
         </div>
       )}
 
@@ -4035,26 +4010,83 @@ function ProfileTab({ user, dashboard, consistency }) {
 
 
 
-      {/* Mentor feedback */}
-      {dashboard?.feedback?.length > 0 && (
-        <Card>
-          <div style={{fontSize:12,fontWeight:800,color:'#1B3A6B',marginBottom:12}}>💬 Latest Mentor Feedback</div>
-          {dashboard.feedback.slice(0,2).map((f,i)=>(
-            <div key={i} style={{background:'#F0FDF4',borderRadius:10,padding:'10px 12px',marginBottom:8,
-              borderLeft:'3px solid #2E7D32'}}>
-              <div style={{fontSize:12,color:'#374151',lineHeight:1.5}}>{f.feedback}</div>
-              <div style={{fontSize:10,color:'#9CA3AF',marginTop:4}}>{f.mentor_name} · {f.date}</div>
-            </div>
-          ))}
-        </Card>
-      )}
+{/* Mentor feedback moved to dedicated Feedback tab */}
 
     </div>
   );
 }
 
+
+// ── Feedback Tab ──────────────────────────────────────────────
+function FeedbackTab({ feedback }) {
+  // Group by date (yyyy-MM-dd)
+  const grouped = {};
+  (feedback || []).forEach(f => {
+    const date = f.created_date ? f.created_date.slice(0, 10) : 'Unknown';
+    if (!grouped[date]) grouped[date] = [];
+    grouped[date].push(f);
+  });
+  const dates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+
+  const fmtDate = str => {
+    try {
+      return new Date(str).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+    } catch { return str; }
+  };
+
+  const fmtTime = str => {
+    if (!str) return '';
+    const parts = str.split(' ');
+    return parts[1] || '';
+  };
+
+  return (
+    <div style={{ paddingBottom: 80 }}>
+      <div className="card-title" style={{ padding: '14px 16px 4px', fontSize: 15 }}>
+        💬 Mentor Feedback
+      </div>
+
+      {dates.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '48px 20px', color: '#9CA3AF' }}>
+          <div style={{ fontSize: 36, marginBottom: 8 }}>💬</div>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>No feedback from your mentor yet</div>
+        </div>
+      ) : (
+        dates.map(date => (
+          <div key={date} style={{ marginBottom: 4 }}>
+            {/* Date header */}
+            <div style={{ padding: '10px 16px 4px', fontSize: 11, fontWeight: 700,
+              color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              📅 {fmtDate(date)}
+            </div>
+            {grouped[date].map((f, i) => (
+              <div key={f.id || i} className="card" style={{ marginBottom: 8,
+                borderLeft: '3px solid #00695C' }}>
+                <div style={{ fontSize: 13, color: '#1B3A6B', lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap', marginBottom: 8 }}>
+                  {f.note}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between',
+                  alignItems: 'center' }}>
+                  <span style={{ fontSize: 10, color: '#9CA3AF' }}>
+                    🕐 {fmtTime(f.created_date)}
+                  </span>
+                  <span style={{ fontSize: 10, background: '#E0F2F1',
+                    color: '#00695C', padding: '2px 8px', borderRadius: 99, fontWeight: 600 }}>
+                    Mentor
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
 // ── Tests Tab ─────────────────────────────────────────────────
-function TestsTab({ user, readOnly=false }) {
+function TestsTab({ user }) {
   const [scores, setScores]   = useState(null);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding]   = useState(null);
@@ -4130,16 +4162,16 @@ function TestsTab({ user, readOnly=false }) {
     <>
       {SECTIONS.map(sec => (
         <TestSection key={sec.key} section={sec} scores={scores}
-          onAdd={readOnly ? null : (series, preSubject) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm(preSubject ? { subject_name: preSubject } : {}); }}
-          onEdit={readOnly ? null : (series, entry) => startEdit(sec, series, entry)}
-          onDelete={readOnly ? null : (series, entry) => {
+          onAdd={(series, preSubject) => { setAdding({ category: sec.key, series, cmtKey: sec.cmtKey }); setForm(preSubject ? { subject_name: preSubject } : {}); }}
+          onEdit={(series, entry) => startEdit(sec, series, entry)}
+          onDelete={(series, entry) => {
             const testType = series === 'CMT' ? 'cmt' : series === 'AWP' ? 'awp' : sec.key;
             deleteTest(testType, entry.row_id);
           }}
         />
       ))}
 
-      {!readOnly && adding && (
+      {adding && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center' }}
           onClick={e => e.target===e.currentTarget && setAdding(null)}>
           <div style={{ background:'#fff', borderRadius:18, padding:24, width:'92%', maxWidth:480, maxHeight:'90vh', overflowY:'auto' }}>
@@ -4411,7 +4443,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
       {section.isCMT ? (
         <>
           <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:12 }}>
-            {onAdd && <button className="btn btn-sm btn-saffron" onClick={() => onAdd('CMT')}>+ Add</button>}
+            <button className="btn btn-sm btn-saffron" onClick={() => onAdd('CMT')}>+ Add</button>
           </div>
           {dedupe(scores?.cmt||[]).length ? dedupe(scores?.cmt||[]).map((r,i) => {
             // Derive correct max marks from section: CSAT CMT = 50, GS CMT = 40
@@ -4437,8 +4469,8 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                       {full ? '✅' : '⚠️'}
                     </div>
                   </div>
-                  {onEdit && <button onClick={() => onEdit('CMT', r)} style={editBtnStyle}>✏️</button>}
-                  {onDelete && <button onClick={() => onDelete('CMT', r)} style={deleteBtnStyle}>🗑</button>}
+                  <button onClick={() => onEdit('CMT', r)} style={editBtnStyle}>✏️</button>
+                  <button onClick={() => onDelete('CMT', r)} style={deleteBtnStyle}>🗑</button>
                 </div>
               </div>
             );
@@ -4459,7 +4491,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                 </button>
               );
             })}
-            {onAdd && <button className="btn btn-sm btn-saffron" style={{ marginLeft:'auto' }} onClick={() => onAdd(activeSeries)}>+ Add</button>}
+            <button className="btn btn-sm btn-saffron" style={{ marginLeft:'auto' }} onClick={() => onAdd(activeSeries)}>+ Add</button>
           </div>
 
           {activeSeries === 'AWP' ? (() => {
@@ -4496,7 +4528,7 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                             <div style={{ fontSize:10, color: done?'#2E7D32':'#9CA3AF' }}>{done?'✅':''}</div>
                           </div>
                           <button
-                            onClick={() => onAdd && onAdd('AWP', subj.name)}
+                            onClick={() => onAdd('AWP', subj.name)}
                             style={{ background:'#FFF3E0', border:'none', borderRadius:6, padding:'4px 8px', fontSize:12, cursor:'pointer', color:'#E65100', fontWeight:600 }}>
                             + Log
                           </button>
@@ -4564,8 +4596,8 @@ function TestSection({ section, scores, onAdd, onEdit, onDelete }) {
                       {r.attempted==='Yes'?'Done':'Not Done'}
                     </span>
                   )}
-                  {onEdit && <button onClick={() => onEdit(activeSeries, r)} style={editBtnStyle} title="Edit">✏️</button>}
-                  {onDelete && <button onClick={() => onDelete(activeSeries, r)} style={deleteBtnStyle} title="Delete">🗑</button>}
+                  <button onClick={() => onEdit(activeSeries, r)} style={editBtnStyle} title="Edit">✏️</button>
+                  <button onClick={() => onDelete(activeSeries, r)} style={deleteBtnStyle} title="Delete">🗑</button>
                 </div>
               </div>
             </div>
@@ -4585,8 +4617,5 @@ function getScoreColor(scored, total) {
   if (pct >= 40) return '#E65100';
   return '#B00020';
 }
-
-// ── Shared exports for MentorApp ──────────────────────────────
-export { SubjectsTab, TestsTab, DailyTab };
 
 
