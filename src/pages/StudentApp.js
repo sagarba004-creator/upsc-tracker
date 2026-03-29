@@ -3994,56 +3994,12 @@ function ProfileTab({ user, dashboard, consistency }) {
             </div>
           ))}
         </div>
-        {/* Progress bar for each */}
-        {[
-          {label:'Proficiency',    val:proficiency,  color:'#2E7D32'},
-          {label:'Exam Readiness', val:readiness,    color:'#E65100'},
-          {label:'Consistency',    val:consistScore, color:TEAL},
-        ].map(s=>(
-          <div key={s.label} style={{marginBottom:8}}>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'#6B7280',marginBottom:3}}>
-              <span>{s.label}</span><span style={{fontWeight:700,color:s.color}}>{s.val}%</span>
-            </div>
-            <div style={{height:6,background:'#F0F0F0',borderRadius:99}}>
-              <div style={{height:'100%',width:`${s.val}%`,background:s.color,borderRadius:99,transition:'width 0.4s'}}/>
-            </div>
-          </div>
-        ))}
+
       </Card>
 
-      {/* Subject progress */}
-      <Card>
-        <div style={{fontSize:12,fontWeight:800,color:'#1B3A6B',marginBottom:12}}>📚 Subject Progress</div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
-          {[
-            {label:'Total Subjects', val:totalSubj,  color:'#1565C0'},
-            {label:'Avg Completion', val:avgCompl+'%',color:'#2E7D32'},
-            {label:'Fully Done',     val:fullDone,   color:'#E65100'},
-          ].map(s=>(
-            <div key={s.label} style={{background:'#F8FAFF',borderRadius:10,padding:'10px 4px',textAlign:'center'}}>
-              <div style={{fontSize:22,fontWeight:900,color:s.color}}>{s.val}</div>
-              <div style={{fontSize:9,color:'#6B7280',fontWeight:600,marginTop:2,lineHeight:1.3}}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </Card>
 
-      {/* Study hours */}
-      <Card>
-        <div style={{fontSize:12,fontWeight:800,color:'#1B3A6B',marginBottom:12}}>⏱ Study Hours (30 days)</div>
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
-          {[
-            {label:'Total',      val:fmtH(totalMins), color:'#1565C0'},
-            {label:'Avg Daily',  val:fmtH(avgDaily),  color:'#2E7D32'},
-            {label:'Days Logged',val:loggedDays,       color:TEAL},
-          ].map(s=>(
-            <div key={s.label} style={{background:'#F8FAFF',borderRadius:10,padding:'10px 4px',textAlign:'center'}}>
-              <div style={{fontSize:18,fontWeight:900,color:s.color}}>{s.val}</div>
-              <div style={{fontSize:9,color:'#6B7280',fontWeight:600,marginTop:2}}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </Card>
+
+
 
       {/* Mentor feedback */}
       {dashboard?.feedback?.length > 0 && (
