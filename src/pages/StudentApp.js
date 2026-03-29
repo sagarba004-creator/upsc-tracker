@@ -3166,7 +3166,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                         {/* Progress bar(s) */}
                         {exam === 'both' ? (
                           <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:6}}>
-                            {[{label:'P',pct:Math.round((subj.pre_pct||0)*100),color:'#1565C0'},{label:'M',pct:Math.round((subj.mains_pct||0)*100),color:'#E65100'}].map(({label,pct,color})=>(
+                            {[{label:'P',pct:(subj.pre_pct||0),color:'#1565C0'},{label:'M',pct:(subj.mains_pct||0),color:'#E65100'}].map(({label,pct,color})=>(
                               <div key={label} style={{display:'flex',alignItems:'center',gap:6}}>
                                 <span style={{fontSize:9,fontWeight:800,color,width:10}}>{label}</span>
                                 <div style={{flex:1,height:5,background:'#F0F0F0',borderRadius:99}}>
@@ -3179,11 +3179,11 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                         ) : (
                           <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
                             <div style={{flex:1,height:6,background:'#F0F0F0',borderRadius:99}}>
-                              <div style={{height:'100%',width:`${Math.round((subj.completion_pct||0)*100)}%`,
+                              <div style={{height:'100%',width:`${subj.completion_pct||0}%`,
                                 background:exam==='mains'?'#E65100':'#1565C0',borderRadius:99,transition:'width 0.4s'}}/>
                             </div>
                             <span style={{fontSize:11,fontWeight:700,color:exam==='mains'?'#E65100':'#1565C0',width:35,textAlign:'right'}}>
-                              {Math.round((subj.completion_pct||0)*100)}%
+                              {subj.completion_pct||0}%
                             </span>
                           </div>
                         )}
