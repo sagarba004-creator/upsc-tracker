@@ -3140,7 +3140,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                           background: isOpen ? 'rgba(255,255,255,0.2)' : '#EEF4FF',
                           color: isOpen ? '#fff' : '#1565C0',
                           border: isOpen ? 'none' : '1px solid #90CAF9'
-                        }}>Pre {+(secPreWt*100).toFixed(1)}%</span>
+                        }}>Pre Wt {+(secPreWt*100).toFixed(1)}%</span>
                       )}
                       {secMainsWt > 0.001 && (
                         <span style={{
@@ -3148,7 +3148,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                           background: isOpen ? 'rgba(255,255,255,0.2)' : '#FFF3E0',
                           color: isOpen ? '#fff' : '#E65100',
                           border: isOpen ? 'none' : '1px solid #FFCC80'
-                        }}>Mains {+(secMainsWt*100).toFixed(1)}%</span>
+                        }}>Mains Wt {+(secMainsWt*100).toFixed(1)}%</span>
                       )}
                     </div>
                   );
@@ -3181,22 +3181,22 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary }) {
                           {(exam === 'pre' || exam === 'both') && subj.subject_pre_wt > 0 && (
                             <span style={{background:'#EEF4FF',color:'#1565C0',border:'1px solid #90CAF9',
                               fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:99,whiteSpace:'nowrap',flexShrink:0}}>
-                              Pre {+((subj.subject_pre_wt||0)*100).toFixed(1)}%
+                              Pre Wt {+((subj.subject_pre_wt||0)*100).toFixed(1)}%
                             </span>
                           )}
                           {(exam === 'mains' || exam === 'both') && subj.subject_mains_wt > 0 && (
                             <span style={{background:'#FFF3E0',color:'#E65100',border:'1px solid #FFCC80',
                               fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:99,whiteSpace:'nowrap',flexShrink:0}}>
-                              Mains {+((subj.subject_mains_wt||0)*100).toFixed(1)}%
+                              Mains Wt {+((subj.subject_mains_wt||0)*100).toFixed(1)}%
                             </span>
                           )}
                         </div>
                         {/* Progress bar(s) */}
                         {exam === 'both' ? (
                           <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:6}}>
-                            {[{label:'P',pct:(subj.pre_pct||0),color:'#1565C0'},{label:'M',pct:(subj.mains_pct||0),color:'#E65100'}].map(({label,pct,color})=>(
+                            {[{label:'Pre',pct:(subj.pre_pct||0),color:'#1565C0'},{label:'Mains',pct:(subj.mains_pct||0),color:'#E65100'}].map(({label,pct,color})=>(
                               <div key={label} style={{display:'flex',alignItems:'center',gap:6}}>
-                                <span style={{fontSize:9,fontWeight:800,color,width:10}}>{label}</span>
+                                <span style={{fontSize:9,fontWeight:800,color,whiteSpace:'nowrap',marginRight:2}}>{label}</span>
                                 <div style={{flex:1,height:5,background:'#F0F0F0',borderRadius:99}}>
                                   <div style={{height:'100%',width:`${pct}%`,background:color,borderRadius:99,transition:'width 0.4s'}}/>
                                 </div>
