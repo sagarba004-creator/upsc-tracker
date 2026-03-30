@@ -111,13 +111,18 @@ function StudentsTab({ onSelect, onAdd }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setStudents(await api('adminGetStudents', { batch:batch||undefined })); }
+    try { setStudents(await api('adminGetStudents')); }
     catch(e){} finally { setLoading(false); }
-  }, [batch]);
+  }, []);
   useEffect(() => { load(); }, [load]);
 
-  const filtered = students.filter(s =>
-    !search || s.name?.toLowerCase().includes(search.toLowerCase()) || String(s.phone).includes(search));
+  const batches = [...new Set(students.map(s => s.batch).filter(Boolean))].sort();
+
+  const filtered = students.filter(s => {
+    const matchSearch = !search || s.name?.toLowerCase().includes(search.toLowerCase()) || String(s.phone).includes(search);
+    const matchBatch  = !batch || s.batch === batch;
+    return matchSearch && matchBatch;
+  });
 
   async function handleDownload() {
     try {
@@ -135,8 +140,12 @@ function StudentsTab({ onSelect, onAdd }) {
       <div style={{ display:'flex', gap:8, marginBottom:12 }}>
         <input className="input-field" style={{ flex:1, margin:0 }} placeholder="🔍 Search name or phone..."
           value={search} onChange={e => setSearch(e.target.value)} />
-        <input className="input-field" style={{ width:80, margin:0 }} placeholder="Batch"
-          value={batch} onChange={e => setBatch(e.target.value)} />
+        <select value={batch} onChange={e => setBatch(e.target.value)}
+          style={{ padding:'8px 10px', borderRadius:8, border:`1px solid ${C.border}`,
+            fontSize:13, background:'#fff', minWidth:90 }}>
+          <option value="">All batches</option>
+          {batches.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
         <button className="btn btn-sm btn-primary" onClick={onAdd} style={{ flexShrink:0 }}>+ Add</button>
       </div>
 
