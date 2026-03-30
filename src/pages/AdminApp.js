@@ -474,22 +474,30 @@ function StudentDetail({ student, onBack }) {
 // ALERTS TAB
 // ══════════════════════════════════════════════════════════════
 function AlertsTab({ onSelect }) {
-  const [alerts, setAlerts] = useState([]);
+  const [alerts, setAlerts]   = useState([]);
   const [loading, setLoading] = useState(true);
+  const [batch, setBatch]     = useState('');
   useEffect(() => {
     api('adminGetAlerts').then(setAlerts).catch(console.error).finally(() => setLoading(false));
   }, []);
   if (loading) return <LoadingSpinner />;
+  const batches = [...new Set(alerts.map(a => a.batch).filter(Boolean))].sort();
+  const filtered = batch ? alerts.filter(a => a.batch === batch) : alerts;
   return (
     <>
-      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
         <span style={{ fontSize:20 }}>🚨</span>
-        <div>
+        <div style={{ flex:1 }}>
           <div style={{ fontWeight:700, fontSize:15 }}>Student Alerts</div>
-          <div style={{ fontSize:12, color:C.sub }}>{alerts.length} students need attention</div>
+          <div style={{ fontSize:12, color:C.sub }}>{filtered.length} students need attention</div>
         </div>
+        <select value={batch} onChange={e => setBatch(e.target.value)}
+          style={{ padding:'6px 8px', borderRadius:8, border:`1px solid ${C.border}`, fontSize:12 }}>
+          <option value="">All batches</option>
+          {batches.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
       </div>
-      {alerts.map(a => (
+      {filtered.map(a => (
         <Card key={a.phone} onClick={() => onSelect(a)} style={{ borderLeft:`4px solid ${C.red}` }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
             <div style={{ flex:1 }}>
@@ -508,7 +516,7 @@ function AlertsTab({ onSelect }) {
           </div>
         </Card>
       ))}
-      {!alerts.length && <Empty icon="✅" text="No alerts — all students on track!" />}
+      {!filtered.length && <Empty icon="✅" text="No alerts — all students on track!" />}
     </>
   );
 }
@@ -519,21 +527,29 @@ function AlertsTab({ onSelect }) {
 function LeaderboardTab({ onSelect }) {
   const [board, setBoard]     = useState([]);
   const [loading, setLoading] = useState(true);
+  const [batch, setBatch]     = useState('');
   useEffect(() => {
     api('adminGetLeaderboard').then(setBoard).catch(console.error).finally(() => setLoading(false));
   }, []);
   if (loading) return <LoadingSpinner />;
+  const batches = [...new Set(board.map(s => s.batch).filter(Boolean))].sort();
+  const filtered = batch ? board.filter(s => s.batch === batch) : board;
   const MEDAL = ['🥇','🥈','🥉'];
   return (
     <>
-      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
         <span style={{ fontSize:20 }}>🏆</span>
-        <div>
+        <div style={{ flex:1 }}>
           <div style={{ fontWeight:700, fontSize:15 }}>Top 30 Students</div>
           <div style={{ fontSize:12, color:C.sub }}>Ranked by progress + consistency + activity</div>
         </div>
+        <select value={batch} onChange={e => setBatch(e.target.value)}
+          style={{ padding:'6px 8px', borderRadius:8, border:`1px solid ${C.border}`, fontSize:12 }}>
+          <option value="">All batches</option>
+          {batches.map(b => <option key={b} value={b}>{b}</option>)}
+        </select>
       </div>
-      {board.map((s, i) => (
+      {filtered.map((s, i) => (
         <Card key={s.phone} onClick={() => onSelect(s)}>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
             <div style={{ fontSize:i<3?24:15, fontWeight:800, color:C.sub, width:32, textAlign:'center', flexShrink:0 }}>
@@ -557,7 +573,7 @@ function LeaderboardTab({ onSelect }) {
           </div>
         </Card>
       ))}
-      {!board.length && <Empty icon="🏆" text="No data yet" />}
+      {!filtered.length && <Empty icon="🏆" text="No data yet" />}
     </>
   );
 }
@@ -568,6 +584,7 @@ function LeaderboardTab({ onSelect }) {
 function MentorsTab({ onAdd, onSelect }) {
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch]   = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -586,11 +603,18 @@ function MentorsTab({ onAdd, onSelect }) {
 
   return (
     <>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
         <div style={{ fontWeight:700, fontSize:15 }}>Mentors ({mentors.length})</div>
         <button className="btn btn-primary btn-sm" onClick={onAdd}>+ Add Mentor</button>
       </div>
-      {loading ? <LoadingSpinner /> : mentors.map(m => (
+      <input className="input-field" style={{ margin:'0 0 12px', width:'100%', boxSizing:'border-box' }}
+        placeholder="🔍 Search mentor name or phone..."
+        value={search} onChange={e => setSearch(e.target.value)} />
+      {loading ? <LoadingSpinner /> : (() => {
+        const filtered = search
+          ? mentors.filter(m => m.name?.toLowerCase().includes(search.toLowerCase()) || String(m.phone).includes(search))
+          : mentors;
+        return filtered.map(m => (
         <Card key={m.mentor_id} onClick={() => onSelect(m)}
           style={{ borderLeft:`4px solid ${C.teal}` }}>
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
@@ -613,7 +637,8 @@ function MentorsTab({ onAdd, onSelect }) {
             </button>
           </div>
         </Card>
-      ))}
+        ));
+      })()}
       {!loading && !mentors.length && <Empty icon="🧑‍🏫" text="No mentors yet" />}
     </>
   );
@@ -623,13 +648,14 @@ function MentorsTab({ onAdd, onSelect }) {
 // MENTOR DETAIL
 // ══════════════════════════════════════════════════════════════
 function MentorDetail({ mentor, onBack }) {
-  const [students, setStudents] = useState([]);
+  const [students, setStudents]       = useState([]);
   const [allStudents, setAllStudents] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [tab, setTab]           = useState('students');
-  const [selStudent, setSelStudent] = useState('');
-  const [selType, setSelType]       = useState('General Mentor');
-  const [assigning, setAssigning]   = useState(false);
+  const [loading, setLoading]         = useState(true);
+  const [tab, setTab]                 = useState('students');
+  const [selType, setSelType]         = useState('General Mentor');
+  const [checkedPhones, setCheckedPhones] = useState(new Set()); // multi-select
+  const [filterBatch, setFilterBatch] = useState('');
+  const [assigning, setAssigning]     = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   useEffect(() => {
@@ -642,19 +668,49 @@ function MentorDetail({ mentor, onBack }) {
     }).catch(console.error).finally(() => setLoading(false));
   }, [mentor.phone, mentor.mentor_id]);
 
-  async function handleAssignStudent() {
-    if (!selStudent) return;
+  // Unassigned students not yet linked to this mentor
+  const unassigned = allStudents.filter(s =>
+    !students.some(x => String(x.phone) === String(s.phone))
+  );
+  // Batch options from unassigned list
+  const batchOptions = [...new Set(unassigned.map(s => s.batch).filter(Boolean))].sort();
+  // Filtered unassigned
+  const filteredUnassigned = filterBatch
+    ? unassigned.filter(s => s.batch === filterBatch)
+    : unassigned;
+
+  function toggleCheck(phone) {
+    setCheckedPhones(prev => {
+      const next = new Set(prev);
+      next.has(phone) ? next.delete(phone) : next.add(phone);
+      return next;
+    });
+  }
+  function toggleAll() {
+    if (checkedPhones.size === filteredUnassigned.length) {
+      setCheckedPhones(new Set());
+    } else {
+      setCheckedPhones(new Set(filteredUnassigned.map(s => String(s.phone))));
+    }
+  }
+
+  async function handleAssignStudents() {
+    if (!checkedPhones.size) return;
     setAssigning(true);
+    let successCount = 0;
     try {
-      await api('adminAssignMentor', {
-        mentor_id: String(mentor.phone),
-        student_phone: selStudent,
-        type: selType,
-      });
-      const s = allStudents.find(x => String(x.phone) === String(selStudent));
-      if (s) setStudents(prev => [...prev, { ...s, overall_pct:0, consistency_7d:0, days_since_active:999 }]);
-      setSelStudent('');
-      alert('Student assigned ✓');
+      for (const phone of checkedPhones) {
+        await api('adminAssignMentor', {
+          mentor_id: String(mentor.phone),
+          student_phone: phone,
+          type: selType,
+        });
+        const s = allStudents.find(x => String(x.phone) === phone);
+        if (s) setStudents(prev => [...prev, { ...s, overall_pct:0, consistency_7d:0, days_since_active:999 }]);
+        successCount++;
+      }
+      setCheckedPhones(new Set());
+      alert(`${successCount} student${successCount!==1?'s':''} assigned ✓`);
     } catch(e) { alert('Failed: ' + e.message); }
     finally { setAssigning(false); }
   }
@@ -693,33 +749,78 @@ function MentorDetail({ mentor, onBack }) {
         {loading ? <LoadingSpinner /> : <>
 
           {tab==='students' && <>
-            {/* Assign student */}
+            {/* Assign students — multi-select */}
             <Card>
-              <SectionTitle>➕ Assign Student to this Mentor</SectionTitle>
+              <SectionTitle>➕ Assign Students to this Mentor</SectionTitle>
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                <select value={selType} onChange={e => setSelType(e.target.value)}
-                  style={{ width:'100%', padding:'8px 10px', borderRadius:8,
-                    border:`1px solid ${C.border}`, fontSize:13, fontWeight:600,
-                    color: selType==='Chief Mentor'?C.purple:selType==='Super Mentor'?C.orange:C.teal }}>
-                  <option value="General Mentor">General Mentor</option>
-                  <option value="Super Mentor">Super Mentor</option>
-                  <option value="Chief Mentor">Chief Mentor</option>
-                </select>
+                {/* Type + Batch filters row */}
                 <div style={{ display:'flex', gap:8 }}>
-                  <select value={selStudent} onChange={e => setSelStudent(e.target.value)}
+                  <select value={selType} onChange={e => setSelType(e.target.value)}
                     style={{ flex:1, padding:'8px 10px', borderRadius:8,
-                      border:`1px solid ${C.border}`, fontSize:13 }}>
-                    <option value="">Select student...</option>
-                    {allStudents
-                      .filter(s => !students.some(x => String(x.phone)===String(s.phone)))
-                      .map(s => (
-                        <option key={s.phone} value={s.phone}>{s.name} · {s.batch||'No batch'}</option>
-                      ))}
+                      border:`1px solid ${C.border}`, fontSize:12, fontWeight:600,
+                      color: selType==='Chief Mentor'?C.purple:selType==='Super Mentor'?C.orange:C.teal }}>
+                    <option value="General Mentor">General Mentor</option>
+                    <option value="Super Mentor">Super Mentor</option>
+                    <option value="Chief Mentor">Chief Mentor</option>
                   </select>
-                  <button className="btn btn-primary btn-sm" onClick={handleAssignStudent} disabled={assigning}>
-                    {assigning ? '…' : 'Assign'}
-                  </button>
+                  <select value={filterBatch} onChange={e => { setFilterBatch(e.target.value); setCheckedPhones(new Set()); }}
+                    style={{ flex:1, padding:'8px 10px', borderRadius:8,
+                      border:`1px solid ${C.border}`, fontSize:12 }}>
+                    <option value="">All batches</option>
+                    {batchOptions.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
                 </div>
+
+                {/* Select all + count */}
+                {filteredUnassigned.length > 0 && (
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+                    padding:'4px 0', borderBottom:`1px solid ${C.border}` }}>
+                    <label style={{ display:'flex', alignItems:'center', gap:6, fontSize:12,
+                      fontWeight:600, color:C.sub, cursor:'pointer' }}>
+                      <input type="checkbox"
+                        checked={checkedPhones.size === filteredUnassigned.length && filteredUnassigned.length > 0}
+                        onChange={toggleAll} />
+                      Select all ({filteredUnassigned.length})
+                    </label>
+                    {checkedPhones.size > 0 && (
+                      <span style={{ fontSize:11, color:C.blue, fontWeight:700 }}>
+                        {checkedPhones.size} selected
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Scrollable student checklist */}
+                <div style={{ maxHeight:200, overflowY:'auto', border:`1px solid ${C.border}`,
+                  borderRadius:8, padding:'4px 0' }}>
+                  {filteredUnassigned.length === 0
+                    ? <div style={{ fontSize:12, color:C.sub, padding:'12px', textAlign:'center' }}>
+                        {filterBatch ? `No unassigned students in batch ${filterBatch}` : 'All students assigned'}
+                      </div>
+                    : filteredUnassigned.map(s => (
+                      <label key={s.phone} style={{ display:'flex', alignItems:'center', gap:10,
+                        padding:'8px 12px', cursor:'pointer', borderBottom:`1px solid ${C.border}`,
+                        background: checkedPhones.has(String(s.phone)) ? '#EFF6FF' : 'transparent' }}>
+                        <input type="checkbox"
+                          checked={checkedPhones.has(String(s.phone))}
+                          onChange={() => toggleCheck(String(s.phone))} />
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:13, fontWeight:600, color:C.text }}>{s.name}</div>
+                          <div style={{ fontSize:11, color:C.sub }}>{s.phone} · {s.batch||'No batch'}</div>
+                        </div>
+                        {s.overall_pct > 0 && (
+                          <span style={{ fontSize:11, color:C.blue, fontWeight:600 }}>{s.overall_pct}%</span>
+                        )}
+                      </label>
+                    ))
+                  }
+                </div>
+
+                <button className="btn btn-primary" onClick={handleAssignStudents}
+                  disabled={assigning || checkedPhones.size === 0}
+                  style={{ width:'100%' }}>
+                  {assigning ? `Assigning… (${checkedPhones.size})` : `Assign ${checkedPhones.size || ''} Student${checkedPhones.size!==1?'s':''}`}
+                </button>
               </div>
             </Card>
 
