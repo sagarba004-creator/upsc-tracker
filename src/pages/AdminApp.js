@@ -730,6 +730,13 @@ function MentorDetail({ mentor, onBack }) {
           <div>
             <div style={{ fontSize:15, fontWeight:700 }}>{mentor.name}</div>
             <div className="sub">{mentor.phone} · {mentor.student_count} students</div>
+            <div style={{ marginTop:3 }}>
+              <span style={{ fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:99,
+                background: mentor.mentor_type==='Chief Mentor'?'#EDE9FE':mentor.mentor_type==='Super Mentor'?'#FEF3C7':'#CCFBF1',
+                color: mentor.mentor_type==='Chief Mentor'?C.purple:mentor.mentor_type==='Super Mentor'?C.orange:C.teal }}>
+                {mentor.mentor_type||'General Mentor'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -749,7 +756,8 @@ function MentorDetail({ mentor, onBack }) {
         {loading ? <LoadingSpinner /> : <>
 
           {tab==='students' && <>
-            {/* Assign students — multi-select */}
+            {/* Assign students — only for Chief/Super Mentors */}
+            {(mentor.mentor_type === 'Chief Mentor' || mentor.mentor_type === 'Super Mentor') ? (
             <Card>
               <SectionTitle>➕ Assign Students to this Mentor</SectionTitle>
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -823,6 +831,20 @@ function MentorDetail({ mentor, onBack }) {
                 </button>
               </div>
             </Card>
+            ) : (
+            <Card style={{ background:'#F0FDF4', border:`1px solid #86EFAC` }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <span style={{ fontSize:20 }}>✅</span>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:700, color:C.green }}>General Mentor — All Students</div>
+                  <div style={{ fontSize:12, color:C.sub, marginTop:2 }}>
+                    General Mentors are automatically assigned to all students and see their full dashboard.
+                    No manual assignment needed.
+                  </div>
+                </div>
+              </div>
+            </Card>
+            )}
 
             {/* Student list */}
             <div style={{ fontSize:12, color:C.sub, marginBottom:8 }}>
@@ -1018,9 +1040,22 @@ function AddMentorForm({ onDone, onCancel }) {
           {error && <div style={{ background:'#FEE2E2', color:C.red, padding:'10px 12px',
             borderRadius:8, fontSize:13, marginBottom:12 }}>{error}</div>}
           <div style={{ background:'#EFF6FF', border:`1px solid #BFDBFE`, borderRadius:8,
-            padding:'10px 12px', fontSize:12, color:C.blue, marginBottom:12 }}>
+            padding:'10px 12px', fontSize:12, color:C.blue, marginBottom:8 }}>
             💡 Mentor ID should be the mentor's phone number for consistent matching.
           </div>
+          {form.mentor_type === 'General Mentor' && (
+            <div style={{ background:'#F0FDF4', border:`1px solid #86EFAC`, borderRadius:8,
+              padding:'10px 12px', fontSize:12, color:C.green, marginBottom:12 }}>
+              ✅ <strong>General Mentor</strong> will be automatically assigned to all existing students,
+              and to every new student added in future.
+            </div>
+          )}
+          {(form.mentor_type === 'Chief Mentor' || form.mentor_type === 'Super Mentor') && (
+            <div style={{ background:'#FFF7ED', border:`1px solid #FED7AA`, borderRadius:8,
+              padding:'10px 12px', fontSize:12, color:C.orange, marginBottom:12 }}>
+              📌 <strong>{form.mentor_type}</strong> must be manually assigned to specific students from their profile.
+            </div>
+          )}
           <form onSubmit={handleSubmit}>
             {[
               { key:'mentor_id', label:'Mentor ID (use phone number)' },
