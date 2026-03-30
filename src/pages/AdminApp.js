@@ -153,7 +153,7 @@ function StudentsTab({ onSelect, onAdd }) {
                 </div>
                 <div style={{ fontSize:11, color:C.sub }}>{s.phone} · {s.batch||'No batch'} · {s.optional||'—'}</div>
                 <div style={{ display:'flex', gap:6, marginTop:4, flexWrap:'wrap' }}>
-                  {s.alerts?.includes('inactive') && <Pill color={C.red} small>Inactive {s.days_since_active}d</Pill>}
+                  {s.alerts?.includes('inactive') && <Pill color={C.red} small>{s.days_since_active>=999?'Never logged':`Inactive ${s.days_since_active}d`}</Pill>}
                   {s.alerts?.includes('low_consistency') && <Pill color={C.amber} small>Cons {s.consistency_7d}%</Pill>}
                 </div>
               </div>
@@ -477,7 +477,7 @@ function AlertsTab({ onSelect }) {
             </div>
             <div style={{ textAlign:'right', flexShrink:0 }}>
               <div style={{ fontSize:11, color:C.sub }}>Inactive</div>
-              <div style={{ fontSize:20, fontWeight:800, color:C.red }}>{a.days_since_active}d</div>
+              <div style={{ fontSize:20, fontWeight:800, color:C.red }}>{a.days_since_active>=999?'Never':`${a.days_since_active}d`}</div>
             </div>
           </div>
         </Card>
@@ -521,7 +521,7 @@ function LeaderboardTab({ onSelect }) {
                 <span style={{ fontSize:11, color:C.blue }}>📚 {s.overall_pct}%</span>
                 <span style={{ fontSize:11, color:C.teal }}>🔥 {s.consistency_7d}%</span>
                 <span style={{ fontSize:11, color:s.days_since_active<=1?C.green:C.sub }}>
-                  ⚡ {s.days_since_active===0?'Today':`${s.days_since_active}d ago`}
+                  ⚡ {s.days_since_active===0?'Today':s.days_since_active>=999?'Never':`${s.days_since_active}d ago`}
                 </span>
               </div>
             </div>
