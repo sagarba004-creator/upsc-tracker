@@ -594,6 +594,18 @@ function MentorsTab({ onAdd, onSelect }) {
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
+  const [syncing, setSyncing] = useState(false);
+
+  async function handleSync() {
+    if (!window.confirm('This will assign all General Mentors to every student. Continue?')) return;
+    setSyncing(true);
+    try {
+      const res = await api('syncGeneralMentors', { adminKey: 'legacy2024admin' });
+      alert(`Sync complete ✓\n${res.added} new assignments created\n${res.general_mentors} General Mentor(s) × ${res.students} students`);
+      load();
+    } catch(e) { alert('Sync failed: ' + e.message); }
+    finally { setSyncing(false); }
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -614,7 +626,13 @@ function MentorsTab({ onAdd, onSelect }) {
     <>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
         <div style={{ fontWeight:700, fontSize:15 }}>Mentors ({mentors.length})</div>
-        <button className="btn btn-primary btn-sm" onClick={onAdd}>+ Add Mentor</button>
+        <div style={{ display:'flex', gap:6 }}>
+          <button className="btn btn-sm btn-outline" onClick={handleSync} disabled={syncing}
+            title="Assign all General Mentors to all students">
+            {syncing ? '…' : '🔄 Sync'}
+          </button>
+          <button className="btn btn-primary btn-sm" onClick={onAdd}>+ Add Mentor</button>
+        </div>
       </div>
       <input className="input-field" style={{ margin:'0 0 12px', width:'100%', boxSizing:'border-box' }}
         placeholder="🔍 Search mentor name or phone..."
