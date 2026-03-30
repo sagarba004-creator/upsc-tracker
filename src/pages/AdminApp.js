@@ -203,9 +203,9 @@ function StudentDetail({ student, onBack }) {
       setDash(d); setCons(cons); setMentors(ms);
       setEditForm({ name:student.name, batch:student.batch,
         target_year:student.target_year, optional:student.optional });
-      // derive current assignments from mentor list
-      const assigned = ms.flatMap(m =>
-        (m.students||[]).includes(String(student.phone)) ? [m] : []
+      // derive assigned mentors — check if student phone appears in mentor's students list
+      const assigned = ms.filter(m =>
+        (m.students||[]).map(String).includes(String(student.phone))
       );
       setAssignments(assigned);
     }).catch(console.error).finally(() => setLoading(false));
@@ -347,7 +347,8 @@ function StudentDetail({ student, onBack }) {
 
             {/* Assigned mentors */}
             <Card>
-              <SectionTitle>🧑‍🏫 Assigned Mentors</SectionTitle>
+              <SectionTitle>🧑‍🏫 Assigned Mentors ({assignments.length})</SectionTitle>
+
               {assignments.length ? assignments.map(m => (
                 <div key={m.mentor_id} style={{ display:'flex', alignItems:'center', gap:10,
                   padding:'8px 0', borderBottom:`1px solid ${C.border}` }}>
@@ -356,25 +357,32 @@ function StudentDetail({ student, onBack }) {
                     <div style={{ fontSize:13, fontWeight:600 }}>{m.name}</div>
                     <div style={{ fontSize:11, color:C.sub }}>{m.phone}</div>
                   </div>
-                  <Pill color={C.teal} small>Assigned</Pill>
+                  <Pill color={C.teal} small>Mentor</Pill>
                 </div>
-              )) : <div style={{ fontSize:12, color:C.sub }}>No mentor assigned yet</div>}
+              )) : (
+                <div style={{ fontSize:12, color:C.sub, marginBottom:8 }}>No mentor assigned yet</div>
+              )}
 
-              {/* Assign new mentor */}
+              {/* Assign additional mentor */}
               <div style={{ marginTop:12, paddingTop:12, borderTop:`1px solid ${C.border}` }}>
-                <div style={{ fontSize:11, color:C.sub, marginBottom:6 }}>Assign mentor</div>
+                <div style={{ fontSize:11, color:C.sub, marginBottom:6 }}>
+                  ➕ Add another mentor
+                </div>
                 <div style={{ display:'flex', gap:8 }}>
                   <select value={selMentor} onChange={e => setSelMentor(e.target.value)}
                     style={{ flex:1, padding:'8px 10px', borderRadius:8,
                       border:`1px solid ${C.border}`, fontSize:13 }}>
                     <option value="">Select mentor...</option>
-                    {mentors.map(m => (
-                      <option key={m.mentor_id} value={m.mentor_id}>
-                        {m.name} · {m.student_count} students
-                      </option>
-                    ))}
+                    {mentors
+                      .filter(m => !assignments.some(a => String(a.mentor_id) === String(m.mentor_id)))
+                      .map(m => (
+                        <option key={m.mentor_id} value={m.mentor_id}>
+                          {m.name} · {m.student_count} assigned
+                        </option>
+                      ))}
                   </select>
-                  <button className="btn btn-primary btn-sm" onClick={handleAssign} disabled={assigning}>
+                  <button className="btn btn-primary btn-sm" onClick={handleAssign}
+                    disabled={assigning || !selMentor}>
                     {assigning ? '…' : 'Assign'}
                   </button>
                 </div>
