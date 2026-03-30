@@ -598,8 +598,12 @@ function MentorsTab({ onAdd, onSelect }) {
             <div style={{ flex:1 }}>
               <div style={{ fontWeight:700, fontSize:14 }}>{m.name}</div>
               <div style={{ fontSize:11, color:C.sub }}>{m.phone} · ID: {m.mentor_id}</div>
-              <div style={{ marginTop:4 }}>
-                <Pill color={C.teal} small>👥 {m.student_count} student{m.student_count!==1?'s':''}</Pill>
+              <div style={{ display:'flex', gap:6, marginTop:4, flexWrap:'wrap' }}>
+                <Pill color={
+                  m.mentor_type==='Chief Mentor'?C.purple:
+                  m.mentor_type==='Super Mentor'?C.orange:C.teal
+                } small>{m.mentor_type||'General Mentor'}</Pill>
+                <Pill color={C.blue} small>👥 {m.student_count} student{m.student_count!==1?'s':''}</Pill>
               </div>
             </div>
             <button onClick={e => { e.stopPropagation(); handleRemove(m.mentor_id, m.name); }}
@@ -890,7 +894,7 @@ function AddStudentForm({ onDone, onCancel }) {
 // ADD MENTOR FORM
 // ══════════════════════════════════════════════════════════════
 function AddMentorForm({ onDone, onCancel }) {
-  const [form, setForm]     = useState({ mentor_id:'', name:'', phone:'' });
+  const [form, setForm]     = useState({ mentor_id:'', name:'', phone:'', mentor_type:'General Mentor' });
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
 
@@ -928,6 +932,16 @@ function AddMentorForm({ onDone, onCancel }) {
                   value={form[f.key]} onChange={e => setForm(v=>({...v,[f.key]:e.target.value}))} />
               </div>
             ))}
+            <div className="input-group">
+              <label>Mentor Type</label>
+              <select className="input-field" style={{ margin:0, fontWeight:600,
+                color: form.mentor_type==='Chief Mentor'?'#7C3AED':form.mentor_type==='Super Mentor'?'#EA580C':'#0D9488' }}
+                value={form.mentor_type} onChange={e => setForm(v=>({...v, mentor_type:e.target.value}))}>
+                <option value="General Mentor">General Mentor</option>
+                <option value="Super Mentor">Super Mentor</option>
+                <option value="Chief Mentor">Chief Mentor</option>
+              </select>
+            </div>
             <div style={{ display:'flex', gap:10 }}>
               <button type="button" className="btn btn-outline" onClick={onCancel}>Cancel</button>
               <button type="submit" className="btn btn-primary" style={{ flex:1 }} disabled={saving}>
