@@ -185,6 +185,7 @@ function StudentDetail({ student, onBack }) {
   const [mentors, setMentors]     = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [selMentor, setSelMentor] = useState('');
+  const [selMentorType, setSelMentorType] = useState('General Mentor');
   const [assigning, setAssigning] = useState(false);
   const [removing, setRemoving]   = useState(false);
   const [editing, setEditing]     = useState(false);
@@ -204,9 +205,13 @@ function StudentDetail({ student, onBack }) {
       setEditForm({ name:student.name, batch:student.batch,
         target_year:student.target_year, optional:student.optional });
       // derive assigned mentors — check if student phone appears in mentor's students list
-      const assigned = ms.filter(m =>
-        (m.students||[]).map(String).includes(String(student.phone))
-      );
+      // attach mentor_type from the student_types map on each mentor
+      const assigned = ms
+        .filter(m => (m.students||[]).map(String).includes(String(student.phone)))
+        .map(m => ({
+          ...m,
+          mentor_type: (m.student_types||{})[String(student.phone)] || 'General Mentor'
+        }));
       setAssignments(assigned);
     }).catch(console.error).finally(() => setLoading(false));
   }, [student.phone]);
@@ -222,7 +227,7 @@ function StudentDetail({ student, onBack }) {
     if (!selMentor) return;
     setAssigning(true);
     try {
-      await api('adminAssignMentor', { mentor_id:selMentor, student_phone:student.phone, type:'student' });
+      await api('adminAssignMentor', { mentor_id:selMentor, student_phone:student.phone, type:selMentorType });
       const m = mentors.find(x => String(x.mentor_id) === String(selMentor));
       if (m) setAssignments(a => [...a, m]);
       setSelMentor('');
@@ -357,7 +362,10 @@ function StudentDetail({ student, onBack }) {
                     <div style={{ fontSize:13, fontWeight:600 }}>{m.name}</div>
                     <div style={{ fontSize:11, color:C.sub }}>{m.phone}</div>
                   </div>
-                  <Pill color={C.teal} small>Mentor</Pill>
+                  <Pill color={
+                    m.mentor_type==='Chief Mentor'?C.purple:
+                    m.mentor_type==='Super Mentor'?C.orange:C.teal
+                  } small>{m.mentor_type||'General Mentor'}</Pill>
                 </div>
               )) : (
                 <div style={{ fontSize:12, color:C.sub, marginBottom:8 }}>No mentor assigned yet</div>
@@ -368,23 +376,33 @@ function StudentDetail({ student, onBack }) {
                 <div style={{ fontSize:11, color:C.sub, marginBottom:6 }}>
                   ➕ Add another mentor
                 </div>
-                <div style={{ display:'flex', gap:8 }}>
-                  <select value={selMentor} onChange={e => setSelMentor(e.target.value)}
-                    style={{ flex:1, padding:'8px 10px', borderRadius:8,
-                      border:`1px solid ${C.border}`, fontSize:13 }}>
-                    <option value="">Select mentor...</option>
-                    {mentors
-                      .filter(m => !assignments.some(a => String(a.mentor_id) === String(m.mentor_id)))
-                      .map(m => (
-                        <option key={m.mentor_id} value={m.mentor_id}>
-                          {m.name} · {m.student_count} assigned
-                        </option>
-                      ))}
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  <select value={selMentorType} onChange={e => setSelMentorType(e.target.value)}
+                    style={{ width:'100%', padding:'8px 10px', borderRadius:8,
+                      border:`1px solid ${C.border}`, fontSize:13, fontWeight:600,
+                      color: selMentorType==='Chief Mentor'?C.purple:selMentorType==='Super Mentor'?C.orange:C.teal }}>
+                    <option value="General Mentor">General Mentor</option>
+                    <option value="Super Mentor">Super Mentor</option>
+                    <option value="Chief Mentor">Chief Mentor</option>
                   </select>
-                  <button className="btn btn-primary btn-sm" onClick={handleAssign}
-                    disabled={assigning || !selMentor}>
-                    {assigning ? '…' : 'Assign'}
-                  </button>
+                  <div style={{ display:'flex', gap:8 }}>
+                    <select value={selMentor} onChange={e => setSelMentor(e.target.value)}
+                      style={{ flex:1, padding:'8px 10px', borderRadius:8,
+                        border:`1px solid ${C.border}`, fontSize:13 }}>
+                      <option value="">Select mentor...</option>
+                      {mentors
+                        .filter(m => !assignments.some(a => String(a.mentor_id) === String(m.mentor_id)))
+                        .map(m => (
+                          <option key={m.mentor_id} value={m.mentor_id}>
+                            {m.name} · {m.student_count} assigned
+                          </option>
+                        ))}
+                    </select>
+                    <button className="btn btn-primary btn-sm" onClick={handleAssign}
+                      disabled={assigning || !selMentor}>
+                      {assigning ? '…' : 'Assign'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </Card>
@@ -606,6 +624,7 @@ function MentorDetail({ mentor, onBack }) {
   const [loading, setLoading]   = useState(true);
   const [tab, setTab]           = useState('students');
   const [selStudent, setSelStudent] = useState('');
+  const [selType, setSelType]       = useState('General Mentor');
   const [assigning, setAssigning]   = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
@@ -626,7 +645,7 @@ function MentorDetail({ mentor, onBack }) {
       await api('adminAssignMentor', {
         mentor_id: String(mentor.phone),
         student_phone: selStudent,
-        type: 'student',
+        type: selType,
       });
       const s = allStudents.find(x => String(x.phone) === String(selStudent));
       if (s) setStudents(prev => [...prev, { ...s, overall_pct:0, consistency_7d:0, days_since_active:999 }]);
@@ -673,20 +692,30 @@ function MentorDetail({ mentor, onBack }) {
             {/* Assign student */}
             <Card>
               <SectionTitle>➕ Assign Student to this Mentor</SectionTitle>
-              <div style={{ display:'flex', gap:8 }}>
-                <select value={selStudent} onChange={e => setSelStudent(e.target.value)}
-                  style={{ flex:1, padding:'8px 10px', borderRadius:8,
-                    border:`1px solid ${C.border}`, fontSize:13 }}>
-                  <option value="">Select student...</option>
-                  {allStudents
-                    .filter(s => !students.some(x => String(x.phone)===String(s.phone)))
-                    .map(s => (
-                      <option key={s.phone} value={s.phone}>{s.name} · {s.batch||'No batch'}</option>
-                    ))}
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                <select value={selType} onChange={e => setSelType(e.target.value)}
+                  style={{ width:'100%', padding:'8px 10px', borderRadius:8,
+                    border:`1px solid ${C.border}`, fontSize:13, fontWeight:600,
+                    color: selType==='Chief Mentor'?C.purple:selType==='Super Mentor'?C.orange:C.teal }}>
+                  <option value="General Mentor">General Mentor</option>
+                  <option value="Super Mentor">Super Mentor</option>
+                  <option value="Chief Mentor">Chief Mentor</option>
                 </select>
-                <button className="btn btn-primary btn-sm" onClick={handleAssignStudent} disabled={assigning}>
-                  {assigning ? '…' : 'Assign'}
-                </button>
+                <div style={{ display:'flex', gap:8 }}>
+                  <select value={selStudent} onChange={e => setSelStudent(e.target.value)}
+                    style={{ flex:1, padding:'8px 10px', borderRadius:8,
+                      border:`1px solid ${C.border}`, fontSize:13 }}>
+                    <option value="">Select student...</option>
+                    {allStudents
+                      .filter(s => !students.some(x => String(x.phone)===String(s.phone)))
+                      .map(s => (
+                        <option key={s.phone} value={s.phone}>{s.name} · {s.batch||'No batch'}</option>
+                      ))}
+                  </select>
+                  <button className="btn btn-primary btn-sm" onClick={handleAssignStudent} disabled={assigning}>
+                    {assigning ? '…' : 'Assign'}
+                  </button>
+                </div>
               </div>
             </Card>
 
