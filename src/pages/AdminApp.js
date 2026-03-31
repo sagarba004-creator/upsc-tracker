@@ -380,39 +380,59 @@ function StudentDetail({ student, onBack }) {
                 <div style={{ fontSize:12, color:C.sub, marginBottom:8 }}>No mentor assigned yet</div>
               )}
 
-              {/* Assign additional mentor */}
+              {/* Assign / Replace mentor */}
               <div style={{ marginTop:12, paddingTop:12, borderTop:`1px solid ${C.border}` }}>
-                <div style={{ fontSize:11, color:C.sub, marginBottom:6 }}>
-                  ➕ Add another mentor
-                </div>
-                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  <select value={selMentorType} onChange={e => setSelMentorType(e.target.value)}
-                    style={{ width:'100%', padding:'8px 10px', borderRadius:8,
-                      border:`1px solid ${C.border}`, fontSize:13, fontWeight:600,
-                      color: selMentorType==='Chief Mentor'?C.purple:selMentorType==='Super Mentor'?C.orange:C.teal }}>
-                    <option value="General Mentor">General Mentor</option>
-                    <option value="Super Mentor">Super Mentor</option>
-                    <option value="Chief Mentor">Chief Mentor</option>
-                  </select>
-                  <div style={{ display:'flex', gap:8 }}>
-                    <select value={selMentor} onChange={e => setSelMentor(e.target.value)}
-                      style={{ flex:1, padding:'8px 10px', borderRadius:8,
-                        border:`1px solid ${C.border}`, fontSize:13 }}>
-                      <option value="">Select mentor...</option>
-                      {mentors
-                        .filter(m => !assignments.some(a => String(a.mentor_id) === String(m.mentor_id)))
-                        .map(m => (
-                          <option key={m.mentor_id} value={m.mentor_id}>
-                            {m.name} · {m.student_count} assigned
-                          </option>
-                        ))}
-                    </select>
-                    <button className="btn btn-primary btn-sm" onClick={handleAssign}
-                      disabled={assigning || !selMentor}>
-                      {assigning ? '…' : 'Assign'}
-                    </button>
-                  </div>
-                </div>
+                {(() => {
+                  const existingSuper = assignments.find(a => a.mentor_type === 'Super Mentor');
+                  const existingChief = assignments.find(a => a.mentor_type === 'Chief Mentor');
+                  const willReplace   = (selMentorType === 'Super Mentor' && existingSuper) ||
+                                        (selMentorType === 'Chief Mentor' && existingChief);
+                  const replaceName   = selMentorType === 'Super Mentor' ? existingSuper?.name :
+                                        selMentorType === 'Chief Mentor' ? existingChief?.name : null;
+                  return (
+                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      <div style={{ fontSize:11, color:C.sub }}>
+                        {willReplace ? `⚠️ Replaces current ${selMentorType}` : '➕ Assign mentor'}
+                      </div>
+                      {willReplace && (
+                        <div style={{ background:'#FFF7ED', border:`1px solid #FED7AA`,
+                          borderRadius:8, padding:'8px 12px', fontSize:12, color:C.orange }}>
+                          <strong>{replaceName}</strong> will be replaced as {selMentorType}.
+                          A student can only have one {selMentorType}.
+                        </div>
+                      )}
+                      <select value={selMentorType} onChange={e => setSelMentorType(e.target.value)}
+                        style={{ width:'100%', padding:'8px 10px', borderRadius:8,
+                          border:`1px solid ${C.border}`, fontSize:13, fontWeight:600,
+                          color: selMentorType==='Chief Mentor'?C.purple:selMentorType==='Super Mentor'?C.orange:C.teal }}>
+                        <option value="General Mentor">General Mentor</option>
+                        <option value="Super Mentor">Super Mentor</option>
+                        <option value="Chief Mentor">Chief Mentor</option>
+                      </select>
+                      <div style={{ display:'flex', gap:8 }}>
+                        <select value={selMentor} onChange={e => setSelMentor(e.target.value)}
+                          style={{ flex:1, padding:'8px 10px', borderRadius:8,
+                            border:`1px solid ${C.border}`, fontSize:13 }}>
+                          <option value="">Select mentor...</option>
+                          {mentors
+                            .filter(m => !assignments.some(a =>
+                              String(a.mentor_id) === String(m.mentor_id) && a.mentor_type === selMentorType
+                            ))
+                            .map(m => (
+                              <option key={m.mentor_id} value={m.mentor_id}>
+                                {m.name} · {m.student_count} assigned
+                              </option>
+                            ))}
+                        </select>
+                        <button className="btn btn-primary btn-sm" onClick={handleAssign}
+                          disabled={assigning || !selMentor}
+                          style={{ background: willReplace ? C.orange : undefined, minWidth:70 }}>
+                          {assigning ? '…' : willReplace ? 'Replace' : 'Assign'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </Card>
 
@@ -597,9 +617,12 @@ function MentorsTab({ onAdd, onSelect }) {
   const [syncing, setSyncing] = useState(false);
 
   async function handleSync() {
-    if (!window.confirm('This will assign all General Mentors to every student. Continue?')) return;
+    if (!window.confirm('This will:\n1. Fix mentor types from existing assignments\n2. Assign all General Mentors to every student\n\nContinue?')) return;
     setSyncing(true);
     try {
+      // Step 1: Fix mentor_type column for existing mentors
+      await api('syncMentorTypes', { adminKey: 'legacy2024admin' });
+      // Step 2: Create General Mentor assignment rows
       const res = await api('syncGeneralMentors', { adminKey: 'legacy2024admin' });
       alert(`Sync complete ✓\n${res.added} new assignments created\n${res.general_mentors} General Mentor(s) × ${res.students} students`);
       load();
