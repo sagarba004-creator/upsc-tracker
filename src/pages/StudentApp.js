@@ -2581,7 +2581,7 @@ function HomeTab({ dashboard, consistency, user, onTabChange, feedback=[], unrea
             <div key={i} style={{ padding:'10px', background:'#F0FDF4', borderRadius:8,
               marginBottom:8, borderLeft:'3px solid #16A34A' }}>
               <div style={{ fontSize:13, color:'#1E293B' }}>{f.note}</div>
-              <div style={{ fontSize:10, color:'#64748B', marginTop:4 }}>{f.created_date}</div>
+              <div style={{ fontSize:10, color:'#64748B', marginTop:4 }}>{f.created_date ? new Date(f.created_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : ''}</div>
             </div>
           ))}
         </div>
@@ -3933,7 +3933,7 @@ function ProfileTab({ user, dashboard, consistency }) {
   );
 
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:0,paddingBottom:80}}>
+    <div style={{display:'flex',flexDirection:'column',gap:0,paddingBottom:120}}>
 
       {/* Avatar + name card */}
       <Card>
@@ -4054,7 +4054,7 @@ function FeedbackTab({ feedback, onSeen }) {
     catch { return str; }
   };
   return (
-    <div style={{ paddingBottom: 80 }}>
+    <div style={{ paddingBottom: 120 }}>
       <div className="card-title" style={{ padding: '14px 16px 4px', fontSize: 15 }}>💬 Mentor Feedback</div>
       {dates.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 20px', color: '#9CA3AF' }}>
@@ -4072,7 +4072,7 @@ function FeedbackTab({ feedback, onSeen }) {
               <div style={{ fontSize: 13, color: '#1B3A6B', lineHeight: 1.6,
                 whiteSpace: 'pre-wrap', marginBottom: 8 }}>{f.note}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: '#9CA3AF' }}>🕐 {f.created_date}</span>
+                <span style={{ fontSize: 10, color: '#9CA3AF' }}>🕐 {f.created_date ? new Date(f.created_date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) + ' · ' + new Date(f.created_date).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}) : ''}</span>
                 <span style={{ fontSize: 10, background: '#E0F2F1', color: '#00695C',
                   padding: '2px 8px', borderRadius: 99, fontWeight: 600 }}>Mentor</span>
               </div>
