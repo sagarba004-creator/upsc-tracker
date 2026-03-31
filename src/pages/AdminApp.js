@@ -104,24 +104,54 @@ export default function AdminApp({ user, onLogout }) {
 // STUDENTS TAB
 // ══════════════════════════════════════════════════════════════
 function StudentsTab({ onSelect, onAdd }) {
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [search, setSearch]     = useState('');
-  const [batch, setBatch]       = useState('');
+  const [students, setStudents]   = useState([]);
+  const [mentors, setMentors]     = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState('');
+  const [batch, setBatch]         = useState('');
+  const [superMentorFilter, setSuperMentorFilter] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setStudents(await api('adminGetStudents')); }
-    catch(e){} finally { setLoading(false); }
+    try {
+      const [studs, ments] = await Promise.all([
+        api('adminGetStudents'),
+        api('adminGetMentors'),
+      ]);
+      setStudents(studs);
+      setMentors(ments);
+    } catch(e){} finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  // Build phone → super mentor name map
+  const superMentorMap = {};
+  mentors.forEach(m => {
+    if (m.mentor_type === 'Super Mentor') {
+      (m.students||[]).forEach(phone => {
+        superMentorMap[String(phone)] = m.name;
+      });
+    }
+  });
+
+  // Build phone → chief mentor name map
+  const chiefMentorMap = {};
+  mentors.forEach(m => {
+    if (m.mentor_type === 'Chief Mentor') {
+      (m.students||[]).forEach(phone => {
+        chiefMentorMap[String(phone)] = m.name;
+      });
+    }
+  });
+
+  const superMentors = mentors.filter(m => m.mentor_type === 'Super Mentor');
   const batches = [...new Set(students.map(s => s.batch).filter(Boolean))].sort();
 
   const filtered = students.filter(s => {
     const matchSearch = !search || s.name?.toLowerCase().includes(search.toLowerCase()) || String(s.phone).includes(search);
     const matchBatch  = !batch || s.batch === batch;
-    return matchSearch && matchBatch;
+    const matchSuper  = !superMentorFilter || superMentorMap[String(s.phone)] === superMentorFilter;
+    return matchSearch && matchBatch && matchSuper;
   });
 
   async function handleDownload() {
@@ -137,16 +167,24 @@ function StudentsTab({ onSelect, onAdd }) {
 
   return (
     <>
-      <div style={{ display:'flex', gap:8, marginBottom:12 }}>
+      <div style={{ display:'flex', gap:8, marginBottom:8 }}>
         <input className="input-field" style={{ flex:1, margin:0 }} placeholder="🔍 Search name or phone..."
           value={search} onChange={e => setSearch(e.target.value)} />
+        <button className="btn btn-sm btn-primary" onClick={onAdd} style={{ flexShrink:0 }}>+ Add</button>
+      </div>
+      <div style={{ display:'flex', gap:8, marginBottom:12 }}>
         <select value={batch} onChange={e => setBatch(e.target.value)}
-          style={{ padding:'8px 10px', borderRadius:8, border:`1px solid ${C.border}`,
-            fontSize:13, background:'#fff', minWidth:90 }}>
+          style={{ flex:1, padding:'8px 10px', borderRadius:8, border:`1px solid ${C.border}`,
+            fontSize:12, background:'#fff' }}>
           <option value="">All batches</option>
           {batches.map(b => <option key={b} value={b}>{b}</option>)}
         </select>
-        <button className="btn btn-sm btn-primary" onClick={onAdd} style={{ flexShrink:0 }}>+ Add</button>
+        <select value={superMentorFilter} onChange={e => setSuperMentorFilter(e.target.value)}
+          style={{ flex:1, padding:'8px 10px', borderRadius:8, border:`1px solid ${C.border}`,
+            fontSize:12, background:'#fff', color: superMentorFilter ? C.orange : undefined }}>
+          <option value="">All Super Mentors</option>
+          {superMentors.map(m => <option key={m.mentor_id} value={m.name}>{m.name}</option>)}
+        </select>
       </div>
 
       {loading ? <LoadingSpinner /> : <>
@@ -164,6 +202,12 @@ function StudentsTab({ onSelect, onAdd }) {
                 <div style={{ display:'flex', gap:6, marginTop:4, flexWrap:'wrap' }}>
                   {s.alerts?.includes('inactive') && <Pill color={C.red} small>{s.days_since_active>=999?'Never logged':`Inactive ${s.days_since_active}d`}</Pill>}
                   {s.alerts?.includes('low_consistency') && <Pill color={C.amber} small>Cons {s.consistency_7d}%</Pill>}
+                  {superMentorMap[String(s.phone)] && (
+                    <Pill color={C.orange} small>⭐ {superMentorMap[String(s.phone)]}</Pill>
+                  )}
+                  {chiefMentorMap[String(s.phone)] && (
+                    <Pill color={C.purple} small>👑 {chiefMentorMap[String(s.phone)]}</Pill>
+                  )}
                 </div>
               </div>
               <div style={{ textAlign:'right', flexShrink:0 }}>
