@@ -708,6 +708,7 @@ function MentorDetail({ mentor, onBack }) {
   const [checkedPhones, setCheckedPhones] = useState(new Set()); // multi-select
   const [filterBatch, setFilterBatch] = useState('');
   const [assigning, setAssigning]     = useState(false);
+  const [removingPhone, setRemovingPhone] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   const [allMentors, setAllMentors]         = useState([]);
@@ -782,6 +783,20 @@ function MentorDetail({ mentor, onBack }) {
       alert(`${successCount} student${successCount!==1?'s':''} assigned ✓`);
     } catch(e) { alert('Failed: ' + e.message); }
     finally { setAssigning(false); }
+  }
+
+  async function handleRemoveStudent(s) {
+    if (!window.confirm(`Remove ${s.name} from ${mentor.name}?`)) return;
+    setRemovingPhone(String(s.phone));
+    try {
+      await api('adminRemoveMentorAssignment', {
+        mentor_id: String(mentor.mentor_id || mentor.phone),
+        student_phone: String(s.phone),
+        type: mentor.mentor_type || 'Super Mentor',
+      });
+      setStudents(prev => prev.filter(x => String(x.phone) !== String(s.phone)));
+    } catch(e) { alert('Failed to remove: ' + e.message); }
+    finally { setRemovingPhone(null); }
   }
 
   if (selectedStudent) return (
@@ -920,11 +935,11 @@ function MentorDetail({ mentor, onBack }) {
               {students.length} assigned student{students.length!==1?'s':''}
             </div>
             {students.map(s => (
-              <Card key={s.phone} onClick={() => setSelectedStudent(s)}
+              <Card key={s.phone}
                 style={{ borderLeft:`4px solid ${s.days_since_active>=3||s.consistency_7d<50?C.red:C.blue}` }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <Avatar name={s.name} size={38} />
-                  <div style={{ flex:1, minWidth:0 }}>
+                  <Avatar name={s.name} size={38} onClick={() => setSelectedStudent(s)} />
+                  <div style={{ flex:1, minWidth:0, cursor:'pointer' }} onClick={() => setSelectedStudent(s)}>
                     <div style={{ fontWeight:700, fontSize:13 }}>{s.name}</div>
                     <div style={{ fontSize:11, color:C.sub }}>{s.phone} · {s.batch||'No batch'}</div>
                     <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>
@@ -935,8 +950,16 @@ function MentorDetail({ mentor, onBack }) {
                       </span>
                     </div>
                   </div>
-                  <div style={{ textAlign:'right' }}>
-                    <div style={{ fontSize:20, fontWeight:800, color:C.navy }}>{s.overall_pct||0}%</div>
+                  <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4, flexShrink:0 }}>
+                    <div style={{ fontSize:18, fontWeight:800, color:C.navy }}>{s.overall_pct||0}%</div>
+                    <button
+                      onClick={e => { e.stopPropagation(); handleRemoveStudent(s); }}
+                      disabled={removingPhone === String(s.phone)}
+                      style={{ background:'#FEE2E2', border:'none', color:C.red,
+                        borderRadius:6, padding:'3px 8px', fontSize:11,
+                        cursor:'pointer', fontWeight:600 }}>
+                      {removingPhone === String(s.phone) ? '…' : '✕ Remove'}
+                    </button>
                   </div>
                 </div>
               </Card>
