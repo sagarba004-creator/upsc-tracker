@@ -25,11 +25,14 @@
   --shadow:     0 2px 12px rgba(0,0,0,0.08);
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
   color: var(--text);
-  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -37,11 +40,11 @@ body {
 .app-shell {
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--bg);
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 /* ── Top bar ── */
@@ -52,13 +55,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
   z-index: 100;
+  flex-shrink: 0;
 }
 .topbar h1 { font-size: 17px; font-weight: 700; }
 .topbar .sub { font-size: 12px; opacity: 0.75; margin-top: 2px; }
@@ -69,13 +69,10 @@ body {
   background: var(--card);
   border-top: 1px solid var(--border);
   display: flex;
-  position: fixed;
+  position: sticky;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
   z-index: 100;
+  flex-shrink: 0;
 }
 .bottom-nav button {
   flex: 1;
@@ -95,7 +92,7 @@ body {
 .bottom-nav button svg { width: 22px; height: 22px; }
 
 /* ── Page content ── */
-.page { flex: 1; padding: 16px; padding-top: 80px; padding-bottom: 120px; }
+.page { flex: 1; padding: 16px; padding-bottom: 24px; overflow-y: auto; min-height: 0; }
 
 /* ── Card ── */
 .card {
