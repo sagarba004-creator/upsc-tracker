@@ -3895,7 +3895,7 @@ function ProfileTab({ user, dashboard, consistency }) {
   const [mentors, setMentors] = useState([]);
   useEffect(() => {
     if (!user?.phone) return;
-    api({ action: 'studentGetMentors', phone: user.phone })
+    api('studentGetMentors', { phone: user.phone })
       .then(data => setMentors(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, [user?.phone]);
