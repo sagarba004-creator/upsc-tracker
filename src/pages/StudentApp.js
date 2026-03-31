@@ -2345,7 +2345,7 @@ export default function StudentApp({ user, onLogout }) {
         ) : (
           <>
             {tab === 'home'    && <HomeTab    dashboard={dashboard} consistency={consistency} user={user} onTabChange={setTab} />}
-            {tab === 'subjects'&& <SubjectsTab dashboard={dashboard} user={user} onUpdate={loadDashboard} gsSummary={dashboard?.gs_summary} />}
+            {tab === 'subjects'&& <SubjectsTab dashboard={dashboard} user={user} onUpdate={loadDashboard} gsSummary={dashboard?.gs_summary} showWeights={true} />}
             {tab === 'daily'   && <DailyTab   dashboard={dashboard} user={user} onUpdate={loadDashboard} consistency={consistency} />}
             {tab === 'tests'    && <TestsTab   user={user} />}
             {tab === 'feedback' && <FeedbackTab feedback={feedback} onSeen={markFeedbackSeen} />}
