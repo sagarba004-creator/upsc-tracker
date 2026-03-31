@@ -3098,45 +3098,59 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
                             onClick={() => { setView({ paper: subj.gs_paper, subject: subj.subject }); setOpenChapter(null); }}>
                             {subj.subject}
                           </div>
-                          {/* Weight pills */}
-                          {showWeights && (exam === 'pre' || exam === 'both') && subj.subject_pre_wt > 0 && (
-                            <span style={{background:'#EEF4FF',color:'#1565C0',border:'1px solid #90CAF9',
-                              fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:99,whiteSpace:'nowrap',flexShrink:0}}>
-                              Pre Wt {+((subj.subject_pre_wt||0)*100).toFixed(1)}%
-                            </span>
-                          )}
-                          {showWeights && (exam === 'mains' || exam === 'both') && subj.subject_mains_wt > 0 && (
-                            <span style={{background:'#FFF3E0',color:'#E65100',border:'1px solid #FFCC80',
-                              fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:99,whiteSpace:'nowrap',flexShrink:0}}>
-                              Mains Wt {+((subj.subject_mains_wt||0)*100).toFixed(1)}%
-                            </span>
-                          )}
+
                         </div>
-                        {/* Progress bar(s) */}
+                        {/* Progress bar(s) with inline weight pill */}
                         {exam === 'both' ? (
-                          <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:6}}>
+                          <div style={{display:'flex',flexDirection:'column',gap:5,marginBottom:6}}>
                             {[
-                              {label:'Pre',  pct:(subj.pre_pct||0),   wt:(subj.subject_pre_wt||0),  color:'#1565C0'},
-                              {label:'Mains',pct:(subj.mains_pct||0), wt:(subj.subject_mains_wt||0),color:'#E65100'}
-                            ].filter(({wt})=>wt>0).map(({label,pct,color})=>(
-                              <div key={label} style={{display:'flex',alignItems:'center',gap:6}}>
-                                <span style={{fontSize:9,fontWeight:800,color,whiteSpace:'nowrap',marginRight:2}}>{label}</span>
-                                <div style={{flex:1,height:5,background:'#F0F0F0',borderRadius:99}}>
-                                  <div style={{height:'100%',width:`${pct}%`,background:color,borderRadius:99,transition:'width 0.4s'}}/>
+                              {label:'Pre',  pct:(subj.pre_pct||0),   wt:(subj.subject_pre_wt||0),  color:'#1565C0', wtBg:'#EEF4FF', wtBorder:'#90CAF9'},
+                              {label:'Mains',pct:(subj.mains_pct||0), wt:(subj.subject_mains_wt||0),color:'#E65100', wtBg:'#FFF3E0', wtBorder:'#FFCC80'}
+                            ].filter(({wt})=>wt>0).map(({label,pct,wt,color,wtBg,wtBorder})=>(
+                              <div key={label}>
+                                <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
+                                  <span style={{fontSize:9,fontWeight:800,color,whiteSpace:'nowrap'}}>{label}</span>
+                                  {showWeights && wt > 0 && (
+                                    <span style={{background:wtBg,color,border:`1px solid ${wtBorder}`,
+                                      fontSize:8,fontWeight:800,padding:'1px 5px',borderRadius:99,whiteSpace:'nowrap'}}>
+                                      Wt. by exam: {+(wt*100).toFixed(1)}%
+                                    </span>
+                                  )}
                                 </div>
-                                <span style={{fontSize:10,fontWeight:700,color,width:36,textAlign:'right'}}>{pct}%</span>
+                                <div style={{display:'flex',alignItems:'center',gap:6}}>
+                                  <div style={{flex:1,height:5,background:'#F0F0F0',borderRadius:99}}>
+                                    <div style={{height:'100%',width:`${pct}%`,background:color,borderRadius:99,transition:'width 0.4s'}}/>
+                                  </div>
+                                  <span style={{fontSize:10,fontWeight:700,color,width:36,textAlign:'right'}}>{pct}%</span>
+                                </div>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-                            <div style={{flex:1,height:6,background:'#F0F0F0',borderRadius:99}}>
-                              <div style={{height:'100%',width:`${subj.completion_pct||0}%`,
-                                background:exam==='mains'?'#E65100':'#1565C0',borderRadius:99,transition:'width 0.4s'}}/>
+                          <div style={{marginBottom:6}}>
+                            <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:3}}>
+                              <span style={{fontSize:9,fontWeight:800,color:exam==='mains'?'#E65100':'#1565C0',whiteSpace:'nowrap'}}>
+                                {exam==='mains'?'Mains':'Pre'}
+                              </span>
+                              {showWeights && (exam==='mains'?subj.subject_mains_wt:subj.subject_pre_wt) > 0 && (
+                                <span style={{
+                                  background:exam==='mains'?'#FFF3E0':'#EEF4FF',
+                                  color:exam==='mains'?'#E65100':'#1565C0',
+                                  border:`1px solid ${exam==='mains'?'#FFCC80':'#90CAF9'}`,
+                                  fontSize:8,fontWeight:800,padding:'1px 5px',borderRadius:99,whiteSpace:'nowrap'}}>
+                                  Wt. by exam: {+((exam==='mains'?subj.subject_mains_wt:subj.subject_pre_wt)*100).toFixed(1)}%
+                                </span>
+                              )}
                             </div>
-                            <span style={{fontSize:11,fontWeight:700,color:exam==='mains'?'#E65100':'#1565C0',width:35,textAlign:'right'}}>
-                              {subj.completion_pct||0}%
-                            </span>
+                            <div style={{display:'flex',alignItems:'center',gap:6}}>
+                              <div style={{flex:1,height:6,background:'#F0F0F0',borderRadius:99}}>
+                                <div style={{height:'100%',width:`${subj.completion_pct||0}%`,
+                                  background:exam==='mains'?'#E65100':'#1565C0',borderRadius:99,transition:'width 0.4s'}}/>
+                              </div>
+                              <span style={{fontSize:11,fontWeight:700,color:exam==='mains'?'#E65100':'#1565C0',width:35,textAlign:'right'}}>
+                                {subj.completion_pct||0}%
+                              </span>
+                            </div>
                           </div>
                         )}
                         {/* PYQ Trend toggle */}
