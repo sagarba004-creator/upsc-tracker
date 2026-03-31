@@ -3892,6 +3892,20 @@ function DailyTab({ dashboard, user, onUpdate, consistency, readOnly=false }) {
 
 // ── Profile Tab ─────────────────────────────────────────────
 function ProfileTab({ user, dashboard, consistency }) {
+  const [mentors, setMentors] = useState([]);
+  useEffect(() => {
+    if (!user?.phone) return;
+    api({ action: 'studentGetMentors', phone: user.phone })
+      .then(data => setMentors(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, [user?.phone]);
+
+  const MENTOR_TYPE_STYLE = {
+    'General Mentor': { bg:'#E3F0FF', color:'#1565C0', border:'#90CAF9' },
+    'Super Mentor':   { bg:'#F3E5FF', color:'#6A1B9A', border:'#CE93D8' },
+    'Chief Mentor':   { bg:'#FFF8E1', color:'#F57F17', border:'#FFD54F' },
+  };
+
   const proficiency   = dashboard?.proficiency_score  || 0;
   const readiness     = dashboard?.exam_readiness      || 0;
   const consistScore  = consistency?.overall?.consistency_score || 0;
@@ -3953,6 +3967,32 @@ function ProfileTab({ user, dashboard, consistency }) {
               {user.optional && <span style={{background:'#FFF3E0',color:'#E65100',fontSize:10,fontWeight:700,
                 padding:'2px 8px',borderRadius:99}}>{user.optional}</span>}
             </div>
+            {mentors.length > 0 && (
+              <div style={{marginTop:10}}>
+                <div style={{fontSize:10,fontWeight:700,color:'#9CA3AF',marginBottom:5,
+                  textTransform:'uppercase',letterSpacing:'0.05em'}}>Mentors</div>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                  {mentors.map(m => {
+                    const st = MENTOR_TYPE_STYLE[m.mentor_type] || MENTOR_TYPE_STYLE['General Mentor'];
+                    return (
+                      <span key={m.mentor_id} style={{
+                        background: st.bg, color: st.color,
+                        border: `1px solid ${st.border}`,
+                        fontSize:10, fontWeight:700,
+                        padding:'3px 9px', borderRadius:99,
+                        display:'flex', alignItems:'center', gap:4
+                      }}>
+                        {m.name}
+                        <span style={{fontSize:8,opacity:0.7,fontWeight:600}}>
+                          {m.mentor_type === 'General Mentor' ? 'GM'
+                            : m.mentor_type === 'Super Mentor' ? 'SM' : 'CM'}
+                        </span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </Card>
