@@ -228,9 +228,8 @@ function StudentsTab({ onSelect, onAdd }) {
 }
 
 
-// Rich consistency analytics for admin student detail
+// Consistency view for admin — identical to student but daily log replaced with insights
 function AdminConsistencyView({ consistency }) {
-  const [selectedDay, setSelectedDay] = useState(null);
   if (!consistency) return <LoadingSpinner />;
   const { overall, weekly, monthly, heatmap } = consistency;
 
@@ -244,158 +243,69 @@ function AdminConsistencyView({ consistency }) {
     }
     return s;
   })();
-  const avgScore  = logged.length ? Math.round(logged.reduce((s,d)=>s+d.score,0)/logged.length) : 0;
-  const avgMins   = logged.length ? Math.round(logged.reduce((s,d)=>s+(d.total_mins||0),0)/logged.length) : 0;
   const avgEdit   = logged.length ? Math.round(logged.reduce((s,d)=>s+(d.editorials||0),0)/logged.length) : 0;
   const avgCA     = logged.length ? Math.round(logged.reduce((s,d)=>s+(d.current_affairs||0),0)/logged.length) : 0;
   const avgStatic = logged.length ? Math.round(logged.reduce((s,d)=>s+(d.static_mins||0),0)/logged.length) : 0;
-  const avgCSAT   = logged.length ? Math.round(logged.reduce((s,d)=>s+(d.csat_mins||0),0)/logged.length) : 0;
   const last7     = (heatmap||[]).slice(-7).filter(d=>d.score!==null);
   const prev7     = (heatmap||[]).slice(-14,-7).filter(d=>d.score!==null);
-  const last7Avg  = last7.length ? Math.round(last7.reduce((s,d)=>s+d.score,0)/last7.length) : 0;
-  const prev7Avg  = prev7.length ? Math.round(prev7.reduce((s,d)=>s+d.score,0)/prev7.length) : 0;
-  const trend     = last7Avg - prev7Avg;
+  const trend     = (last7.length&&prev7.length) ? Math.round(last7.reduce((s,d)=>s+d.score,0)/last7.length) - Math.round(prev7.reduce((s,d)=>s+d.score,0)/prev7.length) : 0;
+  const totalMinsAll = (heatmap||[]).reduce((s,d)=>s+(d.total_mins||0),0);
+  const avgDailyMins = logged.length ? Math.round(totalMinsAll/logged.length) : 0;
+  const weekMins = {};
+  (heatmap||[]).forEach((d,i) => { const w=Math.floor(i/7); weekMins[w]=(weekMins[w]||0)+(d.total_mins||0); });
+  const weekVals = Object.values(weekMins);
+  const avgWeeklyMins = weekVals.length ? Math.round(weekVals.reduce((s,v)=>s+v,0)/weekVals.length) : 0;
+  const last10 = (heatmap||[]).slice(-10);
+  const maxMins = Math.max(1, ...last10.map(d=>d.total_mins||0));
+  const fmtH = m => { if (!m) return '0m'; return m>=60?`${Math.floor(m/60)}h ${m%60>0?m%60+'m':''}`.trim():`${m}m`; };
 
   const insights = [];
-  if (streak >= 7) insights.push({ icon:'🔥', text:`${streak}-day logging streak`, color:C.green });
-  else if (streak === 0) insights.push({ icon:'🚨', text:'No recent logs — needs immediate follow-up', color:C.red });
-  else if (streak < 3) insights.push({ icon:'⚠️', text:`Only ${streak} consecutive day(s) logged`, color:C.amber });
-  if (trend > 10) insights.push({ icon:'📈', text:`Score up +${trend}pts vs last week`, color:C.green });
-  else if (trend < -10) insights.push({ icon:'📉', text:`Score down ${Math.abs(trend)}pts vs last week`, color:C.red });
-  if (avgStatic < 60) insights.push({ icon:'📚', text:`Static study avg ${avgStatic}m/day (target 150m)`, color:C.amber });
-  if (avgCA < 20) insights.push({ icon:'🗞️', text:`Current affairs avg ${avgCA}m/day (target 60m)`, color:C.amber });
-  if (missed.length > 10) insights.push({ icon:'📵', text:`${missed.length}/30 days not logged`, color:C.red });
-  if (qualifying.length >= 20) insights.push({ icon:'✅', text:`${qualifying.length}/30 qualifying days`, color:C.green });
-  if (insights.length === 0) insights.push({ icon:'👍', text:'Consistency looks steady', color:C.teal });
-
-  const fmtH = m => m >= 60 ? `${Math.floor(m/60)}h ${m%60>0?m%60+'m':''}`.trim() : `${m}m`;
+  if (streak>=7)    insights.push({bg:'#E8F5E9',border:'#2E7D32',color:'#2E7D32',text:`🔥 ${streak}-day logging streak — excellent discipline!`});
+  else if (streak===0) insights.push({bg:'#FEE2E2',border:'#EF4444',color:'#B91C1C',text:'🚨 No recent logs — needs immediate follow-up'});
+  else if (streak<3)   insights.push({bg:'#FFF7ED',border:'#F59E0B',color:'#92400E',text:`⚠️ Only ${streak} consecutive day(s) logged`});
+  if (trend>10)        insights.push({bg:'#E8F5E9',border:'#2E7D32',color:'#2E7D32',text:`📈 Score up +${trend}pts vs last week`});
+  else if (trend<-10)  insights.push({bg:'#FEE2E2',border:'#EF4444',color:'#B91C1C',text:`📉 Score down ${Math.abs(trend)}pts vs last week`});
+  if (avgStatic<60)    insights.push({bg:'#FFF7ED',border:'#F59E0B',color:'#92400E',text:`📚 Static avg ${avgStatic}m/day (target 150m)`});
+  if (avgCA<20)        insights.push({bg:'#FFF7ED',border:'#F59E0B',color:'#92400E',text:`🗞️ Current affairs avg ${avgCA}m/day (target 60m)`});
+  if (missed.length>10) insights.push({bg:'#FEE2E2',border:'#EF4444',color:'#B91C1C',text:`📵 ${missed.length}/30 days not logged`});
+  if (qualifying.length>=20) insights.push({bg:'#E8F5E9',border:'#2E7D32',color:'#2E7D32',text:`✅ ${qualifying.length}/30 qualifying days`});
+  if ((overall?.comp_weeks_remaining||0)===0&&(overall?.comp_weeks_used||0)>0)
+    insights.push({bg:'#FEE2E2',border:'#EF4444',color:'#B91C1C',text:'⚠️ All compensation weeks used — penalising score'});
+  if (insights.length===0) insights.push({bg:'#E8F5E9',border:'#2E7D32',color:'#2E7D32',text:'👍 Consistency looks steady'});
 
   return (
     <div>
-      {/* Stats */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:10 }}>
-        {[
-          { label:'This Week',  val:`${weekly?.consistency_pct||0}%`,  color:C.blue,  sub:`${weekly?.qualifying_days||0}/6 days` },
-          { label:'This Month', val:`${monthly?.consistency_pct||0}%`, color:C.green, sub:`${monthly?.qualifying_days||0}/${monthly?.target_days||0} days` },
-          { label:'Overall',    val:`${overall?.consistency_pct||0}%`, color:C.teal,  sub:`${overall?.qualifying_days||0}/${overall?.target_so_far||0} days` },
-        ].map(m => (
-          <Card key={m.label} style={{ textAlign:'center', padding:'10px 4px', marginBottom:0 }}>
-            <div style={{ fontSize:18, fontWeight:900, color:m.color }}>{m.val}</div>
-            <div style={{ fontSize:9, color:C.sub, fontWeight:700, marginTop:2 }}>{m.label}</div>
-            <div style={{ fontSize:9, color:m.color, marginTop:1 }}>{m.sub}</div>
-          </Card>
-        ))}
-      </div>
-
-      {/* Streak + trend row */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:8, marginBottom:10 }}>
-        {[
-          { label:'Streak',    val:`${streak}d`,    color:streak>=7?C.green:streak>=3?C.amber:C.red },
-          { label:'Avg Score', val:`${avgScore}%`,  color:C.navy },
-          { label:'7d Trend',  val:trend>0?`+${trend}`:trend===0?'—':`${trend}`, color:trend>0?C.green:trend<0?C.red:C.teal },
-          { label:'Comp Left', val:`${overall?.comp_weeks_remaining||0}wk`, color:C.amber },
-        ].map(m => (
-          <div key={m.label} style={{ background:C.light, borderRadius:10, padding:'10px 4px', textAlign:'center' }}>
-            <div style={{ fontSize:16, fontWeight:900, color:m.color }}>{m.val}</div>
-            <div style={{ fontSize:9, color:C.sub, marginTop:2 }}>{m.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Task averages */}
-      <Card>
-        <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>⏱ Avg Daily Study ({logged.length} logged days)</div>
-        {[
-          { label:'📰 Editorials',      avg:avgEdit,   target:20,  color:C.blue   },
-          { label:'🗞️ Current Affairs', avg:avgCA,     target:60,  color:C.teal   },
-          { label:'📚 Static (GS+Opt)', avg:avgStatic, target:150, color:C.green  },
-          { label:'🔢 CSAT',            avg:avgCSAT,   target:30,  color:C.purple },
-        ].map(t => {
-          const pct = Math.min(100, Math.round((t.avg/t.target)*100));
-          return (
-            <div key={t.label} style={{ marginBottom:10 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
-                <span style={{ fontSize:12 }}>{t.label}</span>
-                <span style={{ fontSize:12, fontWeight:700, color:pct>=80?C.green:pct>=50?C.amber:C.red }}>
-                  {fmtH(t.avg)} / {fmtH(t.target)} ({pct}%)
-                </span>
-              </div>
-              <Bar pct={pct} color={t.color} height={6} />
-            </div>
-          );
-        })}
-        <div style={{ fontSize:11, color:C.sub, marginTop:4 }}>
-          Total avg: <strong>{fmtH(avgMins)}/day</strong>
-        </div>
-      </Card>
-
-      {/* Insights */}
+      {/* 💡 Actionable Insights */}
       <Card>
         <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>💡 Actionable Insights</div>
-        {insights.map((ins, i) => (
-          <div key={i} style={{ display:'flex', gap:10, padding:'8px 10px',
-            background:`${ins.color}12`, borderRadius:8, marginBottom:6,
-            borderLeft:`3px solid ${ins.color}` }}>
-            <span style={{ fontSize:16, flexShrink:0 }}>{ins.icon}</span>
-            <span style={{ fontSize:12, color:C.text, lineHeight:1.5 }}>{ins.text}</span>
+        {insights.map((ins,i) => (
+          <div key={i} style={{ background:ins.bg, border:`1.5px solid ${ins.border}`,
+            borderRadius:8, padding:'8px 12px', marginBottom:8,
+            fontSize:12, color:ins.color, fontWeight:500, lineHeight:1.5 }}>
+            {ins.text}
           </div>
         ))}
       </Card>
 
-      {/* Heatmap */}
+      {/* 🔥 Heatmap */}
       {heatmap && (
         <Card>
-          <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>🔥 30-Day Activity — tap any cell for details</div>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
-            {heatmap.map((d, i) => {
-              const s = d.score;
-              const bg = s===null?'#F0F0F0':d.qualifying?'#1B5E20':s>=60?'#F5A623':'#FECACA';
-              const isSel = selectedDay?.date===d.date;
+          <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>🔥 30-Day Activity</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>
+            {heatmap.map((d,i) => {
+              const s=d.score, bg=s===null?'#F0F0F0':d.qualifying?'#1B5E20':s>=60?'#F5A623':'#FECACA';
               return (
-                <div key={i} onClick={() => setSelectedDay(isSel?null:d)}
-                  title={`${d.date}: ${s!==null?s+'%':'No log'}`}
-                  style={{ width:20, height:20, borderRadius:4, background:bg, cursor:'pointer',
+                <div key={i} title={`${d.date}: ${s!==null?s+'%':'No log'}`}
+                  style={{ width:18, height:18, borderRadius:3, background:bg,
                     display:'flex', alignItems:'center', justifyContent:'center',
-                    fontSize:8, color:s!==null&&(d.qualifying||s>=60)?'#fff':'#999', fontWeight:700,
-                    border:isSel?`2px solid ${C.navy}`:'2px solid transparent',
-                    transform:isSel?'scale(1.2)':'scale(1)', transition:'transform 0.1s' }}>
-                  {s !== null ? s : ''}
+                    fontSize:8, color:s!==null&&(d.qualifying||s>=60)?'#fff':'#999', fontWeight:700 }}>
+                  {s!==null?s:''}
                 </div>
               );
             })}
           </div>
-          {selectedDay && (
-            <div style={{ marginTop:10, padding:'10px 12px', background:C.light,
-              borderRadius:10, border:`1px solid ${C.border}` }}>
-              <div style={{ fontWeight:700, fontSize:12, color:C.navy, marginBottom:6 }}>
-                📅 {selectedDay.date}
-                {selectedDay.score !== null
-                  ? <span> — Score: <strong style={{ color:selectedDay.qualifying?C.green:C.amber }}>{selectedDay.score}%</strong>
-                      {selectedDay.qualifying && ' ✅'}</span>
-                  : <span style={{ color:C.red }}> — Not logged</span>}
-              </div>
-              {selectedDay.score !== null && (
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-                  {[
-                    { label:'Editorials',      val:selectedDay.editorials,       target:20  },
-                    { label:'Current Affairs', val:selectedDay.current_affairs,  target:60  },
-                    { label:'Static',          val:selectedDay.static_mins,      target:150 },
-                    { label:'CSAT',            val:selectedDay.csat_mins,        target:30  },
-                  ].map(t => (
-                    <div key={t.label} style={{ fontSize:11 }}>
-                      <span style={{ color:C.sub }}>{t.label}: </span>
-                      <strong style={{ color:t.val>=t.target?C.green:t.val>0?C.amber:C.red }}>
-                        {t.val}m
-                      </strong>
-                      <span style={{ color:C.sub }}> /{t.target}m</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
           <div style={{ display:'flex', gap:10, marginTop:10, fontSize:10, color:C.sub, flexWrap:'wrap' }}>
-            {[['#1B5E20','Qualifying'],['#F5A623','Partial'],['#FECACA','Low'],['#F0F0F0','No log']].map(([c,l])=>(
+            {[['#1B5E20','Qualifying (100%)'],['#F5A623','Partial'],['#FECACA','Low'],['#F0F0F0','No log']].map(([c,l])=>(
               <div key={l} style={{ display:'flex', gap:4, alignItems:'center' }}>
                 <div style={{ width:10, height:10, borderRadius:2, background:c }} />
                 <span>{l}</span>
@@ -404,9 +314,90 @@ function AdminConsistencyView({ consistency }) {
           </div>
         </Card>
       )}
+
+      {/* ⏱ Study Hours */}
+      {heatmap && (
+        <Card>
+          <div style={{ fontWeight:700, fontSize:13, marginBottom:12 }}>⏱ Study Hours</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:16 }}>
+            {[
+              { label:'Avg Daily',    val:fmtH(avgDailyMins),  color:C.blue   },
+              { label:'Avg Weekly',   val:fmtH(avgWeeklyMins), color:C.green  },
+              { label:'30-Day Total', val:fmtH(totalMinsAll),  color:C.orange },
+            ].map(s => (
+              <div key={s.label} style={{ textAlign:'center', background:C.light,
+                borderRadius:10, padding:'10px 4px', border:`1px solid ${C.border}` }}>
+                <div style={{ fontSize:16, fontWeight:800, color:s.color }}>{s.val}</div>
+                <div style={{ fontSize:10, color:C.sub, fontWeight:600, marginTop:2 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize:11, color:C.sub, marginBottom:8, fontWeight:600 }}>Last 10 days</div>
+          <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:90 }}>
+            {last10.map(d => {
+              const mins=d.total_mins||0;
+              const barH=maxMins>0?Math.max(4,Math.round((mins/maxMins)*64)):4;
+              return (
+                <div key={d.date} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
+                  <div style={{ fontSize:8, color:C.blue, fontWeight:700, lineHeight:1, minHeight:10 }}>{mins>0?fmtH(mins):''}</div>
+                  <div style={{ width:'100%', height:barH, background:mins===0?'#F0F0F0':C.blue, borderRadius:'3px 3px 0 0' }} />
+                  <div style={{ fontSize:8, color:C.sub, whiteSpace:'nowrap' }}>{d.date?d.date.slice(5):''}</div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* 📊 Consistency Score */}
+      {consistency && (
+        <Card>
+          <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>📊 Consistency Score</div>
+          <div style={{ fontSize:12, color:C.sub, marginBottom:10 }}>
+            Target: 6 qualifying days/week until {overall.exam_end_date} · {overall.total_weeks} weeks total
+          </div>
+          {(() => {
+            const used=overall.comp_weeks_used||0, remaining=overall.comp_weeks_remaining??overall.max_comp_weeks, max=overall.max_comp_weeks||6;
+            if (used===0) return null;
+            const exhausted=remaining===0;
+            return (
+              <div style={{ background:exhausted?'#FEE2E2':'#FFF7ED', border:`1.5px solid ${exhausted?'#EF4444':'#F59E0B'}`,
+                borderRadius:8, padding:'8px 12px', marginBottom:12, fontSize:12, color:exhausted?'#B91C1C':'#92400E' }}>
+                {exhausted?`⚠️ All ${max} compensation weeks used — missed weeks now penalise score`:`🔄 ${used} of ${max} comp weeks used · ${remaining} remaining`}
+              </div>
+            );
+          })()}
+          {(() => {
+            const s=weekly.status; if (!s||s==='FULL') return null;
+            const cfg = {
+              COMPENSATED:{bg:'#EFF6FF',border:'#3B82F6',color:'#1D4ED8',text:'🔄 Compensation week — full credit applied'},
+              PARTIAL:{bg:'#FFF7ED',border:'#F59E0B',color:'#92400E',text:'⚡ Partial week — needs more days'},
+              PARTIAL_OVER_BUDGET:{bg:'#FEE2E2',border:'#EF4444',color:'#B91C1C',text:'❌ Partial — compensation exhausted'},
+              MISSED:{bg:'#FEE2E2',border:'#EF4444',color:'#B91C1C',text:'❌ No logs this week'},
+            };
+            const c=cfg[s]; if (!c) return null;
+            return <div style={{ background:c.bg, border:`1.5px solid ${c.border}`, borderRadius:8, padding:'7px 12px', marginBottom:12, fontSize:12, color:c.color, fontWeight:600 }}>{c.text}</div>;
+          })()}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:8 }}>
+            {[
+              {val:`${Math.min(100,weekly.consistency_pct)}%`, lbl:'This Week',  sub:`${weekly.qualifying_days}/6 days`,     color:C.blue  },
+              {val:`${Math.min(100,monthly.consistency_pct)}%`,lbl:'This Month', sub:`${monthly.qualifying_days}/${monthly.target_days} days`, color:C.orange},
+              {val:`${overall.consistency_pct}%`,              lbl:'Overall',    sub:`${overall.qualifying_days}/${overall.target_days} days`, color:C.green },
+              {val:`${Math.min(100,overall.on_track_pct)}%`,   lbl:'On Track',   sub:'vs target so far',                     color:C.purple},
+            ].map(m => (
+              <div key={m.lbl} style={{ background:C.light, borderRadius:10, padding:'10px 4px', textAlign:'center' }}>
+                <div style={{ fontSize:18, fontWeight:900, color:m.color }}>{m.val}</div>
+                <div style={{ fontSize:9, color:C.sub, fontWeight:700, marginTop:2 }}>{m.lbl}</div>
+                <div style={{ fontSize:9, color:m.color, marginTop:1 }}>{m.sub}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
+
 
 // ══════════════════════════════════════════════════════════════
 // STUDENT DETAIL
