@@ -3924,6 +3924,12 @@ function DailyTab({ dashboard, user, onUpdate, consistency, readOnly=false }) {
 
 // ── Profile Tab ─────────────────────────────────────────────
 function ProfileTab({ user, dashboard, consistency }) {
+  const [mentors, setMentors] = React.useState([]);
+  React.useEffect(() => {
+    api('studentGetMentors', { phone: user.phone })
+      .then(setMentors).catch(() => {});
+  }, [user.phone]);
+
   const proficiency   = dashboard?.proficiency_score  || 0;
   const readiness     = dashboard?.exam_readiness      || 0;
   const consistScore  = consistency?.overall?.consistency_score || 0;
@@ -4030,7 +4036,40 @@ function ProfileTab({ user, dashboard, consistency }) {
 
 
 
-{/* Mentor feedback moved to dedicated Feedback tab */}
+      {/* Assigned Mentors */}
+      {mentors.length > 0 && (
+        <Card>
+          <div style={{fontSize:12,fontWeight:800,color:'#1B3A6B',marginBottom:12}}>🧑‍🏫 My Mentors</div>
+          {mentors.map((m, i) => (
+            <div key={i} style={{display:'flex',alignItems:'center',gap:12,
+              padding:'10px 0',borderBottom:i<mentors.length-1?'1px solid #F0F4FF':'none'}}>
+              <div style={{width:40,height:40,borderRadius:'50%',flexShrink:0,
+                background: m.mentor_type==='Chief Mentor'?'linear-gradient(135deg,#7C3AED,#A78BFA)':
+                             m.mentor_type==='Super Mentor'?'linear-gradient(135deg,#EA580C,#FB923C)':
+                             'linear-gradient(135deg,#0D9488,#2DD4BF)',
+                display:'flex',alignItems:'center',justifyContent:'center',
+                fontSize:16,fontWeight:800,color:'#fff'}}>
+                {m.name?.[0]?.toUpperCase()||'?'}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:700,color:'#1B3A6B'}}>{m.name}</div>
+                <div style={{marginTop:3}}>
+                  <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:99,
+                    background: m.mentor_type==='Chief Mentor'?'#EDE9FE':
+                                m.mentor_type==='Super Mentor'?'#FEF3C7':'#CCFBF1',
+                    color: m.mentor_type==='Chief Mentor'?'#7C3AED':
+                           m.mentor_type==='Super Mentor'?'#EA580C':'#0D9488'}}>
+                    {m.mentor_type||'General Mentor'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {/* Mentor feedback moved to Feedback tab */}
+      {/*dashboard?.feedback?.length > 0 && (...)*/}
 
     </div>
   );
@@ -4039,7 +4078,6 @@ function ProfileTab({ user, dashboard, consistency }) {
 
 // ── Feedback Tab ──────────────────────────────────────────────
 function FeedbackTab({ feedback }) {
-  // Group by date (yyyy-MM-dd)
   const grouped = {};
   (feedback || []).forEach(f => {
     const date = f.created_date ? f.created_date.slice(0, 10) : 'Unknown';
@@ -4047,60 +4085,37 @@ function FeedbackTab({ feedback }) {
     grouped[date].push(f);
   });
   const dates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
-
   const fmtDate = str => {
-    try {
-      return new Date(str).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
-    } catch { return str; }
+    try { return new Date(str).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }); }
+    catch { return str; }
   };
-
-  const fmtTime = str => {
-    if (!str) return '';
-    const parts = str.split(' ');
-    return parts[1] || '';
-  };
-
   return (
     <div style={{ paddingBottom: 80 }}>
-      <div className="card-title" style={{ padding: '14px 16px 4px', fontSize: 15 }}>
-        💬 Mentor Feedback
-      </div>
-
+      <div className="card-title" style={{ padding: '14px 16px 4px', fontSize: 15 }}>💬 Mentor Feedback</div>
       {dates.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 20px', color: '#9CA3AF' }}>
           <div style={{ fontSize: 36, marginBottom: 8 }}>💬</div>
           <div style={{ fontSize: 13, fontWeight: 600 }}>No feedback from your mentor yet</div>
         </div>
-      ) : (
-        dates.map(date => (
-          <div key={date} style={{ marginBottom: 4 }}>
-            {/* Date header */}
-            <div style={{ padding: '10px 16px 4px', fontSize: 11, fontWeight: 700,
-              color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              📅 {fmtDate(date)}
-            </div>
-            {grouped[date].map((f, i) => (
-              <div key={f.id || i} className="card" style={{ marginBottom: 8,
-                borderLeft: '3px solid #00695C' }}>
-                <div style={{ fontSize: 13, color: '#1B3A6B', lineHeight: 1.6,
-                  whiteSpace: 'pre-wrap', marginBottom: 8 }}>
-                  {f.note}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between',
-                  alignItems: 'center' }}>
-                  <span style={{ fontSize: 10, color: '#9CA3AF' }}>
-                    🕐 {fmtTime(f.created_date)}
-                  </span>
-                  <span style={{ fontSize: 10, background: '#E0F2F1',
-                    color: '#00695C', padding: '2px 8px', borderRadius: 99, fontWeight: 600 }}>
-                    Mentor
-                  </span>
-                </div>
-              </div>
-            ))}
+      ) : dates.map(date => (
+        <div key={date} style={{ marginBottom: 4 }}>
+          <div style={{ padding: '10px 16px 4px', fontSize: 11, fontWeight: 700,
+            color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            📅 {fmtDate(date)}
           </div>
-        ))
-      )}
+          {grouped[date].map((f, i) => (
+            <div key={f.id || i} className="card" style={{ marginBottom: 8, borderLeft: '3px solid #00695C' }}>
+              <div style={{ fontSize: 13, color: '#1B3A6B', lineHeight: 1.6,
+                whiteSpace: 'pre-wrap', marginBottom: 8 }}>{f.note}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, color: '#9CA3AF' }}>🕐 {f.created_date}</span>
+                <span style={{ fontSize: 10, background: '#E0F2F1', color: '#00695C',
+                  padding: '2px 8px', borderRadius: 99, fontWeight: 600 }}>Mentor</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
@@ -4637,8 +4652,6 @@ function getScoreColor(scored, total) {
   if (pct >= 40) return '#E65100';
   return '#B00020';
 }
-
-
 
 // Named exports for MentorApp shared tab components
 export { SubjectsTab, TestsTab, DailyTab };
