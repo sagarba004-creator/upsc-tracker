@@ -3237,8 +3237,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
           );
         });
       })()}
-      {/* ── Marks Weight Analysis Card ── */}
-      {!view && <PaperWeightAnalysisCard subjects={allSubjects} />}
+
 
       {false && allSubjects.map((subj, idx) => {
         const col     = PAPER_COL[subj.gs_paper] || PAPER_COL['GS Paper 1'];
