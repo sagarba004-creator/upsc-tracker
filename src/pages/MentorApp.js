@@ -282,32 +282,7 @@ function DashboardTab({ students, alerts, onSelect }) {
 
   return (
     <div>
-      {/* Cohort overview */}
-      <Card>
-        <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:12 }}>
-          📊 Cohort Overview
-        </div>
-        <ScoreGrid items={[
-          { label:'Avg Success Prob',   val:avgSucc,  color:NAVY   },
-          { label:'Avg Proficiency',    val:avgProf,  color:GREEN  },
-          { label:'Avg Exam Readiness', val:avgReady, color:ORANGE },
-          { label:'Avg Consistency',    val:avgCons,  color:TEAL   },
-        ]} />
-        {[
-          { label:'Proficiency',    val:avgProf,  color:GREEN  },
-          { label:'Exam Readiness', val:avgReady, color:ORANGE },
-          { label:'Consistency',    val:avgCons,  color:TEAL   },
-        ].map(s => (
-          <div key={s.label} style={{ marginBottom:8 }}>
-            <div style={{ display:'flex', justifyContent:'space-between',
-              fontSize:10, color:'#6B7280', marginBottom:3 }}>
-              <span>{s.label}</span>
-              <span style={{ fontWeight:700, color:s.color }}>{s.val}%</span>
-            </div>
-            <Bar pct={s.val} color={s.color} />
-          </div>
-        ))}
-      </Card>
+
 
       {/* Quick stats */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:10 }}>
@@ -376,18 +351,16 @@ function DashboardTab({ students, alerts, onSelect }) {
           neverLogged > 0 &&
             `📵 ${neverLogged} student${neverLogged>1?'s':''} have never logged a study session`,
           avgCons < 50 &&
-            `📉 Cohort consistency is low (${avgCons}%) — recommend daily check-ins`,
+            `📉 Group consistency is low (${avgCons}%) — recommend daily check-ins`,
           avgProf > 60 && avgReady < 40 &&
             `⚠️ Proficiency is good but Exam Readiness is lagging — focus on test series`,
-          avgSucc >= 60 &&
-            `✅ Cohort is on track — keep up the momentum!`,
         ].filter(Boolean).map((msg, i) => (
           <div key={i} style={{ fontSize:12, color:'#374151', padding:'7px 10px',
             background:'#F8FAFF', borderRadius:8, marginBottom:6, lineHeight:1.5 }}>
             {msg}
           </div>
         ))}
-        {!atRiskCount && avgCons >= 50 && (
+        {!atRiskCount && avgCons >= 50 && avgSucc > 0 && (
           <div style={{ fontSize:12, color:GREEN, fontWeight:600 }}>
             ✅ All students are on track this week!
           </div>
@@ -651,19 +624,16 @@ function AlertRow({ alert: a, onSelect, color=RED }) {
 function NotesTab({ feedback, setFeedback, mentorId, studentPhone }) {
   const [note, setNote]         = useState('');
   const [saving, setSaving]     = useState(false);
-  const [editId, setEditId]     = useState(null);  // id of entry being edited
+  const [editId, setEditId]     = useState(null);
   const [editText, setEditText] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
   const fmtDate = str => {
     if (!str) return '';
-    try {
-      return new Date(str.slice(0,10)).toLocaleDateString('en-IN',
-        { day:'numeric', month:'long', year:'numeric' });
-    } catch { return str; }
+    try { return new Date(str.slice(0,10)).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }); }
+    catch { return str; }
   };
 
-  // Group by date
   const grouped = {};
   (feedback || []).forEach(f => {
     const date = f.created_date ? f.created_date.slice(0,10) : 'Unknown';
@@ -676,12 +646,9 @@ function NotesTab({ feedback, setFeedback, mentorId, studentPhone }) {
     if (!note.trim()) return;
     setSaving(true);
     try {
-      const res = await api('mentorAddFeedback', {
-        mentor_id: mentorId, student_phone: studentPhone, note: note.trim()
-      });
+      const res = await api('mentorAddFeedback', { mentor_id: mentorId, student_phone: studentPhone, note: note.trim() });
       const now = res.created_date || new Date().toLocaleString('en-IN');
-      setFeedback(f => [{ id: res.id, mentor_id: mentorId,
-        student_phone: studentPhone, note: note.trim(), created_date: now }, ...f]);
+      setFeedback(f => [{ id: res.id, mentor_id: mentorId, student_phone: studentPhone, note: note.trim(), created_date: now }, ...f]);
       setNote('');
     } catch(e) { alert('Failed to save note'); }
     setSaving(false);
@@ -691,9 +658,7 @@ function NotesTab({ feedback, setFeedback, mentorId, studentPhone }) {
     if (!editText.trim()) return;
     setSavingEdit(true);
     try {
-      await api('mentorUpdateFeedback', {
-        mentor_id: mentorId, feedback_id: f.id, note: editText.trim()
-      });
+      await api('mentorUpdateFeedback', { mentor_id: mentorId, feedback_id: f.id, note: editText.trim() });
       setFeedback(prev => prev.map(fb => fb.id === f.id ? { ...fb, note: editText.trim() } : fb));
       setEditId(null); setEditText('');
     } catch(e) { alert('Failed to update note'); }
@@ -702,84 +667,61 @@ function NotesTab({ feedback, setFeedback, mentorId, studentPhone }) {
 
   return (
     <div style={{ paddingBottom: 80 }}>
-      {/* Add new note */}
       <Card>
-        <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:10 }}>
-          📝 Add Note / Feedback
-        </div>
-        <textarea
-          value={note} onChange={e => setNote(e.target.value)}
+        <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:10 }}>📝 Add Note / Feedback</div>
+        <textarea value={note} onChange={e => setNote(e.target.value)}
           placeholder="Write feedback, observations or action items…"
-          style={{ width:'100%', minHeight:90, padding:'10px 12px',
-            borderRadius:10, border:'1.5px solid #E5E7EB', fontSize:13,
-            fontFamily:'inherit', resize:'vertical',
-            boxSizing:'border-box', outline:'none', marginBottom:10 }} />
+          style={{ width:'100%', minHeight:90, padding:'10px 12px', borderRadius:10,
+            border:'1.5px solid #E5E7EB', fontSize:13, fontFamily:'inherit',
+            resize:'vertical', boxSizing:'border-box', outline:'none', marginBottom:10 }} />
         <button onClick={addNote} disabled={saving || !note.trim()}
-          style={{ width:'100%', padding:'12px', borderRadius:10,
-            border:'none', cursor: saving||!note.trim() ? 'not-allowed':'pointer',
-            background: saving||!note.trim() ? '#E5E7EB' : NAVY,
-            color: saving||!note.trim() ? '#9CA3AF' : '#fff',
-            fontSize:13, fontWeight:700 }}>
+          style={{ width:'100%', padding:'12px', borderRadius:10, border:'none',
+            cursor: saving||!note.trim()?'not-allowed':'pointer',
+            background: saving||!note.trim()?'#E5E7EB':NAVY,
+            color: saving||!note.trim()?'#9CA3AF':'#fff', fontSize:13, fontWeight:700 }}>
           {saving ? 'Saving…' : '💾 Save Note'}
         </button>
       </Card>
-
-      {/* Feedback log grouped by date */}
       <div style={{ fontSize:12, color:'#9CA3AF', marginBottom:6, fontWeight:600, padding:'0 4px' }}>
         Feedback Log ({feedback.length})
       </div>
-
       {dates.length === 0
         ? <Empty icon="📝" text="No notes yet — add the first one above" />
         : dates.map(date => (
           <div key={date}>
-            {/* Date group header */}
-            <div style={{ fontSize:11, fontWeight:700, color:'#6B7280',
-              textTransform:'uppercase', letterSpacing:0.5,
-              padding:'8px 4px 4px' }}>
-              📅 {fmtDate(date)}
-            </div>
+            <div style={{ fontSize:11, fontWeight:700, color:'#6B7280', textTransform:'uppercase',
+              letterSpacing:0.5, padding:'8px 4px 4px' }}>📅 {fmtDate(date)}</div>
             {grouped[date].map(f => (
               <Card key={f.id} style={{ borderLeft:`3px solid ${TEAL}`, marginBottom:8 }}>
                 {editId === f.id ? (
                   <>
-                    <textarea
-                      value={editText} onChange={e => setEditText(e.target.value)}
-                      style={{ width:'100%', minHeight:80, padding:'8px 10px',
-                        borderRadius:8, border:'1.5px solid #00838F', fontSize:13,
-                        fontFamily:'inherit', resize:'vertical',
-                        boxSizing:'border-box', outline:'none', marginBottom:8 }} />
+                    <textarea value={editText} onChange={e => setEditText(e.target.value)}
+                      style={{ width:'100%', minHeight:80, padding:'8px 10px', borderRadius:8,
+                        border:`1.5px solid ${TEAL}`, fontSize:13, fontFamily:'inherit',
+                        resize:'vertical', boxSizing:'border-box', outline:'none', marginBottom:8 }} />
                     <div style={{ display:'flex', gap:8 }}>
                       <button onClick={() => saveEdit(f)} disabled={savingEdit || !editText.trim()}
                         style={{ flex:1, padding:'8px', borderRadius:8, border:'none',
-                          background: savingEdit||!editText.trim() ? '#E5E7EB' : TEAL,
-                          color: savingEdit||!editText.trim() ? '#9CA3AF' : '#fff',
+                          background: savingEdit||!editText.trim()?'#E5E7EB':TEAL,
+                          color: savingEdit||!editText.trim()?'#9CA3AF':'#fff',
                           fontSize:12, fontWeight:700, cursor:'pointer' }}>
                         {savingEdit ? 'Saving…' : '✓ Update'}
                       </button>
                       <button onClick={() => { setEditId(null); setEditText(''); }}
                         style={{ padding:'8px 14px', borderRadius:8, border:'1px solid #E5E7EB',
-                          background:'#fff', fontSize:12, fontWeight:600, cursor:'pointer',
-                          color:'#6B7280' }}>
+                          background:'#fff', fontSize:12, fontWeight:600, cursor:'pointer', color:'#6B7280' }}>
                         Cancel
                       </button>
                     </div>
-                    {/* Date locked notice */}
-                    <div style={{ fontSize:10, color:'#9CA3AF', marginTop:6 }}>
-                      🔒 Date locked · {f.created_date}
-                    </div>
+                    <div style={{ fontSize:10, color:'#9CA3AF', marginTop:6 }}>🔒 Date locked · {f.created_date}</div>
                   </>
                 ) : (
                   <>
-                    <div style={{ fontSize:13, color:NAVY, lineHeight:1.6,
-                      whiteSpace:'pre-wrap', marginBottom:6 }}>
-                      {f.note}
-                    </div>
+                    <div style={{ fontSize:13, color:NAVY, lineHeight:1.6, whiteSpace:'pre-wrap', marginBottom:6 }}>{f.note}</div>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                       <span style={{ fontSize:10, color:'#9CA3AF' }}>{f.created_date}</span>
                       <button onClick={() => { setEditId(f.id); setEditText(f.note); }}
-                        style={{ fontSize:11, color:TEAL, background:'none', border:'none',
-                          cursor:'pointer', fontWeight:600, padding:'2px 6px' }}>
+                        style={{ fontSize:11, color:TEAL, background:'none', border:'none', cursor:'pointer', fontWeight:600, padding:'2px 6px' }}>
                         ✏️ Edit
                       </button>
                     </div>
@@ -805,7 +747,6 @@ function StudentDetail({ phone, mentorId, students, onBack }) {
   const [tab, setTab]                 = useState('overview');
   const [feedback, setFeedback]       = useState([]);
 
-  // Read-only user object passed to StudentApp tab components
   const studentUser = { phone, name: studentMeta.name, batch: studentMeta.batch,
     target_year: studentMeta.target_year, optional: studentMeta.optional };
 
@@ -815,7 +756,7 @@ function StudentDetail({ phone, mentorId, students, onBack }) {
       api('getConsistency', { phone }),
     ]).then(([d, cons]) => {
       setDash(d);
-      setFeedback(d.feedback || []);
+      setFeedback(d.feedback||[]);
       setConsistency(cons);
     }).catch(console.error).finally(() => setLoading(false));
   }, [phone, mentorId]);
@@ -941,23 +882,12 @@ function StudentDetail({ phone, mentorId, students, onBack }) {
 
             {/* ── Subjects ── */}
             {tab === 'subjects' && (
-              <SubjectsTab
-                dashboard={dash}
-                user={studentUser}
-                onUpdate={() => {}}
-                gsSummary={dash?.gs_summary}
-              />
+              <SubjectsTab dashboard={dash} user={studentUser} onUpdate={() => {}} gsSummary={dash?.gs_summary} />
             )}
 
             {/* ── Consistency ── */}
             {tab === 'consistency' && (
-              <DailyTab
-                dashboard={dash}
-                user={studentUser}
-                onUpdate={() => {}}
-                consistency={consistency}
-                readOnly={true}
-              />
+              <DailyTab dashboard={dash} user={studentUser} onUpdate={() => {}} consistency={consistency} readOnly={true} />
             )}
 
             {/* ── Tests ── */}
@@ -967,12 +897,7 @@ function StudentDetail({ phone, mentorId, students, onBack }) {
 
             {/* ── Notes ── */}
             {tab === 'notes' && (
-              <NotesTab
-                feedback={feedback}
-                setFeedback={setFeedback}
-                mentorId={mentorId}
-                studentPhone={phone}
-              />
+              <NotesTab feedback={feedback} setFeedback={setFeedback} mentorId={mentorId} studentPhone={phone} />
             )}
           </>
         }
