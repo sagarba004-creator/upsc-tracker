@@ -73,8 +73,8 @@ export default function AdminApp({ user, onLogout }) {
   return (
     <div className="app-shell">
       <div className="topbar">
-        <div>
-          <div style={{ fontSize:17, fontWeight:800 }}>⚙️ Admin Panel</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+          <img src="/logo.png" alt="LegacyIAS" style={{ height:26, objectFit:'contain', filter:'brightness(0) invert(1)' }} />
           <div className="sub">{user.name}</div>
         </div>
         <button onClick={onLogout} style={{ background:'rgba(255,255,255,0.15)', border:'none',
@@ -82,7 +82,7 @@ export default function AdminApp({ user, onLogout }) {
           Logout
         </button>
       </div>
-      <div className="page" style={{ paddingBottom:80 }}>
+      <div className="page" style={{ paddingBottom:120  }}>
         {tab==='students'    && <StudentsTab    onSelect={s => setView({type:'student_detail',data:s})} onAdd={() => setView({type:'add_student'})} />}
         {tab==='alerts'      && <AlertsTab      onSelect={s => setView({type:'student_detail',data:s})} />}
         {tab==='leaderboard' && <LeaderboardTab onSelect={s => setView({type:'student_detail',data:s})} />}
@@ -539,7 +539,7 @@ function StudentDetail({ student, onBack }) {
         ))}
       </div>
 
-      <div className="page" style={{ paddingBottom:20 }}>
+      <div className="page" style={{ paddingBottom:120  }}>
         {loading ? <LoadingSpinner /> : !dash ? <Empty icon="📊" text="No data yet" /> : <>
 
           {/* ── Summary ── */}
@@ -1047,7 +1047,7 @@ function MentorDetail({ mentor, onBack }) {
         ))}
       </div>
 
-      <div className="page" style={{ paddingBottom:20 }}>
+      <div className="page" style={{ paddingBottom:120  }}>
         {loading ? <LoadingSpinner /> : <>
 
           {tab==='students' && <>

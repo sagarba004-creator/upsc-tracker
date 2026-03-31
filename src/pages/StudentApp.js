@@ -2322,13 +2322,24 @@ export default function StudentApp({ user, onLogout }) {
   return (
     <div className="app-shell">
       <div className="topbar">
-        <div>
-          <div className="topbar h1" style={{ fontSize: 17, fontWeight: 700 }}>🎯 UPSC Tracker</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+          <img src="/logo.png" alt="LegacyIAS" style={{ height:26, objectFit:'contain', filter:'brightness(0) invert(1)' }} />
           <div className="sub">{user.name} · {user.batch || 'No batch'}</div>
         </div>
-        <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 8, padding: '6px 12px', fontSize: 13, cursor: 'pointer' }}>
-          Logout
-        </button>
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <button onClick={() => setTab('profile')}
+            title="Profile"
+            style={{ background:'rgba(255,255,255,0.2)', border:'none', borderRadius:99,
+              width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',
+              cursor:'pointer', flexShrink:0 }}>
+            <span style={{ color:'#fff', fontWeight:800, fontSize:13 }}>
+              {user.name?.[0]?.toUpperCase()||'?'}
+            </span>
+          </button>
+          <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 8, padding: '6px 12px', fontSize: 13, cursor: 'pointer' }}>
+            Logout
+          </button>
+        </div>
       </div>
 
       <div className="page">
@@ -2360,10 +2371,9 @@ export default function StudentApp({ user, onLogout }) {
           { key: 'daily',    icon: '📅', label: 'Daily' },
           { key: 'tests',    icon: '📝', label: 'Tests' },
           { key: 'feedback', icon: '💬', label: 'Feedback', badge: unreadCount },
-          { key: 'profile',  icon: '👤', label: 'Profile' },
         ].map(t => {
           const isActive = tab === t.key;
-          const COLOR = { home:'#2E7D32', subjects:'#1565C0', daily:'#E65100', tests:'#6A1B9A', feedback:'#00695C', profile:'#00838F' };
+          const COLOR = { home:'#2E7D32', subjects:'#1565C0', daily:'#E65100', tests:'#6A1B9A', feedback:'#00695C' };
           const c = COLOR[t.key] || '#1B3A6B';
           return (
             <button key={t.key} onClick={() => setTab(t.key)}

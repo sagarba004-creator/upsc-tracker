@@ -194,10 +194,10 @@ export default function MentorApp({ user, onLogout }) {
     <div style={{ background:'#F8FAFC', minHeight:'100vh',
       fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
       {/* Header */}
-      <div style={{ background:NAVY, padding:'14px 16px 12px',
-        display:'flex', alignItems:'center', gap:10 }}>
-        <div style={{ flex:1 }}>
-          <div style={{ fontSize:17, fontWeight:800, color:'#fff' }}>🧑‍🏫 Mentor Portal</div>
+      <div style={{ background:NAVY, padding:'12px 16px',
+        display:'flex', alignItems:'center', justifyContent:'space-between', gap:10 }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+          <img src="/logo.png" alt="LegacyIAS" style={{ height:24, objectFit:'contain', filter:'brightness(0) invert(1)' }} />
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.6)', marginTop:1 }}>
             {user.name} · {students.length} students
           </div>
@@ -867,7 +867,7 @@ function NotesTab({ feedback, setFeedback, mentorId, studentPhone }) {
   }
 
   return (
-    <div style={{ paddingBottom: 80 }}>
+    <div style={{ paddingBottom: 120 }}>
       <Card>
         <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:10 }}>📝 Add Note / Feedback</div>
         <textarea value={note} onChange={e => setNote(e.target.value)}
