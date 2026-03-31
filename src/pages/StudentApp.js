@@ -2463,74 +2463,7 @@ function HomeTab({ dashboard, consistency, user, onTabChange, feedback=[], unrea
 
   return (
     <>
-      {/* ── Success Probability Meter ── */}
-      <div style={{
-        background: `linear-gradient(135deg, ${meterColor(successProb)}, ${meterColor(successProb)}CC)`,
-        borderRadius:16, padding:'20px', marginBottom:14, color:'#fff',
-        boxShadow:'0 4px 20px rgba(0,0,0,0.15)'
-      }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-          <div>
-            <div style={{ fontSize:12, opacity:0.85, marginBottom:4, fontWeight:500 }}>
-              🎯 Success Probability
-            </div>
-            <div style={{ fontSize:52, fontWeight:900, lineHeight:1 }}>
-              {successProb}<span style={{ fontSize:22 }}>%</span>
-            </div>
-            <div style={{ fontSize:12, opacity:0.8, marginTop:6 }}>
-              {successProb >= 70 ? '🔥 Excellent trajectory' :
-               successProb >= 50 ? '📈 Good progress' :
-               successProb >= 30 ? '⚠️ Needs more effort' : '🚨 Critical — take action'}
-            </div>
-          </div>
-          <div style={{ textAlign:'right' }}>
-            <div style={{ fontSize:11, opacity:0.75, marginBottom:4 }}>
-              {user.name}
-            </div>
-            <div style={{ fontSize:11, opacity:0.75 }}>
-              Target: {user.target_year || '—'}
-            </div>
-            <div style={{ fontSize:11, opacity:0.75, marginTop:2 }}>
-              Batch: {user.batch || '—'}
-            </div>
-          </div>
-        </div>
 
-        {/* 3 pillars breakdown */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginTop:16 }}>
-          {[
-            { label:'Proficiency', val:proficiency,       wt:'40%' },
-            { label:'Readiness',   val:readiness,         wt:'35%' },
-            { label:'Consistency', val:consistency_score, wt:'25%' },
-          ].map(p => (
-            <div key={p.label} style={{
-              background:'rgba(255,255,255,0.2)', borderRadius:10,
-              padding:'10px 8px', textAlign:'center'
-            }}>
-              <div style={{ fontSize:20, fontWeight:800 }}>{p.val}%</div>
-              <div style={{ fontSize:10, opacity:0.9, marginTop:2 }}>{p.label}</div>
-              <div style={{ fontSize:9, opacity:0.7 }}>weight: {p.wt}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Pre / Mains Success Probability ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
-        {[
-          { label:'📘 Prelims Success', value: dashboard?.pre_success||0,   color:'#1565C0', bg:'#E3F0FF', bar:'#2563EB' },
-          { label:'📗 Mains Success',   value: dashboard?.mains_success||0, color:'#065F46', bg:'#D1FAE5', bar:'#059669' },
-        ].map(m => (
-          <div key={m.label} style={{ background:m.bg, borderRadius:14, padding:'14px',
-            boxShadow:'0 1px 6px rgba(0,0,0,0.07)' }}>
-            <div style={{ fontSize:10, color:m.color, fontWeight:700, marginBottom:4, opacity:0.8 }}>{m.label}</div>
-            <div style={{ fontSize:28, fontWeight:900, color:m.color, lineHeight:1 }}>{m.value}<span style={{ fontSize:14 }}>%</span></div>
-            <div style={{ background:'rgba(0,0,0,0.08)', borderRadius:99, height:5, marginTop:8 }}>
-              <div style={{ width:`${m.value}%`, height:5, background:m.bar, borderRadius:99, transition:'width 0.5s' }} />
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* ── Subject Proficiency ── */}
       <div
