@@ -617,14 +617,16 @@ function MentorsTab({ onAdd, onSelect }) {
   const [syncing, setSyncing] = useState(false);
 
   async function handleSync() {
-    if (!window.confirm('This will:\n1. Fix mentor types from existing assignments\n2. Assign all General Mentors to every student\n\nContinue?')) return;
+    if (!window.confirm('This will:\n1. Fix mentor types from existing assignments\n2. Remove duplicate Super/Chief Mentor assignments\n3. Assign all General Mentors to every student\n\nContinue?')) return;
     setSyncing(true);
     try {
       // Step 1: Fix mentor_type column for existing mentors
       await api('syncMentorTypes', { adminKey: 'legacy2024admin' });
-      // Step 2: Create General Mentor assignment rows
+      // Step 2: Remove duplicate Super/Chief Mentor rows (keep latest)
+      const cleanup = await api('cleanupDuplicateMentors', { adminKey: 'legacy2024admin' });
+      // Step 3: Create General Mentor assignment rows
       const res = await api('syncGeneralMentors', { adminKey: 'legacy2024admin' });
-      alert(`Sync complete ✓\n${res.added} new assignments created\n${res.general_mentors} General Mentor(s) × ${res.students} students`);
+      alert(`Sync complete ✓\n${cleanup.deleted} duplicate mentor rows removed\n${res.added} new General Mentor assignments created`);
       load();
     } catch(e) { alert('Sync failed: ' + e.message); }
     finally { setSyncing(false); }
