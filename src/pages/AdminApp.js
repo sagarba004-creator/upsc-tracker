@@ -710,20 +710,32 @@ function MentorDetail({ mentor, onBack }) {
   const [assigning, setAssigning]     = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
+  const [allMentors, setAllMentors] = useState([]);
+
   useEffect(() => {
     Promise.all([
       api('mentorGetStudents', { mentor_id: String(mentor.phone) }),
       api('adminGetStudents'),
-    ]).then(([ms, all]) => {
+      api('adminGetMentors'),
+    ]).then(([ms, all, ms2]) => {
       setStudents(ms);
       setAllStudents(all);
+      setAllMentors(ms2);
     }).catch(console.error).finally(() => setLoading(false));
   }, [mentor.phone, mentor.mentor_id]);
 
-  // Unassigned students not yet linked to this mentor
-  const unassigned = allStudents.filter(s =>
-    !students.some(x => String(x.phone) === String(s.phone))
-  );
+  // Unassigned students not yet linked to this mentor,
+  // and for Super/Chief: also exclude students who already have that type from ANY mentor
+  const unassigned = allStudents.filter(s => {
+    if (students.some(x => String(x.phone) === String(s.phone))) return false;
+    if (selType === 'Super Mentor' || selType === 'Chief Mentor') {
+      const alreadyHasType = allMentors.some(m =>
+        (m.student_types||{})[String(s.phone)] === selType
+      );
+      if (alreadyHasType) return false;
+    }
+    return true;
+  });
   // Batch options from unassigned list
   const batchOptions = [...new Set(unassigned.map(s => s.batch).filter(Boolean))].sort();
   // Filtered unassigned
