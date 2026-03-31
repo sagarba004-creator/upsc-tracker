@@ -2544,21 +2544,8 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
       </div>
 
       {/* ── GS Paper summary ── */}
-      {dashboard.gs_summary?.length > 0 && (
-        <div className="card">
-          <div className="card-title">📋 GS Paper Progress</div>
-          {PAPER_ORDER.filter(p => paperMap[p] !== undefined).map(paper => (
-            <div key={paper} style={{ marginBottom:10 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
-                <span style={{ fontSize:12, fontWeight:600, color: GS_COL[paper]||'#1B3A6B' }}>{paper}</span>
-                <span style={{ fontSize:12, fontWeight:800, color: GS_COL[paper]||'#1B3A6B' }}>{paperMap[paper]||0}%</span>
-              </div>
-              <div className="progress-bar-wrap" style={{ height:6 }}>
-                <div className="progress-bar-fill" style={{ width:`${paperMap[paper]||0}%`, background: GS_COL[paper]||'#1B3A6B', borderRadius:99 }} />
-              </div>
-            </div>
-          ))}
-        </div>
+      {dashboard?.subjects?.length > 0 && (
+        <PaperWeightAnalysisCard subjects={dashboard.subjects} />
       )}
     </>
   );
@@ -2575,6 +2562,78 @@ const CHAPTER_SECTIONS = {
 };
 
 const PYQ_YEAR_DATA = {"Ancient India": {"pre": {"2005": 1, "2006": 3, "2011": 3, "2012": 2, "2013": 1, "2014": 1, "2016": 2, "2017": 1, "2019": 2, "2020": 6, "2021": 2, "2022": 2, "2023": 2, "2025": 5}, "mains": {}}, "Medieval History": {"pre": {"2005": 1, "2006": 6, "2008": 1, "2009": 1, "2010": 2, "2014": 2, "2015": 4, "2016": 3, "2019": 2, "2020": 1, "2021": 4, "2022": 5, "2023": 2, "2024": 1}, "mains": {}}, "Art and Culture": {"pre": {"2005": 1, "2006": 12, "2007": 1, "2008": 6, "2009": 12, "2010": 3, "2011": 1, "2012": 7, "2013": 10, "2014": 17, "2015": 2, "2016": 6, "2017": 5, "2018": 8, "2019": 6, "2020": 4, "2021": 8, "2022": 6, "2023": 7, "2024": 7, "2025": 3}, "mains": {"2013": 3, "2014": 4, "2015": 2, "2016": 2, "2017": 1, "2018": 3, "2019": 1, "2020": 4, "2021": 1, "2022": 3, "2023": 1, "2024": 2, "2025": 3}}, "Indian Society": {"pre": {}, "mains": {"2013": 5, "2014": 4, "2015": 7, "2016": 8, "2017": 6, "2018": 7, "2019": 6, "2020": 6, "2021": 6, "2022": 6, "2023": 5, "2024": 9, "2025": 8}}, "Modern History": {"pre": {"2005": 21, "2006": 8, "2007": 11, "2008": 12, "2009": 12, "2010": 9, "2011": 8, "2012": 12, "2013": 6, "2014": 5, "2015": 8, "2016": 6, "2017": 7, "2018": 13, "2019": 6, "2020": 8, "2021": 8, "2022": 3, "2023": 2, "2024": 3, "2025": 7}, "mains": {"2013": 4, "2014": 3, "2015": 3, "2016": 3, "2017": 4, "2018": 2, "2019": 3, "2020": 3, "2021": 3, "2022": 3, "2023": 2, "2024": 2, "2025": 2}}, "Post Independent History": {"pre": {}, "mains": {"2013": 3, "2021": 1, "2022": 1, "2025": 4}}, "World History": {"pre": {}, "mains": {"2013": 4, "2014": 2, "2015": 2, "2016": 1, "2017": 1, "2019": 1, "2021": 1, "2023": 1, "2024": 1, "2025": 1}}, "Geography": {"pre": {"2005": 19, "2006": 14, "2007": 19, "2008": 17, "2009": 12, "2010": 19, "2011": 12, "2012": 10, "2013": 8, "2014": 11, "2015": 8, "2016": 3, "2017": 7, "2018": 7, "2019": 9, "2020": 9, "2021": 10, "2022": 8, "2023": 12, "2024": 12, "2025": 17}, "mains": {"2013": 8, "2014": 10, "2015": 8, "2016": 10, "2017": 9, "2018": 9, "2019": 8, "2020": 9, "2021": 8, "2022": 8, "2023": 7, "2024": 6, "2025": 7}}, "Indian Polity": {"pre": {"2005": 9, "2006": 10, "2007": 12, "2008": 10, "2009": 11, "2010": 7, "2011": 6, "2012": 15, "2013": 14, "2014": 10, "2015": 12, "2016": 9, "2017": 20, "2018": 14, "2019": 13, "2020": 14, "2021": 15, "2022": 10, "2023": 13, "2024": 14, "2025": 15}, "mains": {"2013": 9, "2014": 8, "2015": 8, "2016": 9, "2017": 9, "2018": 11, "2019": 8, "2020": 9, "2021": 9, "2022": 9, "2023": 8, "2024": 10, "2025": 10}}, "Governance": {"pre": {}, "mains": {"2013": 9, "2014": 8, "2015": 7, "2016": 5, "2017": 5, "2018": 3, "2019": 6, "2020": 6, "2021": 5, "2022": 4, "2023": 6, "2024": 5, "2025": 8}}, "Social Justice": {"pre": {}, "mains": {"2013": 1, "2014": 1, "2015": 4, "2017": 4, "2019": 2, "2020": 3, "2021": 4, "2022": 3, "2023": 2, "2024": 3, "2025": 7}}, "International Relations": {"pre": {}, "mains": {"2013": 6, "2014": 4, "2015": 3, "2016": 4, "2017": 4, "2018": 4, "2019": 4, "2020": 4, "2021": 4, "2022": 3, "2023": 4, "2024": 5, "2025": 5}}, "Indian Economy": {"pre": {"2005": 9, "2006": 12, "2007": 10, "2008": 15, "2009": 13, "2010": 32, "2011": 27, "2012": 16, "2013": 22, "2014": 11, "2015": 20, "2016": 28, "2017": 27, "2018": 25, "2019": 28, "2020": 20, "2021": 15, "2022": 19, "2023": 16, "2024": 16, "2025": 16}, "mains": {"2013": 12, "2014": 10, "2015": 11, "2016": 12, "2017": 12, "2018": 7, "2019": 7, "2020": 9, "2021": 7, "2022": 6, "2023": 8, "2024": 12, "2025": 15}}, "Environment": {"pre": {"2005": 4, "2006": 3, "2007": 5, "2008": 12, "2009": 9, "2010": 19, "2011": 19, "2012": 20, "2013": 17, "2014": 24, "2015": 19, "2016": 17, "2017": 14, "2018": 12, "2019": 18, "2020": 18, "2021": 15, "2022": 17, "2023": 18, "2024": 19, "2025": 9}, "mains": {"2013": 4, "2014": 2, "2015": 2, "2016": 2, "2017": 3, "2018": 4, "2019": 2, "2020": 4, "2021": 3, "2022": 6, "2023": 4, "2024": 4, "2025": 5}}, "Science and Technology": {"pre": {"2005": 3, "2006": 5, "2007": 7, "2008": 6, "2009": 5, "2010": 9, "2011": 12, "2012": 9, "2013": 15, "2014": 10, "2015": 7, "2016": 7, "2017": 8, "2018": 13, "2019": 11, "2020": 11, "2021": 11, "2022": 14, "2023": 9, "2024": 6, "2025": 13}, "mains": {"2013": 5, "2014": 4, "2015": 4, "2016": 4, "2017": 4, "2018": 4, "2019": 3, "2020": 5, "2021": 3, "2022": 7, "2023": 4, "2024": 3, "2025": 5}}, "Internal Security": {"pre": {}, "mains": {"2013": 5, "2014": 4, "2015": 5, "2016": 5, "2017": 4, "2018": 5, "2019": 5, "2020": 4, "2021": 4, "2022": 5, "2023": 4, "2024": 4, "2025": 5}}, "Disaster Management": {"pre": {}, "mains": {"2013": 1, "2014": 1, "2015": 1, "2016": 2, "2017": 1, "2018": 1, "2019": 2, "2020": 1, "2021": 2, "2022": 2, "2024": 2}}, "Ethics Theory": {"pre": {}, "mains": {"2013": 9, "2014": 10, "2015": 10, "2016": 12, "2017": 11, "2018": 11, "2019": 12, "2020": 12, "2021": 10, "2022": 12, "2023": 10, "2024": 13, "2025": 9}}, "Ethics Case Studies": {"pre": {}, "mains": {"2013": 5, "2014": 7, "2015": 6, "2016": 6, "2017": 6, "2018": 6, "2019": 6, "2020": 6, "2021": 6, "2022": 6, "2023": 6, "2024": 6, "2025": 6}}};
+
+
+// ── Shared Paper Weight & Coverage Card ─────────────────────
+function PaperWeightAnalysisCard({ subjects }) {
+  if (!subjects || !subjects.length) return null;
+  const SECTION_META = [
+    { key:'GS Paper 1', label:'GS 1',  color:'#2E7D32' },
+    { key:'GS Paper 2', label:'GS 2',  color:'#1565C0' },
+    { key:'GS Paper 3', label:'GS 3',  color:'#BF6000' },
+    { key:'GS Paper 4', label:'GS 4',  color:'#6A1B9A' },
+    { key:'Essay',      label:'Essay', color:'#00695C' },
+    { key:'CSAT',       label:'CSAT',  color:'#283593' },
+    { key:'Optional',   label:'Opt',   color:'#7B3F00' },
+  ];
+  const rows = SECTION_META.map(sec => {
+    const subs = subjects.filter(s => s.gs_paper === sec.key);
+    if (!subs.length) return null;
+    const preWt    = +(subs.reduce((s,sub) => s + (sub.subject_pre_wt  || 0), 0) * 100).toFixed(1);
+    const mainsWt  = +(subs.reduce((s,sub) => s + (sub.subject_mains_wt|| 0), 0) * 100).toFixed(1);
+    const preAvg   = +(subs.reduce((s,sub) => s + (sub.pre_pct  || 0), 0) / subs.length).toFixed(1);
+    const mainsAvg = +(subs.reduce((s,sub) => s + (sub.mains_pct|| 0), 0) / subs.length).toFixed(1);
+    return { ...sec, preWt, mainsWt, preAvg, mainsAvg };
+  }).filter(Boolean);
+
+  return (
+    <div style={{ background:'#fff', borderRadius:14, padding:'16px',
+      boxShadow:'0 2px 8px rgba(0,0,0,0.07)', marginTop:4 }}>
+      <div style={{ fontSize:13, fontWeight:800, color:'#1B3A6B', marginBottom:12 }}>
+        📊 Paper-wise Weight & Coverage
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'70px 1fr 1fr', gap:6,
+        fontSize:9, fontWeight:800, color:'#9CA3AF', textTransform:'uppercase',
+        letterSpacing:'0.05em', marginBottom:6, paddingBottom:6,
+        borderBottom:'1px solid #F0F0F0' }}>
+        <span>Paper</span>
+        <span style={{textAlign:'center', color:'#1565C0'}}>Prelims</span>
+        <span style={{textAlign:'center', color:'#E65100'}}>Mains</span>
+      </div>
+      {rows.map(row => (
+        <div key={row.key} style={{ display:'grid', gridTemplateColumns:'70px 1fr 1fr',
+          gap:6, alignItems:'center', marginBottom:8 }}>
+          <span style={{ fontSize:11, fontWeight:700, color: row.color }}>{row.label}</span>
+          {row.preWt > 0 ? (
+            <div>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
+                <span style={{ fontSize:9, color:'#6B7280' }}>Wt {row.preWt}%</span>
+                <span style={{ fontSize:9, fontWeight:800, color:'#1565C0' }}>{row.preAvg}% done</span>
+              </div>
+              <div style={{ background:'#E3F0FF', borderRadius:99, height:5 }}>
+                <div style={{ width:`${Math.min(row.preAvg,100)}%`, height:5, background:'#1565C0', borderRadius:99 }} />
+              </div>
+            </div>
+          ) : <span style={{ fontSize:10, color:'#D1D5DB', textAlign:'center' }}>—</span>}
+          {row.mainsWt > 0 ? (
+            <div>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
+                <span style={{ fontSize:9, color:'#6B7280' }}>Wt {row.mainsWt}%</span>
+                <span style={{ fontSize:9, fontWeight:800, color:'#E65100' }}>{row.mainsAvg}% done</span>
+              </div>
+              <div style={{ background:'#FFF3E0', borderRadius:99, height:5 }}>
+                <div style={{ width:`${Math.min(row.mainsAvg,100)}%`, height:5, background:'#E65100', borderRadius:99 }} />
+              </div>
+            </div>
+          ) : <span style={{ fontSize:10, color:'#D1D5DB', textAlign:'center' }}>—</span>}
+        </div>
+      ))}
+      <div style={{ fontSize:10, color:'#9CA3AF', marginTop:8, borderTop:'1px solid #F0F0F0', paddingTop:8 }}>
+        Weight = share of total exam marks · Done = avg subject coverage
+      </div>
+    </div>
+  );
+}
 
 function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }) {
   const [localData, setLocalData] = useState(null);
@@ -3179,80 +3238,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
         });
       })()}
       {/* ── Marks Weight Analysis Card ── */}
-      {!view && showWeights && (() => {
-        const SECTION_META = [
-          { key:'GS Paper 1', label:'GS 1', color:'#2E7D32' },
-          { key:'GS Paper 2', label:'GS 2', color:'#1565C0' },
-          { key:'GS Paper 3', label:'GS 3', color:'#BF6000' },
-          { key:'GS Paper 4', label:'GS 4', color:'#6A1B9A' },
-          { key:'Essay',      label:'Essay',color:'#00695C' },
-          { key:'CSAT',       label:'CSAT', color:'#283593' },
-          { key:'Optional',   label:'Opt',  color:'#7B3F00' },
-        ];
-        const rows = SECTION_META.map(sec => {
-          const subjects = grouped[sec.key] || [];
-          if (!subjects.length) return null;
-          const preWt   = +(subjects.reduce((s,sub) => s + (sub.subject_pre_wt  || 0), 0) * 100).toFixed(1);
-          const mainsWt = +(subjects.reduce((s,sub) => s + (sub.subject_mains_wt || 0), 0) * 100).toFixed(1);
-          const preAvg  = subjects.length ? +(subjects.reduce((s,sub) => s + (sub.pre_pct  || 0), 0) / subjects.length).toFixed(1) : 0;
-          const mainsAvg= subjects.length ? +(subjects.reduce((s,sub) => s + (sub.mains_pct|| 0), 0) / subjects.length).toFixed(1) : 0;
-          return { ...sec, preWt, mainsWt, preAvg, mainsAvg };
-        }).filter(Boolean);
-
-        return (
-          <div style={{ background:'#fff', borderRadius:14, padding:'16px',
-            boxShadow:'0 2px 8px rgba(0,0,0,0.07)', marginTop:4 }}>
-            <div style={{ fontSize:13, fontWeight:800, color:'#1B3A6B', marginBottom:12 }}>
-              📊 Paper-wise Weight & Coverage
-            </div>
-            {/* Header row */}
-            <div style={{ display:'grid', gridTemplateColumns:'80px 1fr 1fr', gap:6,
-              fontSize:9, fontWeight:800, color:'#9CA3AF', textTransform:'uppercase',
-              letterSpacing:'0.05em', marginBottom:6, paddingBottom:6,
-              borderBottom:'1px solid #F0F0F0' }}>
-              <span>Paper</span>
-              <span style={{textAlign:'center', color:'#1565C0'}}>Prelims</span>
-              <span style={{textAlign:'center', color:'#E65100'}}>Mains</span>
-            </div>
-            {rows.map(row => (
-              <div key={row.key} style={{ display:'grid', gridTemplateColumns:'80px 1fr 1fr',
-                gap:6, alignItems:'center', marginBottom:8 }}>
-                <span style={{ fontSize:11, fontWeight:700, color: row.color }}>{row.label}</span>
-                {/* Prelims column */}
-                {row.preWt > 0 ? (
-                  <div>
-                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
-                      <span style={{ fontSize:9, color:'#6B7280' }}>Wt {row.preWt}%</span>
-                      <span style={{ fontSize:9, fontWeight:800, color:'#1565C0' }}>{row.preAvg}% done</span>
-                    </div>
-                    <div style={{ background:'#E3F0FF', borderRadius:99, height:5 }}>
-                      <div style={{ width:`${Math.min(row.preAvg,100)}%`, height:5,
-                        background:'#1565C0', borderRadius:99 }} />
-                    </div>
-                  </div>
-                ) : <span style={{ fontSize:10, color:'#D1D5DB', textAlign:'center' }}>—</span>}
-                {/* Mains column */}
-                {row.mainsWt > 0 ? (
-                  <div>
-                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
-                      <span style={{ fontSize:9, color:'#6B7280' }}>Wt {row.mainsWt}%</span>
-                      <span style={{ fontSize:9, fontWeight:800, color:'#E65100' }}>{row.mainsAvg}% done</span>
-                    </div>
-                    <div style={{ background:'#FFF3E0', borderRadius:99, height:5 }}>
-                      <div style={{ width:`${Math.min(row.mainsAvg,100)}%`, height:5,
-                        background:'#E65100', borderRadius:99 }} />
-                    </div>
-                  </div>
-                ) : <span style={{ fontSize:10, color:'#D1D5DB', textAlign:'center' }}>—</span>}
-              </div>
-            ))}
-            <div style={{ fontSize:10, color:'#9CA3AF', marginTop:8, borderTop:'1px solid #F0F0F0',
-              paddingTop:8 }}>
-              Weight = share of total exam marks · Done = avg subject coverage
-            </div>
-          </div>
-        );
-      })()}
+      {!view && <PaperWeightAnalysisCard subjects={allSubjects} />}
 
       {false && allSubjects.map((subj, idx) => {
         const col     = PAPER_COL[subj.gs_paper] || PAPER_COL['GS Paper 1'];
