@@ -2562,6 +2562,7 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
       )}
     </>
   );
+}
 
 const CHAPTER_SECTIONS = {
   "Geography": {
