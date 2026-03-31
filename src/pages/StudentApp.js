@@ -3664,7 +3664,7 @@ function DailyTab({ dashboard, user, onUpdate, consistency, readOnly=false }) {
                 <div key={d.date} className="heatmap-cell"
                   style={{ background: bg, color: s !== null && (q || s >= 60) ? '#fff' : '#999',
                     cursor: 'pointer' }}
-                  title={`${d.date}: ${s !== null ? s + '% daily score' + (q ? ' ✅ Qualifying' : '') : 'No log'}`}
+                  title={`${d.date}: ${s !== null ? s + '% daily score' + (q ? ' ✅ Perfect' : '') : 'No log'}`}
                   onClick={() => setSelectedDate(d.date)}>
                   {s !== null ? s : ''}
                 </div>
@@ -3674,7 +3674,7 @@ function DailyTab({ dashboard, user, onUpdate, consistency, readOnly=false }) {
           <div style={{ display: 'flex', gap: 12, marginTop: 10, alignItems: 'center', fontSize: 11, color: '#6B7280', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <div style={{ width: 12, height: 12, background: '#1B5E20', borderRadius: 3 }} />
-              <span>Qualifying (100%)</span>
+              <span>Perfect (≥80)</span>
             </div>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
               <div style={{ width: 12, height: 12, background: '#F5A623', borderRadius: 3 }} />
