@@ -197,7 +197,7 @@ export default function MentorApp({ user, onLogout }) {
       <div style={{ background:NAVY, padding:'12px 16px',
         display:'flex', alignItems:'center', justifyContent:'space-between', gap:10 }}>
         <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-          <img src="/logo.png" alt="LegacyIAS" style={{ height:24, objectFit:'contain', filter:'brightness(0) invert(1)' }} />
+          <img src="/logo.png" alt="LegacyIAS" style={{ height:24, objectFit:'contain', mixBlendMode:'screen' }} />
           <div style={{ fontSize:11, color:'rgba(255,255,255,0.6)', marginTop:1 }}>
             {user.name} · {students.length} students
           </div>

@@ -74,7 +74,7 @@ export default function AdminApp({ user, onLogout }) {
     <div className="app-shell">
       <div className="topbar">
         <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-          <img src="/logo.png" alt="LegacyIAS" style={{ height:26, objectFit:'contain', filter:'brightness(0) invert(1)' }} />
+          <img src="/logo.png" alt="LegacyIAS" style={{ height:26, objectFit:'contain', mixBlendMode:'screen' }} />
           <div className="sub">{user.name}</div>
         </div>
         <button onClick={onLogout} style={{ background:'rgba(255,255,255,0.15)', border:'none',

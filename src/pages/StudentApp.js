@@ -2323,7 +2323,7 @@ export default function StudentApp({ user, onLogout }) {
     <div className="app-shell">
       <div className="topbar">
         <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-          <img src="/logo.png" alt="LegacyIAS" style={{ height:26, objectFit:'contain', filter:'brightness(0) invert(1)' }} />
+          <img src="/logo.png" alt="LegacyIAS" style={{ height:26, objectFit:'contain', mixBlendMode:'screen' }} />
           <div className="sub">{user.name} · {user.batch || 'No batch'}</div>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
