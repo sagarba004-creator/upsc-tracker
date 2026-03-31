@@ -3149,7 +3149,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
                   const secMainsWt = subjects.reduce((s,sub) => s + (sub.subject_mains_wt || 0), 0);
                   return (
                     <div style={{display:'flex',gap:4}}>
-                      {secPreWt > 0.001 && (
+                      {showWeights && secPreWt > 0.001 && (
                         <span style={{
                           fontSize:10, fontWeight:800, padding:'3px 8px', borderRadius:99,
                           background: isOpen ? 'rgba(255,255,255,0.2)' : '#EEF4FF',
@@ -3157,7 +3157,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
                           border: isOpen ? 'none' : '1px solid #90CAF9'
                         }}>Pre Wt {+(secPreWt*100).toFixed(1)}%</span>
                       )}
-                      {secMainsWt > 0.001 && (
+                      {showWeights && secMainsWt > 0.001 && (
                         <span style={{
                           fontSize:10, fontWeight:800, padding:'3px 8px', borderRadius:99,
                           background: isOpen ? 'rgba(255,255,255,0.2)' : '#FFF3E0',
@@ -3193,13 +3193,13 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
                             {subj.subject}
                           </div>
                           {/* Weight pills */}
-                          {(exam === 'pre' || exam === 'both') && subj.subject_pre_wt > 0 && (
+                          {showWeights && (exam === 'pre' || exam === 'both') && subj.subject_pre_wt > 0 && (
                             <span style={{background:'#EEF4FF',color:'#1565C0',border:'1px solid #90CAF9',
                               fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:99,whiteSpace:'nowrap',flexShrink:0}}>
                               Pre Wt {+((subj.subject_pre_wt||0)*100).toFixed(1)}%
                             </span>
                           )}
-                          {(exam === 'mains' || exam === 'both') && subj.subject_mains_wt > 0 && (
+                          {showWeights && (exam === 'mains' || exam === 'both') && subj.subject_mains_wt > 0 && (
                             <span style={{background:'#FFF3E0',color:'#E65100',border:'1px solid #FFCC80',
                               fontSize:9,fontWeight:800,padding:'2px 7px',borderRadius:99,whiteSpace:'nowrap',flexShrink:0}}>
                               Mains Wt {+((subj.subject_mains_wt||0)*100).toFixed(1)}%
