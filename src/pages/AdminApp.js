@@ -227,6 +227,187 @@ function StudentsTab({ onSelect, onAdd }) {
   );
 }
 
+
+// Rich consistency analytics for admin student detail
+function AdminConsistencyView({ consistency }) {
+  const [selectedDay, setSelectedDay] = useState(null);
+  if (!consistency) return <LoadingSpinner />;
+  const { overall, weekly, monthly, heatmap } = consistency;
+
+  const logged     = (heatmap||[]).filter(d => d.score !== null);
+  const qualifying = logged.filter(d => d.qualifying);
+  const missed     = (heatmap||[]).filter(d => d.score === null);
+  const streak = (() => {
+    let s = 0;
+    for (let i = (heatmap||[]).length - 1; i >= 0; i--) {
+      if (heatmap[i].score !== null) s++; else break;
+    }
+    return s;
+  })();
+  const avgScore  = logged.length ? Math.round(logged.reduce((s,d)=>s+d.score,0)/logged.length) : 0;
+  const avgMins   = logged.length ? Math.round(logged.reduce((s,d)=>s+(d.total_mins||0),0)/logged.length) : 0;
+  const avgEdit   = logged.length ? Math.round(logged.reduce((s,d)=>s+(d.editorials||0),0)/logged.length) : 0;
+  const avgCA     = logged.length ? Math.round(logged.reduce((s,d)=>s+(d.current_affairs||0),0)/logged.length) : 0;
+  const avgStatic = logged.length ? Math.round(logged.reduce((s,d)=>s+(d.static_mins||0),0)/logged.length) : 0;
+  const avgCSAT   = logged.length ? Math.round(logged.reduce((s,d)=>s+(d.csat_mins||0),0)/logged.length) : 0;
+  const last7     = (heatmap||[]).slice(-7).filter(d=>d.score!==null);
+  const prev7     = (heatmap||[]).slice(-14,-7).filter(d=>d.score!==null);
+  const last7Avg  = last7.length ? Math.round(last7.reduce((s,d)=>s+d.score,0)/last7.length) : 0;
+  const prev7Avg  = prev7.length ? Math.round(prev7.reduce((s,d)=>s+d.score,0)/prev7.length) : 0;
+  const trend     = last7Avg - prev7Avg;
+
+  const insights = [];
+  if (streak >= 7) insights.push({ icon:'🔥', text:`${streak}-day logging streak`, color:C.green });
+  else if (streak === 0) insights.push({ icon:'🚨', text:'No recent logs — needs immediate follow-up', color:C.red });
+  else if (streak < 3) insights.push({ icon:'⚠️', text:`Only ${streak} consecutive day(s) logged`, color:C.amber });
+  if (trend > 10) insights.push({ icon:'📈', text:`Score up +${trend}pts vs last week`, color:C.green });
+  else if (trend < -10) insights.push({ icon:'📉', text:`Score down ${Math.abs(trend)}pts vs last week`, color:C.red });
+  if (avgStatic < 60) insights.push({ icon:'📚', text:`Static study avg ${avgStatic}m/day (target 150m)`, color:C.amber });
+  if (avgCA < 20) insights.push({ icon:'🗞️', text:`Current affairs avg ${avgCA}m/day (target 60m)`, color:C.amber });
+  if (missed.length > 10) insights.push({ icon:'📵', text:`${missed.length}/30 days not logged`, color:C.red });
+  if (qualifying.length >= 20) insights.push({ icon:'✅', text:`${qualifying.length}/30 qualifying days`, color:C.green });
+  if (insights.length === 0) insights.push({ icon:'👍', text:'Consistency looks steady', color:C.teal });
+
+  const fmtH = m => m >= 60 ? `${Math.floor(m/60)}h ${m%60>0?m%60+'m':''}`.trim() : `${m}m`;
+
+  return (
+    <div>
+      {/* Stats */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:10 }}>
+        {[
+          { label:'This Week',  val:`${weekly?.consistency_pct||0}%`,  color:C.blue,  sub:`${weekly?.qualifying_days||0}/6 days` },
+          { label:'This Month', val:`${monthly?.consistency_pct||0}%`, color:C.green, sub:`${monthly?.qualifying_days||0}/${monthly?.target_days||0} days` },
+          { label:'Overall',    val:`${overall?.consistency_pct||0}%`, color:C.teal,  sub:`${overall?.qualifying_days||0}/${overall?.target_so_far||0} days` },
+        ].map(m => (
+          <Card key={m.label} style={{ textAlign:'center', padding:'10px 4px', marginBottom:0 }}>
+            <div style={{ fontSize:18, fontWeight:900, color:m.color }}>{m.val}</div>
+            <div style={{ fontSize:9, color:C.sub, fontWeight:700, marginTop:2 }}>{m.label}</div>
+            <div style={{ fontSize:9, color:m.color, marginTop:1 }}>{m.sub}</div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Streak + trend row */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:8, marginBottom:10 }}>
+        {[
+          { label:'Streak',    val:`${streak}d`,    color:streak>=7?C.green:streak>=3?C.amber:C.red },
+          { label:'Avg Score', val:`${avgScore}%`,  color:C.navy },
+          { label:'7d Trend',  val:trend>0?`+${trend}`:trend===0?'—':`${trend}`, color:trend>0?C.green:trend<0?C.red:C.teal },
+          { label:'Comp Left', val:`${overall?.comp_weeks_remaining||0}wk`, color:C.amber },
+        ].map(m => (
+          <div key={m.label} style={{ background:C.light, borderRadius:10, padding:'10px 4px', textAlign:'center' }}>
+            <div style={{ fontSize:16, fontWeight:900, color:m.color }}>{m.val}</div>
+            <div style={{ fontSize:9, color:C.sub, marginTop:2 }}>{m.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Task averages */}
+      <Card>
+        <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>⏱ Avg Daily Study ({logged.length} logged days)</div>
+        {[
+          { label:'📰 Editorials',      avg:avgEdit,   target:20,  color:C.blue   },
+          { label:'🗞️ Current Affairs', avg:avgCA,     target:60,  color:C.teal   },
+          { label:'📚 Static (GS+Opt)', avg:avgStatic, target:150, color:C.green  },
+          { label:'🔢 CSAT',            avg:avgCSAT,   target:30,  color:C.purple },
+        ].map(t => {
+          const pct = Math.min(100, Math.round((t.avg/t.target)*100));
+          return (
+            <div key={t.label} style={{ marginBottom:10 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+                <span style={{ fontSize:12 }}>{t.label}</span>
+                <span style={{ fontSize:12, fontWeight:700, color:pct>=80?C.green:pct>=50?C.amber:C.red }}>
+                  {fmtH(t.avg)} / {fmtH(t.target)} ({pct}%)
+                </span>
+              </div>
+              <Bar pct={pct} color={t.color} height={6} />
+            </div>
+          );
+        })}
+        <div style={{ fontSize:11, color:C.sub, marginTop:4 }}>
+          Total avg: <strong>{fmtH(avgMins)}/day</strong>
+        </div>
+      </Card>
+
+      {/* Insights */}
+      <Card>
+        <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>💡 Actionable Insights</div>
+        {insights.map((ins, i) => (
+          <div key={i} style={{ display:'flex', gap:10, padding:'8px 10px',
+            background:`${ins.color}12`, borderRadius:8, marginBottom:6,
+            borderLeft:`3px solid ${ins.color}` }}>
+            <span style={{ fontSize:16, flexShrink:0 }}>{ins.icon}</span>
+            <span style={{ fontSize:12, color:C.text, lineHeight:1.5 }}>{ins.text}</span>
+          </div>
+        ))}
+      </Card>
+
+      {/* Heatmap */}
+      {heatmap && (
+        <Card>
+          <div style={{ fontWeight:700, fontSize:13, marginBottom:10 }}>🔥 30-Day Activity — tap any cell for details</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
+            {heatmap.map((d, i) => {
+              const s = d.score;
+              const bg = s===null?'#F0F0F0':d.qualifying?'#1B5E20':s>=60?'#F5A623':'#FECACA';
+              const isSel = selectedDay?.date===d.date;
+              return (
+                <div key={i} onClick={() => setSelectedDay(isSel?null:d)}
+                  title={`${d.date}: ${s!==null?s+'%':'No log'}`}
+                  style={{ width:20, height:20, borderRadius:4, background:bg, cursor:'pointer',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:8, color:s!==null&&(d.qualifying||s>=60)?'#fff':'#999', fontWeight:700,
+                    border:isSel?`2px solid ${C.navy}`:'2px solid transparent',
+                    transform:isSel?'scale(1.2)':'scale(1)', transition:'transform 0.1s' }}>
+                  {s !== null ? s : ''}
+                </div>
+              );
+            })}
+          </div>
+          {selectedDay && (
+            <div style={{ marginTop:10, padding:'10px 12px', background:C.light,
+              borderRadius:10, border:`1px solid ${C.border}` }}>
+              <div style={{ fontWeight:700, fontSize:12, color:C.navy, marginBottom:6 }}>
+                📅 {selectedDay.date}
+                {selectedDay.score !== null
+                  ? <span> — Score: <strong style={{ color:selectedDay.qualifying?C.green:C.amber }}>{selectedDay.score}%</strong>
+                      {selectedDay.qualifying && ' ✅'}</span>
+                  : <span style={{ color:C.red }}> — Not logged</span>}
+              </div>
+              {selectedDay.score !== null && (
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                  {[
+                    { label:'Editorials',      val:selectedDay.editorials,       target:20  },
+                    { label:'Current Affairs', val:selectedDay.current_affairs,  target:60  },
+                    { label:'Static',          val:selectedDay.static_mins,      target:150 },
+                    { label:'CSAT',            val:selectedDay.csat_mins,        target:30  },
+                  ].map(t => (
+                    <div key={t.label} style={{ fontSize:11 }}>
+                      <span style={{ color:C.sub }}>{t.label}: </span>
+                      <strong style={{ color:t.val>=t.target?C.green:t.val>0?C.amber:C.red }}>
+                        {t.val}m
+                      </strong>
+                      <span style={{ color:C.sub }}> /{t.target}m</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          <div style={{ display:'flex', gap:10, marginTop:10, fontSize:10, color:C.sub, flexWrap:'wrap' }}>
+            {[['#1B5E20','Qualifying'],['#F5A623','Partial'],['#FECACA','Low'],['#F0F0F0','No log']].map(([c,l])=>(
+              <div key={l} style={{ display:'flex', gap:4, alignItems:'center' }}>
+                <div style={{ width:10, height:10, borderRadius:2, background:c }} />
+                <span>{l}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════
 // STUDENT DETAIL
 // ══════════════════════════════════════════════════════════════
@@ -511,13 +692,7 @@ function StudentDetail({ student, onBack }) {
 
           {/* ── Consistency ── (full student view) */}
           {tab==='consistency' && (
-            <DailyTab
-              dashboard={dash}
-              user={studentUser}
-              onUpdate={() => {}}
-              consistency={consistency}
-              readOnly={true}
-            />
+            <AdminConsistencyView consistency={consistency} />
           )}
 
           {/* ── Tests ── (full student view) */}
