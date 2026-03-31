@@ -2287,6 +2287,20 @@ export default function StudentApp({ user, onLogout }) {
   const [loading, setLoading]   = useState(true);
 
   const [feedback, setFeedback] = useState([]);
+  const [lastSeenFeedbackDate, setLastSeenFeedbackDate] = useState(() => {
+    try { return localStorage.getItem('lastSeenFeedback_' + user.phone) || ''; } catch { return ''; }
+  });
+
+  function markFeedbackSeen() {
+    const latest = feedback.length ? feedback[0].created_date || '' : '';
+    try { localStorage.setItem('lastSeenFeedback_' + user.phone, latest); } catch {}
+    setLastSeenFeedbackDate(latest);
+  }
+
+  // Count unread: feedback newer than lastSeenFeedbackDate
+  const unreadCount = feedback.filter(f =>
+    (f.created_date || '') > lastSeenFeedbackDate
+  ).length;
 
   const loadDashboard = useCallback(async (silent=false) => {
     try {
@@ -2324,11 +2338,11 @@ export default function StudentApp({ user, onLogout }) {
           </div>
         ) : (
           <>
-            {tab === 'home'     && <HomeTab    dashboard={dashboard} consistency={consistency} user={user} onTabChange={setTab} />}
+            {tab === 'home'     && <HomeTab    dashboard={dashboard} consistency={consistency} user={user} onTabChange={setTab} feedback={feedback} unreadCount={unreadCount} />}
             {tab === 'subjects' && <SubjectsTab dashboard={dashboard} user={user} onUpdate={loadDashboard} gsSummary={dashboard?.gs_summary} />}
             {tab === 'daily'    && <DailyTab   dashboard={dashboard} user={user} onUpdate={loadDashboard} consistency={consistency} />}
             {tab === 'tests'    && <TestsTab   user={user} />}
-            {tab === 'feedback' && <FeedbackTab feedback={feedback} />}
+            {tab === 'feedback' && <FeedbackTab feedback={feedback} onSeen={markFeedbackSeen} />}
             {tab === 'profile'  && <ProfileTab  user={user} dashboard={dashboard} consistency={consistency} />}
           </>
         )}
@@ -2345,7 +2359,7 @@ export default function StudentApp({ user, onLogout }) {
           { key: 'subjects', icon: '📚', label: 'Subjects' },
           { key: 'daily',    icon: '📅', label: 'Daily' },
           { key: 'tests',    icon: '📝', label: 'Tests' },
-          { key: 'feedback', icon: '💬', label: 'Feedback' },
+          { key: 'feedback', icon: '💬', label: 'Feedback', badge: unreadCount },
           { key: 'profile',  icon: '👤', label: 'Profile' },
         ].map(t => {
           const isActive = tab === t.key;
@@ -2367,8 +2381,16 @@ export default function StudentApp({ user, onLogout }) {
                   width:32, height:3, borderRadius:99, background:c
                 }}/>
               )}
-              <span style={{ fontSize:22, filter: isActive ? 'none' : 'grayscale(60%) opacity(0.6)' }}>
+              <span style={{ fontSize:22, filter: isActive ? 'none' : 'grayscale(60%) opacity(0.6)', position:'relative', display:'inline-block' }}>
                 {t.icon}
+                {t.badge > 0 && (
+                  <span style={{ position:'absolute', top:-4, right:-6, background:'#DC2626',
+                    color:'#fff', borderRadius:99, fontSize:9, fontWeight:800,
+                    minWidth:16, height:16, display:'flex', alignItems:'center',
+                    justifyContent:'center', padding:'0 3px', lineHeight:1 }}>
+                    {t.badge > 9 ? '9+' : t.badge}
+                  </span>
+                )}
               </span>
               <span style={{ fontSize:10, fontWeight: isActive ? 800 : 500 }}>
                 {t.label}
@@ -2382,7 +2404,7 @@ export default function StudentApp({ user, onLogout }) {
 }
 
 // ── Home Tab ──────────────────────────────────────────────
-function HomeTab({ dashboard, consistency, user, onTabChange }) {
+function HomeTab({ dashboard, consistency, user, onTabChange, feedback=[], unreadCount=0 }) {
   if (!dashboard) return null;
 
   const proficiency  = dashboard.proficiency_score  || 0;
@@ -2611,10 +2633,18 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
       </PillarCard>
 
       {/* ── Mentor Feedback ── */}
-      {dashboard?.feedback?.length > 0 && (
-        <div className="card">
-          <div className="card-title">💬 Mentor Feedback</div>
-          {dashboard.feedback.slice(0,3).map((f,i) => (
+      {feedback?.length > 0 && (
+        <div className="card" onClick={() => onTabChange('feedback')} style={{ cursor:'pointer' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
+            <div className="card-title" style={{ margin:0 }}>💬 Mentor Feedback</div>
+            {unreadCount > 0 && (
+              <span style={{ background:'#DC2626', color:'#fff', borderRadius:99,
+                fontSize:10, fontWeight:800, padding:'2px 8px' }}>
+                {unreadCount} new
+              </span>
+            )}
+          </div>
+          {feedback.slice(0,3).map((f,i) => (
             <div key={i} style={{ padding:'10px', background:'#F0FDF4', borderRadius:8,
               marginBottom:8, borderLeft:'3px solid #16A34A' }}>
               <div style={{ fontSize:13, color:'#1E293B' }}>{f.note}</div>
@@ -4077,7 +4107,8 @@ function ProfileTab({ user, dashboard, consistency }) {
 
 
 // ── Feedback Tab ──────────────────────────────────────────────
-function FeedbackTab({ feedback }) {
+function FeedbackTab({ feedback, onSeen }) {
+  React.useEffect(() => { if (onSeen) onSeen(); }, []);
   const grouped = {};
   (feedback || []).forEach(f => {
     const date = f.created_date ? f.created_date.slice(0, 10) : 'Unknown';
