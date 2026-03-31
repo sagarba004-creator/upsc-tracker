@@ -2286,6 +2286,7 @@ export default function StudentApp({ user, onLogout }) {
   const [consistency, setConsistency] = useState(null);
   const [loading, setLoading]   = useState(true);
 
+  const [mentors, setMentors]   = useState([]);
   const [feedback, setFeedback] = useState([]);
   const [lastSeenFeedbackDate, setLastSeenFeedbackDate] = useState(() => {
     try { return localStorage.getItem('lastSeenFeedback_' + user.phone) || ''; } catch { return ''; }
@@ -2300,14 +2301,16 @@ export default function StudentApp({ user, onLogout }) {
   const loadDashboard = useCallback(async (silent=false) => {
     try {
       if (!silent) setLoading(true);
-      const [dash, cons, fb] = await Promise.all([
+      const [dash, cons, fb, ments] = await Promise.all([
         api('getStudentDashboard', { phone: user.phone }),
         api('getConsistency', { phone: user.phone }),
         api('studentGetFeedback', { phone: user.phone }),
+        api('studentGetMentors', { phone: user.phone }),
       ]);
       setDashboard(dash);
       setConsistency(cons);
       setFeedback(Array.isArray(fb) ? fb : []);
+      setMentors(Array.isArray(ments) ? ments : []);
     } catch (e) { console.error(e); }
     finally { if (!silent) setLoading(false); }
   }, [user.phone]);
@@ -2316,25 +2319,84 @@ export default function StudentApp({ user, onLogout }) {
 
   return (
     <div className="app-shell">
-      <div className="topbar">
-        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-          <img src="/logo.png" alt="LegacyIAS" style={{ height:26, objectFit:'contain', mixBlendMode:'screen' }} />
-          <div className="sub">{user.name} · {user.batch || 'No batch'}</div>
+      <div className="topbar" style={{ flexDirection:'column', alignItems:'stretch', padding:'8px 16px 6px', gap:6 }}>
+        {/* Row 1: logo + actions */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
+            <img src="/logo.png" alt="LegacyIAS" style={{ height:24, objectFit:'contain', mixBlendMode:'screen' }} />
+            <div className="sub" style={{ fontSize:11 }}>{user.name} · {user.batch || 'No batch'}</div>
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <button onClick={() => setTab('profile')}
+              title="Profile"
+              style={{ background:'rgba(255,255,255,0.2)', border:'none', borderRadius:99,
+                width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',
+                cursor:'pointer', flexShrink:0 }}>
+              <span style={{ color:'#fff', fontWeight:800, fontSize:13 }}>
+                {user.name?.[0]?.toUpperCase()||'?'}
+              </span>
+            </button>
+            <button onClick={onLogout} style={{ background:'rgba(255,255,255,0.15)', border:'none', color:'#fff', borderRadius:8, padding:'6px 12px', fontSize:13, cursor:'pointer' }}>
+              Logout
+            </button>
+          </div>
         </div>
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          <button onClick={() => setTab('profile')}
-            title="Profile"
-            style={{ background:'rgba(255,255,255,0.2)', border:'none', borderRadius:99,
-              width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',
-              cursor:'pointer', flexShrink:0 }}>
-            <span style={{ color:'#fff', fontWeight:800, fontSize:13 }}>
-              {user.name?.[0]?.toUpperCase()||'?'}
-            </span>
-          </button>
-          <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: 8, padding: '6px 12px', fontSize: 13, cursor: 'pointer' }}>
-            Logout
-          </button>
-        </div>
+        {/* Row 2: exam countdown pills */}
+        {(() => {
+          const targetYear = Number(user.target_year) || new Date().getFullYear()+1;
+          const preStr  = consistency?.overall?.prelims_date;
+          const mainStr = consistency?.overall?.mains_date;
+          const preDate  = preStr  ? new Date(preStr)  : new Date(targetYear, 4, 25);
+          const mainDate = mainStr ? new Date(mainStr) : new Date(targetYear, 8, 20);
+          const today = new Date();
+          const dPre  = Math.max(0, Math.ceil((preDate  - today) / 86400000));
+          const dMain = Math.max(0, Math.ceil((mainDate - today) / 86400000));
+          return (
+            <div style={{ display:'flex', gap:8 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:5,
+                background:'rgba(255,255,255,0.12)', borderRadius:20, padding:'4px 10px' }}>
+                <span style={{ fontSize:9, color:'rgba(255,255,255,0.7)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em' }}>Prelims</span>
+                <span style={{ fontSize:13, fontWeight:900, color:'#fff', lineHeight:1 }}>{dPre}</span>
+                <span style={{ fontSize:9, color:'rgba(255,255,255,0.6)' }}>days</span>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:5,
+                background:'rgba(255,255,255,0.12)', borderRadius:20, padding:'4px 10px' }}>
+                <span style={{ fontSize:9, color:'rgba(255,255,255,0.7)', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.05em' }}>Mains</span>
+                <span style={{ fontSize:13, fontWeight:900, color:'#fff', lineHeight:1 }}>{dMain}</span>
+                <span style={{ fontSize:9, color:'rgba(255,255,255,0.6)' }}>days</span>
+              </div>
+            </div>
+          );
+        })()}
+        {/* Row 3: assigned mentors */}
+        {mentors.length > 0 && (() => {
+          const MENTOR_TYPE_STYLE = {
+            'General Mentor': { bg:'rgba(255,255,255,0.12)', label:'GM' },
+            'Super Mentor':   { bg:'rgba(180,130,255,0.25)', label:'SM' },
+            'Chief Mentor':   { bg:'rgba(255,210,100,0.25)', label:'CM' },
+          };
+          return (
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
+              <span style={{ fontSize:9, color:'rgba(255,255,255,0.5)', fontWeight:600,
+                textTransform:'uppercase', letterSpacing:'0.05em', marginRight:2 }}>Mentors</span>
+              {mentors.map(m => {
+                const st = MENTOR_TYPE_STYLE[m.mentor_type] || MENTOR_TYPE_STYLE['General Mentor'];
+                return (
+                  <span key={m.mentor_id} style={{
+                    background: st.bg,
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: 20, padding:'3px 9px',
+                    fontSize:10, fontWeight:700, color:'#fff',
+                    display:'flex', alignItems:'center', gap:4
+                  }}>
+                    {m.name}
+                    <span style={{ fontSize:8, opacity:0.65 }}>{st.label}</span>
+                  </span>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
 
       <div className="page">
@@ -2349,7 +2411,7 @@ export default function StudentApp({ user, onLogout }) {
             {tab === 'daily'   && <DailyTab   dashboard={dashboard} user={user} onUpdate={loadDashboard} consistency={consistency} />}
             {tab === 'tests'    && <TestsTab   user={user} />}
             {tab === 'feedback' && <FeedbackTab feedback={feedback} onSeen={markFeedbackSeen} />}
-            {tab === 'profile'  && <ProfileTab  user={user} dashboard={dashboard} consistency={consistency} />}
+            {tab === 'profile'  && <ProfileTab  user={user} dashboard={dashboard} consistency={consistency} mentors={mentors} />}
           </>
         )}
       </div>
@@ -3891,15 +3953,7 @@ function DailyTab({ dashboard, user, onUpdate, consistency, readOnly=false }) {
 }
 
 // ── Profile Tab ─────────────────────────────────────────────
-function ProfileTab({ user, dashboard, consistency }) {
-  const [mentors, setMentors] = useState([]);
-  useEffect(() => {
-    if (!user?.phone) return;
-    api('studentGetMentors', { phone: user.phone })
-      .then(data => setMentors(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  }, [user?.phone]);
-
+function ProfileTab({ user, dashboard, consistency, mentors=[] }) {
   const MENTOR_TYPE_STYLE = {
     'General Mentor': { bg:'#E3F0FF', color:'#1565C0', border:'#90CAF9' },
     'Super Mentor':   { bg:'#F3E5FF', color:'#6A1B9A', border:'#CE93D8' },
