@@ -618,6 +618,77 @@ function AlertRow({ alert: a, onSelect, color=RED }) {
 }
 
 
+
+// Read-only consistency view for mentor — heatmap + stats only, no study log form
+function MentorConsistencyView({ consistency, dash }) {
+  if (!consistency) return <div style={{ textAlign:'center', padding:40, color:'#9CA3AF' }}>Loading…</div>;
+
+  const { overall, weekly, monthly, heatmap } = consistency;
+
+  return (
+    <div style={{ paddingBottom: 20 }}>
+      {/* Stats grid */}
+      <Card>
+        <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:12 }}>📊 Consistency Overview</div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12 }}>
+          {[
+            { label:'This Week',  val:`${weekly?.consistency_pct||0}%`,  color:BLUE  },
+            { label:'This Month', val:`${monthly?.consistency_pct||0}%`, color:GREEN },
+            { label:'Overall',    val:`${overall?.consistency_pct||0}%`, color:TEAL  },
+          ].map(m => (
+            <div key={m.label} style={{ background:'#F8FAFF', borderRadius:10,
+              padding:'10px 4px', textAlign:'center' }}>
+              <div style={{ fontSize:20, fontWeight:900, color:m.color }}>{m.val}</div>
+              <div style={{ fontSize:9, color:'#6B7280', marginTop:2 }}>{m.label}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+          {[
+            { label:'Qualifying Days', val:`${overall?.qualifying_days||0} / ${overall?.target_so_far||0}` },
+            { label:'Comp Weeks Left', val:`${overall?.comp_weeks_remaining||0} / ${overall?.max_comp_weeks||0}` },
+          ].map(m => (
+            <div key={m.label} style={{ background:'#F8FAFF', borderRadius:10, padding:'10px 8px', textAlign:'center' }}>
+              <div style={{ fontSize:15, fontWeight:800, color:NAVY }}>{m.val}</div>
+              <div style={{ fontSize:10, color:'#6B7280', marginTop:2 }}>{m.label}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* 30-day heatmap */}
+      {heatmap && (
+        <Card>
+          <div style={{ fontSize:13, fontWeight:800, color:NAVY, marginBottom:10 }}>🔥 30-Day Activity</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>
+            {heatmap.map((d, i) => {
+              const s = d.score;
+              const q = d.qualifying;
+              const bg = s === null ? '#F0F0F0' : q ? '#1B5E20' : s >= 60 ? '#F5A623' : '#FECACA';
+              return (
+                <div key={i} title={`${d.date}: ${s !== null ? s + '%' : 'No log'}`}
+                  style={{ width:18, height:18, borderRadius:3, background:bg,
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:8, color: s !== null && (q || s >= 60) ? '#fff' : '#999', fontWeight:700 }}>
+                  {s !== null ? s : ''}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display:'flex', gap:10, marginTop:10, fontSize:10, color:'#6B7280', flexWrap:'wrap' }}>
+            {[['#1B5E20','Qualifying'],['#F5A623','Partial'],['#FECACA','Low'],['#F0F0F0','No log']].map(([c,l])=>(
+              <div key={l} style={{ display:'flex', gap:4, alignItems:'center' }}>
+                <div style={{ width:10, height:10, borderRadius:2, background:c }} />
+                <span>{l}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════
 // NOTES TAB — add + edit feedback (date locked)
 // ══════════════════════════════════════════════════════════════
@@ -887,7 +958,7 @@ function StudentDetail({ phone, mentorId, students, onBack }) {
 
             {/* ── Consistency ── */}
             {tab === 'consistency' && (
-              <DailyTab dashboard={dash} user={studentUser} onUpdate={() => {}} consistency={consistency} readOnly={true} />
+              <MentorConsistencyView consistency={consistency} dash={dash} />
             )}
 
             {/* ── Tests ── */}
