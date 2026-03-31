@@ -505,6 +505,7 @@ function StudentDetail({ student, onBack }) {
               user={studentUser}
               onUpdate={() => {}}
               gsSummary={dash?.gs_summary}
+              showWeights={true}
             />
           )}
 
