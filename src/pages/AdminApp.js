@@ -710,17 +710,22 @@ function MentorDetail({ mentor, onBack }) {
   const [assigning, setAssigning]     = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
-  const [allMentors, setAllMentors] = useState([]);
+  const [allMentors, setAllMentors]         = useState([]);
+  const [assignments, setAssignments]       = useState([]);
 
   useEffect(() => {
     Promise.all([
-      api('mentorGetStudents', { mentor_id: String(mentor.phone) }),
       api('adminGetStudents'),
       api('adminGetMentors'),
-    ]).then(([ms, all, ms2]) => {
-      setStudents(ms);
+      api('adminGetMentorAssignments', { mentor_id: String(mentor.mentor_id || mentor.phone) }),
+    ]).then(([all, ms2, asg]) => {
       setAllStudents(all);
       setAllMentors(ms2);
+      // Build student list from assignments — match by phone
+      const assignedPhones = new Set((asg||[]).map(a => String(a.student_phone).trim()));
+      const assignedStudents = all.filter(s => assignedPhones.has(String(s.phone).trim()));
+      setStudents(assignedStudents);
+      setAssignments(asg||[]);
     }).catch(console.error).finally(() => setLoading(false));
   }, [mentor.phone, mentor.mentor_id]);
 
