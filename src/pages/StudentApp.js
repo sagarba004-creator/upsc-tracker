@@ -2747,23 +2747,25 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
                     <div style={{ width:10, height:10, borderRadius:'50%', background:dotCol, flexShrink:0 }} />
                     <span style={{ flex:1, fontSize:14, fontWeight:500 }}>{ch.chapter}</span>
                     {(() => {
-                      const wts = (CHAPTER_WEIGHTS[subj.subject] || {})[ch.chapter];
-                      const exam = subj.exam_type || 'both';
-                      if (!wts) return null;
+                      // Use ch_pre_wt / ch_mains_wt directly from chapter data
+                      const exam   = subj.exam_type || 'both';
+                      const preWt  = Number(ch.ch_pre_wt  || 0);
+                      const mainsWt= Number(ch.ch_mains_wt|| 0);
+                      if (!preWt && !mainsWt) return null;
                       return (
                         <div style={{ display:'flex', gap:3, flexShrink:0 }}>
-                          {(exam === 'pre' || exam === 'both') && wts.pre && (
+                          {(exam === 'pre' || exam === 'both') && preWt > 0 && (
                             <span style={{ background:'#EEF4FF', color:'#1565C0',
                               border:'1px solid #90CAF9', fontSize:9, fontWeight:800,
                               padding:'2px 7px', borderRadius:99, whiteSpace:'nowrap' }}>
-                              P {wts.pre}%
+                              P {preWt.toFixed(2)}%
                             </span>
                           )}
-                          {(exam === 'mains' || exam === 'both') && wts.mains && (
+                          {(exam === 'mains' || exam === 'both') && mainsWt > 0 && (
                             <span style={{ background:'#FFF3E0', color:'#E65100',
                               border:'1px solid #FFCC80', fontSize:9, fontWeight:800,
                               padding:'2px 7px', borderRadius:99, whiteSpace:'nowrap' }}>
-                              M {wts.mains}%
+                              M {mainsWt.toFixed(2)}%
                             </span>
                           )}
                         </div>
