@@ -3073,30 +3073,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
                   background: isOpen ? 'rgba(255,255,255,0.2)' : sec.color + '20',
                   color: isOpen ? '#fff' : sec.color
                 }}>{subjects.length} subjects</span>
-                {(() => {
-                  const secPreWt  = subjects.reduce((s,sub) => s + (sub.subject_pre_wt  || 0), 0);
-                  const secMainsWt = subjects.reduce((s,sub) => s + (sub.subject_mains_wt || 0), 0);
-                  return (
-                    <div style={{display:'flex',gap:4}}>
-                      {showWeights && secPreWt > 0.001 && (
-                        <span style={{
-                          fontSize:10, fontWeight:800, padding:'3px 8px', borderRadius:99,
-                          background: isOpen ? 'rgba(255,255,255,0.2)' : '#EEF4FF',
-                          color: isOpen ? '#fff' : '#1565C0',
-                          border: isOpen ? 'none' : '1px solid #90CAF9'
-                        }}>Pre Wt {+(secPreWt*100).toFixed(1)}%</span>
-                      )}
-                      {showWeights && secMainsWt > 0.001 && (
-                        <span style={{
-                          fontSize:10, fontWeight:800, padding:'3px 8px', borderRadius:99,
-                          background: isOpen ? 'rgba(255,255,255,0.2)' : '#FFF3E0',
-                          color: isOpen ? '#fff' : '#E65100',
-                          border: isOpen ? 'none' : '1px solid #FFCC80'
-                        }}>Mains Wt {+(secMainsWt*100).toFixed(1)}%</span>
-                      )}
-                    </div>
-                  );
-                })()}
+
                 <span style={{ color: isOpen ? '#fff' : sec.color, fontSize:12,
                   transform: isOpen ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}>▼</span>
               </div>
@@ -3187,6 +3164,82 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
           );
         });
       })()}
+      {/* ── Marks Weight Analysis Card ── */}
+      {!view && showWeights && (() => {
+        const SECTION_META = [
+          { key:'GS Paper 1', label:'GS 1', color:'#2E7D32' },
+          { key:'GS Paper 2', label:'GS 2', color:'#1565C0' },
+          { key:'GS Paper 3', label:'GS 3', color:'#BF6000' },
+          { key:'GS Paper 4', label:'GS 4', color:'#6A1B9A' },
+          { key:'Essay',      label:'Essay',color:'#00695C' },
+          { key:'CSAT',       label:'CSAT', color:'#283593' },
+          { key:'Optional',   label:'Opt',  color:'#7B3F00' },
+        ];
+        const rows = SECTION_META.map(sec => {
+          const subjects = grouped[sec.key] || [];
+          if (!subjects.length) return null;
+          const preWt   = +(subjects.reduce((s,sub) => s + (sub.subject_pre_wt  || 0), 0) * 100).toFixed(1);
+          const mainsWt = +(subjects.reduce((s,sub) => s + (sub.subject_mains_wt || 0), 0) * 100).toFixed(1);
+          const preAvg  = subjects.length ? +(subjects.reduce((s,sub) => s + (sub.pre_pct  || 0), 0) / subjects.length).toFixed(1) : 0;
+          const mainsAvg= subjects.length ? +(subjects.reduce((s,sub) => s + (sub.mains_pct|| 0), 0) / subjects.length).toFixed(1) : 0;
+          return { ...sec, preWt, mainsWt, preAvg, mainsAvg };
+        }).filter(Boolean);
+
+        return (
+          <div style={{ background:'#fff', borderRadius:14, padding:'16px',
+            boxShadow:'0 2px 8px rgba(0,0,0,0.07)', marginTop:4 }}>
+            <div style={{ fontSize:13, fontWeight:800, color:'#1B3A6B', marginBottom:12 }}>
+              📊 Paper-wise Weight & Coverage
+            </div>
+            {/* Header row */}
+            <div style={{ display:'grid', gridTemplateColumns:'80px 1fr 1fr', gap:6,
+              fontSize:9, fontWeight:800, color:'#9CA3AF', textTransform:'uppercase',
+              letterSpacing:'0.05em', marginBottom:6, paddingBottom:6,
+              borderBottom:'1px solid #F0F0F0' }}>
+              <span>Paper</span>
+              <span style={{textAlign:'center', color:'#1565C0'}}>Prelims</span>
+              <span style={{textAlign:'center', color:'#E65100'}}>Mains</span>
+            </div>
+            {rows.map(row => (
+              <div key={row.key} style={{ display:'grid', gridTemplateColumns:'80px 1fr 1fr',
+                gap:6, alignItems:'center', marginBottom:8 }}>
+                <span style={{ fontSize:11, fontWeight:700, color: row.color }}>{row.label}</span>
+                {/* Prelims column */}
+                {row.preWt > 0 ? (
+                  <div>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
+                      <span style={{ fontSize:9, color:'#6B7280' }}>Wt {row.preWt}%</span>
+                      <span style={{ fontSize:9, fontWeight:800, color:'#1565C0' }}>{row.preAvg}% done</span>
+                    </div>
+                    <div style={{ background:'#E3F0FF', borderRadius:99, height:5 }}>
+                      <div style={{ width:`${Math.min(row.preAvg,100)}%`, height:5,
+                        background:'#1565C0', borderRadius:99 }} />
+                    </div>
+                  </div>
+                ) : <span style={{ fontSize:10, color:'#D1D5DB', textAlign:'center' }}>—</span>}
+                {/* Mains column */}
+                {row.mainsWt > 0 ? (
+                  <div>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2 }}>
+                      <span style={{ fontSize:9, color:'#6B7280' }}>Wt {row.mainsWt}%</span>
+                      <span style={{ fontSize:9, fontWeight:800, color:'#E65100' }}>{row.mainsAvg}% done</span>
+                    </div>
+                    <div style={{ background:'#FFF3E0', borderRadius:99, height:5 }}>
+                      <div style={{ width:`${Math.min(row.mainsAvg,100)}%`, height:5,
+                        background:'#E65100', borderRadius:99 }} />
+                    </div>
+                  </div>
+                ) : <span style={{ fontSize:10, color:'#D1D5DB', textAlign:'center' }}>—</span>}
+              </div>
+            ))}
+            <div style={{ fontSize:10, color:'#9CA3AF', marginTop:8, borderTop:'1px solid #F0F0F0',
+              paddingTop:8 }}>
+              Weight = share of total exam marks · Done = avg subject coverage
+            </div>
+          </div>
+        );
+      })()}
+
       {false && allSubjects.map((subj, idx) => {
         const col     = PAPER_COL[subj.gs_paper] || PAPER_COL['GS Paper 1'];
         const sc      = SUBJ_COLORS[idx % SUBJ_COLORS.length];
