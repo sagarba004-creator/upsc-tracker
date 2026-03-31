@@ -2408,13 +2408,6 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
   const readiness    = dashboard.exam_readiness      || 0;
   const consistency_score = consistency?.overall?.consistency_score || 0;
 
-  // Success Probability = weighted average of all 3
-  const successProb = Math.round(
-    proficiency    * 0.40 +
-    readiness      * 0.35 +
-    consistency_score * 0.25
-  );
-
   const GS_COL = {
     'GS Paper 1': '#2E7D32',
     'GS Paper 2': '#1565C0',
@@ -2425,13 +2418,6 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
     'Optional':   '#37474F',
   };
   const PAPER_ORDER = ['GS Paper 1','GS Paper 2','GS Paper 3','GS Paper 4','Essay','CSAT','Optional'];
-
-  function meterColor(pct) {
-    if (pct >= 70) return '#2E7D32';
-    if (pct >= 50) return '#F57C00';
-    if (pct >= 30) return '#E65100';
-    return '#C62828';
-  }
 
   function PillarCard({ title, score, color, icon, children }) {
     return (
@@ -2460,82 +2446,10 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
 
   return (
     <>
-      {/* ── Success Probability Meter ── */}
-      <div style={{
-        background: `linear-gradient(135deg, ${meterColor(successProb)}, ${meterColor(successProb)}CC)`,
-        borderRadius:16, padding:'20px', marginBottom:14, color:'#fff',
-        boxShadow:'0 4px 20px rgba(0,0,0,0.15)'
-      }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-          <div>
-            <div style={{ fontSize:12, opacity:0.85, marginBottom:4, fontWeight:500 }}>
-              🎯 Success Probability
-            </div>
-            <div style={{ fontSize:52, fontWeight:900, lineHeight:1 }}>
-              {successProb}<span style={{ fontSize:22 }}>%</span>
-            </div>
-            <div style={{ fontSize:12, opacity:0.8, marginTop:6 }}>
-              {successProb >= 70 ? '🔥 Excellent trajectory' :
-               successProb >= 50 ? '📈 Good progress' :
-               successProb >= 30 ? '⚠️ Needs more effort' : '🚨 Critical — take action'}
-            </div>
-          </div>
-          <div style={{ textAlign:'right' }}>
-            <div style={{ fontSize:11, opacity:0.75, marginBottom:4 }}>
-              {user.name}
-            </div>
-            <div style={{ fontSize:11, opacity:0.75 }}>
-              Target: {user.target_year || '—'}
-            </div>
-            <div style={{ fontSize:11, opacity:0.75, marginTop:2 }}>
-              Batch: {user.batch || '—'}
-            </div>
-          </div>
-        </div>
-
-        {/* 3 pillars breakdown */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginTop:16 }}>
-          {[
-            { label:'Proficiency', val:proficiency,       wt:'40%' },
-            { label:'Readiness',   val:readiness,         wt:'35%' },
-            { label:'Consistency', val:consistency_score, wt:'25%' },
-          ].map(p => (
-            <div key={p.label} style={{
-              background:'rgba(255,255,255,0.2)', borderRadius:10,
-              padding:'10px 8px', textAlign:'center'
-            }}>
-              <div style={{ fontSize:20, fontWeight:800 }}>{p.val}%</div>
-              <div style={{ fontSize:10, opacity:0.9, marginTop:2 }}>{p.label}</div>
-              <div style={{ fontSize:9, opacity:0.7 }}>weight: {p.wt}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Pre / Mains Success Probability ── */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
-        {[
-          { label:'📘 Prelims Success', value: dashboard?.pre_success||0,   color:'#1565C0', bg:'#E3F0FF', bar:'#2563EB' },
-          { label:'📗 Mains Success',   value: dashboard?.mains_success||0, color:'#065F46', bg:'#D1FAE5', bar:'#059669' },
-        ].map(m => (
-          <div key={m.label} style={{ background:m.bg, borderRadius:14, padding:'14px',
-            boxShadow:'0 1px 6px rgba(0,0,0,0.07)' }}>
-            <div style={{ fontSize:10, color:m.color, fontWeight:700, marginBottom:4, opacity:0.8 }}>{m.label}</div>
-            <div style={{ fontSize:28, fontWeight:900, color:m.color, lineHeight:1 }}>{m.value}<span style={{ fontSize:14 }}>%</span></div>
-            <div style={{ background:'rgba(0,0,0,0.08)', borderRadius:99, height:5, marginTop:8 }}>
-              <div style={{ width:`${m.value}%`, height:5, background:m.bar, borderRadius:99, transition:'width 0.5s' }} />
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* ── Subject Proficiency ── */}
-      <div
-        onClick={() => onTabChange && onTabChange('subjects')}
-        style={{ cursor:'pointer' }}>
+      <div onClick={() => onTabChange && onTabChange('subjects')} style={{ cursor:'pointer', marginBottom:14 }}>
         <PillarCard title="Subject Proficiency" score={proficiency} color="#1B3A6B" icon="📚">
           <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            {/* Prelims bar */}
             {(() => {
               const prePct = dashboard?.pre_proficiency || 0;
               return (
@@ -2550,7 +2464,6 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
                 </div>
               );
             })()}
-            {/* Mains bar */}
             {(() => {
               const mainsPct = dashboard?.mains_proficiency || 0;
               return (
@@ -2572,71 +2485,83 @@ function HomeTab({ dashboard, consistency, user, onTabChange }) {
         </PillarCard>
       </div>
 
-      {/* ── Exam Readiness ── */}
-      <PillarCard title="Exam Readiness" score={readiness} color="#E65100" icon="📝">
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-          {[
-            { label:'LEEP Prelims', wt:'15%', color:'#1565C0' },
-            { label:'EDGE Prelims', wt:'22.5%', color:'#2E7D32' },
-            { label:'LEEP Mains',   wt:'15%', color:'#1565C0' },
-            { label:'EDGE Mains',   wt:'22.5%', color:'#2E7D32' },
-            { label:'CMTs',         wt:'5%',  color:'#6A1B9A' },
-            { label:'AWP',          wt:'20%', color:'#E65100' },
-          ].map(t => (
-            <div key={t.label} style={{
-              background:`${t.color}15`, borderRadius:8, padding:'8px 10px',
-              border:`1px solid ${t.color}30`
-            }}>
-              <div style={{ fontSize:12, fontWeight:600, color:t.color }}>{t.label}</div>
-              <div style={{ fontSize:10, color:'#9CA3AF', marginTop:1 }}>Weight: {t.wt}</div>
-            </div>
-          ))}
-        </div>
-      </PillarCard>
+      {/* ── Exam Readiness + Consistency — side by side ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
 
-      {/* ── Consistency Score ── */}
-      <PillarCard title="Consistency Score" score={consistency_score} color="#00838F" icon="🔥">
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
-          {[
-            { label:'This Week',    val: consistency?.weekly?.consistency_score  || 0, sub: `${consistency?.weekly?.consistency_pct||0}% days` },
-            { label:'This Month',   val: consistency?.monthly?.consistency_score || 0, sub: `${consistency?.monthly?.consistency_pct||0}% days` },
-            { label:'Overall',      val: consistency?.overall?.consistency_score || 0, sub: `${consistency?.overall?.logged_days||0} days` },
-          ].map(c => (
-            <div key={c.label} style={{ textAlign:'center', background:'#F0FDFD', borderRadius:10, padding:'10px 6px' }}>
-              <div style={{ fontSize:20, fontWeight:800, color:'#00838F' }}>{c.val}%</div>
-              <div style={{ fontSize:10, color:'#4B5563', fontWeight:600, marginTop:2 }}>{c.label}</div>
-              <div style={{ fontSize:9, color:'#9CA3AF', marginTop:1 }}>{c.sub}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* 30-day heatmap mini */}
-        {consistency?.heatmap && (
-          <div style={{ marginTop:12 }}>
-            <div style={{ fontSize:11, color:'#6B7280', marginBottom:6 }}>30-day activity</div>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:3 }}>
-              {consistency.heatmap.map(d => {
-                const s  = d.score;
-                const bg = s === null ? '#F0F0F0' : s >= 70 ? '#00695C' : s >= 40 ? '#4DB6AC' : '#B2DFDB';
-                return (
-                  <div key={d.date} style={{
-                    width:14, height:14, borderRadius:3, background:bg
-                  }} title={`${d.date}: ${s !== null ? s+'%' : 'No log'}`} />
-                );
-              })}
-            </div>
+        {/* Exam Readiness card */}
+        <div style={{ background:'#fff', borderRadius:14, padding:'14px 12px',
+          boxShadow:'0 2px 10px rgba(0,0,0,0.07)', borderTop:'4px solid #E65100' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
+            <span style={{ fontSize:14 }}>📝</span>
+            <span style={{ fontSize:12, fontWeight:700, color:'#1A1A2E' }}>Exam Readiness</span>
           </div>
-        )}
-      </PillarCard>
+          <div style={{ fontSize:26, fontWeight:900, color:'#E65100', lineHeight:1, marginBottom:8 }}>
+            {readiness}<span style={{ fontSize:12, fontWeight:500, color:'#9CA3AF' }}>%</span>
+          </div>
+          <div className="progress-bar-wrap" style={{ height:6, marginBottom:10 }}>
+            <div className="progress-bar-fill" style={{ width:`${readiness}%`, background:'#E65100', borderRadius:99 }} />
+          </div>
+          {[
+            { label:'📘 Prelims', val: dashboard?.pre_readiness||0, color:'#1565C0' },
+            { label:'📗 Mains',   val: dashboard?.mains_readiness||0, color:'#E65100' },
+          ].map(r => (
+            <div key={r.label} style={{ marginBottom:6 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
+                <span style={{ fontSize:10, fontWeight:600, color:r.color }}>{r.label}</span>
+                <span style={{ fontSize:10, fontWeight:800, color:r.color }}>{r.val}%</span>
+              </div>
+              <div style={{ background:'#F0F0F0', borderRadius:99, height:5, overflow:'hidden' }}>
+                <div style={{ width:`${r.val}%`, height:5, background:r.color, borderRadius:99, transition:'width 0.5s' }} />
+              </div>
+            </div>
+          ))}
+        </div>
 
+        {/* Consistency card */}
+        <div style={{ background:'#fff', borderRadius:14, padding:'14px 12px',
+          boxShadow:'0 2px 10px rgba(0,0,0,0.07)', borderTop:'4px solid #00838F' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
+            <span style={{ fontSize:14 }}>🔥</span>
+            <span style={{ fontSize:12, fontWeight:700, color:'#1A1A2E' }}>Consistency</span>
+          </div>
+          <div style={{ fontSize:26, fontWeight:900, color:'#00838F', lineHeight:1, marginBottom:8 }}>
+            {consistency_score}<span style={{ fontSize:12, fontWeight:500, color:'#9CA3AF' }}>%</span>
+          </div>
+          <div className="progress-bar-wrap" style={{ height:6, marginBottom:10 }}>
+            <div className="progress-bar-fill" style={{ width:`${consistency_score}%`, background:'#00838F', borderRadius:99 }} />
+          </div>
+          {[
+            { label:'This Week',  val: consistency?.weekly?.consistency_pct  || 0 },
+            { label:'This Month', val: consistency?.monthly?.consistency_pct || 0 },
+            { label:'Overall',    val: consistency?.overall?.consistency_pct || 0 },
+          ].map(c => (
+            <div key={c.label} style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+              <span style={{ fontSize:10, color:'#6B7280' }}>{c.label}</span>
+              <span style={{ fontSize:10, fontWeight:700, color:'#00838F' }}>{c.val}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
+      {/* ── GS Paper summary ── */}
+      {dashboard.gs_summary?.length > 0 && (
+        <div className="card">
+          <div className="card-title">📋 GS Paper Progress</div>
+          {PAPER_ORDER.filter(p => paperMap[p] !== undefined).map(paper => (
+            <div key={paper} style={{ marginBottom:10 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                <span style={{ fontSize:12, fontWeight:600, color: GS_COL[paper]||'#1B3A6B' }}>{paper}</span>
+                <span style={{ fontSize:12, fontWeight:800, color: GS_COL[paper]||'#1B3A6B' }}>{paperMap[paper]||0}%</span>
+              </div>
+              <div className="progress-bar-wrap" style={{ height:6 }}>
+                <div className="progress-bar-fill" style={{ width:`${paperMap[paper]||0}%`, background: GS_COL[paper]||'#1B3A6B', borderRadius:99 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
-}
-
-
-// ── Subjects Tab ──────────────────────────────────────────────
-const CHAPTER_WEIGHTS = {"Reading Comprehension": {"Socio-Politico-Economic Passages": {"pre": 25.0, "mains": 0.0}, "Philosophical Passages": {"pre": 25.0, "mains": 0.0}, "Scientific Passages": {"pre": 25.0, "mains": 0.0}, "Literature & Humanities Passages": {"pre": 25.0, "mains": 0.0}}, "Logical Reasoning & Analytical Ability": {"Syllogism / Statement\u2013Conclusion": {"pre": 7.7, "mains": 0.0}, "Statement\u2013Assumption / Argument / Inference": {"pre": 7.1, "mains": 0.0}, "Seating Arrangement (Linear & Circular)": {"pre": 7.1, "mains": 0.0}, "Blood Relations": {"pre": 7.1, "mains": 0.0}, "Number & Letter Series": {"pre": 7.1, "mains": 0.0}, "Venn Diagrams (Logical)": {"pre": 7.1, "mains": 0.0}, "Puzzles & Logical Arrangements": {"pre": 7.1, "mains": 0.0}, "Coding\u2013Decoding": {"pre": 7.1, "mains": 0.0}, "Direction & Distance": {"pre": 7.1, "mains": 0.0}, "Analogies & Classification / Odd-One-Out": {"pre": 7.1, "mains": 0.0}, "Input\u2013Output / Operational Reasoning": {"pre": 7.1, "mains": 0.0}, "Calendar & Clock": {"pre": 7.1, "mains": 0.0}, "Ranking & Order": {"pre": 7.1, "mains": 0.0}, "Matrix / Figure-based Reasoning": {"pre": 7.1, "mains": 0.0}}, "Basic Numeracy & Data Interpretation": {"HCF & LCM": {"pre": 4.0, "mains": 0.0}, "Remainders & Modular Arithmetic": {"pre": 4.0, "mains": 0.0}, "Divisibility Rules & Tests": {"pre": 4.0, "mains": 0.0}, "Unit Digit & Last Digit Cycles": {"pre": 4.0, "mains": 0.0}, "Prime Numbers & Prime Factorisation": {"pre": 4.0, "mains": 0.0}, "Number of Factors & Divisors": {"pre": 4.0, "mains": 0.0}, "Fractions, Decimals & Ordering": {"pre": 4.0, "mains": 0.0}, "Powers, Indices & Surds": {"pre": 4.0, "mains": 0.0}, "Consecutive & Special Numbers": {"pre": 4.0, "mains": 0.0}, "Digit-Based Problems": {"pre": 4.0, "mains": 0.0}, "Number Sequences & Patterns": {"pre": 4.0, "mains": 0.0}, "Base System & Number Representation": {"pre": 4.0, "mains": 0.0}, "Data Interpretation": {"pre": 4.0, "mains": 0.0}, "Percentages": {"pre": 4.0, "mains": 0.0}, "Time, Speed & Distance": {"pre": 4.0, "mains": 0.0}, "Profit, Loss & Discount": {"pre": 4.0, "mains": 0.0}, "Time & Work / Pipes & Cisterns": {"pre": 4.0, "mains": 0.0}, "Ratio, Proportion & Averages": {"pre": 4.0, "mains": 0.0}, "Data Sufficiency": {"pre": 4.0, "mains": 0.0}, "Simple & Compound Interest": {"pre": 4.0, "mains": 0.0}, "Permutation & Combination": {"pre": 4.0, "mains": 0.0}, "Probability": {"pre": 4.0, "mains": 0.0}, "Mixture & Alligation": {"pre": 4.0, "mains": 0.0}, "Algebra \u2014 Linear Equations, Age Problems, Inequalities": {"pre": 4.0, "mains": 0.0}, "Geometry & Mensuration": {"pre": 4.0, "mains": 0.0}}, "Socio-Politico-Economic": {"Governance, Democracy & Society": {"pre": 0.0, "mains": 20.0}, "Economy, Agriculture & Rural Development": {"pre": 0.0, "mains": 20.0}, "Gender, Social Justice & Empowerment": {"pre": 0.0, "mains": 20.0}, "Environment, Climate & Sustainability": {"pre": 0.0, "mains": 20.0}, "Foreign Policy & Geopolitics": {"pre": 0.0, "mains": 20.0}}, "Philosophical": {"Human Nature, Self & The Good Life": {"pre": 0.0, "mains": 16.5}, "Truth, Knowledge & Wisdom": {"pre": 0.0, "mains": 16.7}, "Action, Change & Leadership": {"pre": 0.0, "mains": 16.7}, "Ethics, Morality & Values": {"pre": 0.0, "mains": 16.7}, "Education, Mind & Intellectual Growth": {"pre": 0.0, "mains": 16.7}, "Society, Arts, Culture & Literature": {"pre": 0.0, "mains": 16.7}}, "Psychology Paper 1": {"1. Introduction": {"pre": 0.0, "mains": 7.7}, "2. Methods of Psychology": {"pre": 0.0, "mains": 7.1}, "3. Research Methods": {"pre": 0.0, "mains": 7.1}, "4. Development of Human Behaviour": {"pre": 0.0, "mains": 7.1}, "5. Sensation, Attention and Perception": {"pre": 0.0, "mains": 7.1}, "6. Learning": {"pre": 0.0, "mains": 7.1}, "7. Memory": {"pre": 0.0, "mains": 7.1}, "8. Thinking and Problem Solving": {"pre": 0.0, "mains": 7.1}, "9. Motivation and Emotion": {"pre": 0.0, "mains": 7.1}, "10. Intelligence and Aptitude": {"pre": 0.0, "mains": 7.1}, "11. Personality": {"pre": 0.0, "mains": 7.1}, "12. Attitudes, Values and Interests": {"pre": 0.0, "mains": 7.1}, "13. Language and Communication": {"pre": 0.0, "mains": 7.1}, "14. Issues and Perspectives in Modern Contemporary Psychology": {"pre": 0.0, "mains": 7.1}}, "Psychology Paper 2": {"1. Psychological Measurement of Individual Differences": {"pre": 0.0, "mains": 7.7}, "2. Psychological Well-being and Mental Disorders": {"pre": 0.0, "mains": 7.1}, "3. Therapeutic Approaches": {"pre": 0.0, "mains": 7.1}, "4. Work Psychology and Organisational Behaviour": {"pre": 0.0, "mains": 7.1}, "5. Application of Psychology to Educational Field": {"pre": 0.0, "mains": 7.1}, "6. Community Psychology": {"pre": 0.0, "mains": 7.1}, "7. Rehabilitation Psychology": {"pre": 0.0, "mains": 7.1}, "8. Application of Psychology to Disadvantaged Groups": {"pre": 0.0, "mains": 7.1}, "9. Psychological Problem of Social Integration": {"pre": 0.0, "mains": 7.1}, "10. Application of Psychology in IT and Mass Media": {"pre": 0.0, "mains": 7.1}, "11. Psychology and Economic Development": {"pre": 0.0, "mains": 7.1}, "12. Application of Psychology to Environment and Related Fields": {"pre": 0.0, "mains": 7.1}, "13. Application of Psychology in Other Fields (Military, Sports, Media, Terrorism)": {"pre": 0.0, "mains": 7.1}, "14. Psychology of Gender": {"pre": 0.0, "mains": 7.1}}, "Anthropology Paper 1": {"1. Meaning, Scope, Branches & Interdisciplinary Relationships (1.1\u20131.3)": {"pre": 0.0, "mains": 8.7}, "2. Human Evolution \u2014 Theories, Synthetic Theory, Concepts (1.4)": {"pre": 0.0, "mains": 8.3}, "3. Primates \u2014 Taxonomy, Adaptations, Behaviour, Erect Posture (1.5)": {"pre": 0.0, "mains": 8.3}, "4. Fossil Hominids \u2014 Australopithecines, Homo erectus, Homo sapiens (1.6)": {"pre": 0.0, "mains": 8.3}, "5. Biological Basis of Life + Prehistoric Archaeology & Dating Methods (1.7 & 1.8)": {"pre": 0.0, "mains": 8.3}, "6. Culture, Society, Marriage, Family & Kinship (2.1\u20132.5)": {"pre": 0.0, "mains": 8.3}, "7. Economic, Political Organisation & Religion (3, 4 & 5)": {"pre": 0.0, "mains": 8.3}, "8. Anthropological Theories \u2014 Evolutionism to Post-modernism (6)": {"pre": 0.0, "mains": 8.3}, "9. Culture, Language, Communication & Research Methods (7 & 8)": {"pre": 0.0, "mains": 8.3}, "10. Human Genetics, Race, Ecology & Epidemiology (9.1\u20139.8)": {"pre": 0.0, "mains": 8.3}, "11. Human Growth, Development, Ageing & Demography (10 & 11)": {"pre": 0.0, "mains": 8.3}, "12. Applications of Anthropology \u2014 Forensic, Sports, Genetics (12)": {"pre": 0.0, "mains": 8.3}}, "Anthropology Paper 2": {"1. Evolution of Indian Culture & Civilization \u2014 Prehistoric, Protohistoric, Ethnoarchaeology (1.1\u20131.3)": {"pre": 0.0, "mains": 11.2}, "2. Demographic Profile of India \u2014 Ethnic, Linguistic & Population Factors (2)": {"pre": 0.0, "mains": 11.1}, "3. Traditional Indian Social System \u2014 Varnashram, Caste, Sacred Complex, Religions (3.1\u20133.4)": {"pre": 0.0, "mains": 11.1}, "4. Emergence & Growth of Anthropology in India \u2014 Scholar-Administrators & Indian Anthropologists (4)": {"pre": 0.0, "mains": 11.1}, "5. Indian Village, Linguistic & Religious Minorities, Socio-cultural Change (5.1\u20135.3)": {"pre": 0.0, "mains": 11.1}, "6. Tribal Situation in India \u2014 Problems, Displacement, Urbanisation (6.1\u20136.3)": {"pre": 0.0, "mains": 11.1}, "7. SCs, STs, OBCs \u2014 Safeguards, Social Change & Ethnicity (7.1\u20137.3)": {"pre": 0.0, "mains": 11.1}, "8. Religion on Tribal Societies & Tribe\u2013Nation State Relationship (8.1\u20138.2)": {"pre": 0.0, "mains": 11.1}, "9. Tribal Development, Applied Anthropology & Movements \u2014 NGOs, Policies, Regionalism (9.1\u20139.3)": {"pre": 0.0, "mains": 11.1}}, "Ancient India": {"1. Pre-Historic India": {"pre": 10.0, "mains": 0.0}, "2. Harappan Civilization / Bronze Age": {"pre": 10.0, "mains": 0.0}, "3. The Vedic Age": {"pre": 10.0, "mains": 0.0}, "4. The Mahajanapadas": {"pre": 20.0, "mains": 0.0}, "5. The Maurya Empire": {"pre": 13.3, "mains": 0.0}, "6. The Guptas and the Vakatakas": {"pre": 23.4, "mains": 0.0}, "7. Post-Harsha Period & Regional Kingdoms": {"pre": 13.3, "mains": 0.0}}, "Medieval History": {"1. Early Medieval India: Age of Regional Configurations (c. 600\u20131200 CE)": {"pre": 8.5, "mains": 0.0}, "2. Early Medieval India: States of South India": {"pre": 2.8, "mains": 0.0}, "3. Delhi Sultanate": {"pre": 19.8, "mains": 0.0}, "4. Vijayanagara and Bahmani Kingdoms": {"pre": 22.7, "mains": 0.0}, "5. The Mughal Empire": {"pre": 14.1, "mains": 0.0}, "6. Society, Economy & Culture in Medieval India": {"pre": 8.5, "mains": 0.0}, "7. Decline of the Mughal Empire": {"pre": 1.0, "mains": 0.0}, "8. Advent of Europeans & Early Modern India": {"pre": 22.6, "mains": 0.0}}, "Art and Culture": {"1. Indian Architecture": {"pre": 14.5, "mains": 24.0}, "2. Legendary Cities of Ancient & Medieval India": {"pre": 1.0, "mains": 1.0}, "3. Indian Sculpture and Pottery": {"pre": 2.9, "mains": 9.0}, "4. Edicts and Inscriptions": {"pre": 2.0, "mains": 1.0}, "5. Coins in Ancient and Medieval India": {"pre": 1.0, "mains": 1.0}, "6. Indian Paintings": {"pre": 4.9, "mains": 1.0}, "7. Indian Handicrafts": {"pre": 2.9, "mains": 1.0}, "8. UNESCO World Heritage Sites in India": {"pre": 1.0, "mains": 1.0}, "9. Indian Music": {"pre": 5.9, "mains": 1.0}, "10. Indian Dance Forms": {"pre": 4.9, "mains": 3.0}, "11. Indian Theatre": {"pre": 1.0, "mains": 1.0}, "12. Indian Puppetry": {"pre": 1.0, "mains": 1.0}, "13. Indian Circus": {"pre": 1.0, "mains": 1.0}, "14. Martial Arts in India": {"pre": 1.0, "mains": 1.0}, "15. UNESCO Intangible Cultural Heritage": {"pre": 2.0, "mains": 1.0}, "16. Tribal Culture in India": {"pre": 4.9, "mains": 1.0}, "17. Trade, Traders and Cultural Exchange": {"pre": 1.0, "mains": 1.0}, "18. Languages in India": {"pre": 2.9, "mains": 1.0}, "19. Religion in India": {"pre": 2.0, "mains": 6.0}, "20. Bhakti and Sufi Movements": {"pre": 3.9, "mains": 12.0}, "21. Buddhism and Jainism": {"pre": 11.7, "mains": 1.0}, "22. Indian Literature": {"pre": 8.8, "mains": 9.0}, "23. Education in Ancient and Medieval India": {"pre": 1.0, "mains": 9.0}, "24. Indian Schools of Philosophy": {"pre": 2.9, "mains": 1.0}, "25. Science and Technology through the Ages": {"pre": 2.9, "mains": 1.0}, "26. Indian Cinema": {"pre": 1.0, "mains": 1.0}, "27. Fairs and Festivals in India": {"pre": 2.0, "mains": 1.0}, "28. Awards and Honours": {"pre": 2.0, "mains": 1.0}, "29. Calendars in India": {"pre": 1.0, "mains": 1.0}, "30. Law and Culture": {"pre": 1.0, "mains": 1.0}, "31. Indian Culture Abroad": {"pre": 1.0, "mains": 1.0}, "32. India Through the Eyes of Foreign Travellers": {"pre": 1.0, "mains": 3.0}, "33. Cultural Institutions in India": {"pre": 2.0, "mains": 1.0}}, "Indian Society": {"1. Salient Features of Indian Society": {"pre": 0.0, "mains": 3.5}, "2. Caste System & Dalit Identity": {"pre": 0.0, "mains": 5.3}, "3. Diversity of India": {"pre": 0.0, "mains": 5.3}, "4. Family, Marriage & Kinship": {"pre": 0.0, "mains": 5.3}, "5. Scheduled Tribes & Tribal Society": {"pre": 0.0, "mains": 3.5}, "6. Role of Women & Gender Issues": {"pre": 0.0, "mains": 13.8}, "7. Population Issues & Demographics": {"pre": 0.0, "mains": 5.3}, "8. Migration": {"pre": 0.0, "mains": 3.5}, "9. Urbanisation & Smart Cities": {"pre": 0.0, "mains": 8.8}, "10. Poverty, Deprivation & Human Development": {"pre": 0.0, "mains": 7.0}, "11. Effects of Globalisation on Indian Society": {"pre": 0.0, "mains": 12.3}, "12. Social Empowerment, Affirmative Action & Reforms": {"pre": 0.0, "mains": 12.3}, "13. Communalism": {"pre": 0.0, "mains": 3.5}, "14. Secularism \u2014 Indian Model": {"pre": 0.0, "mains": 5.3}, "15. Regionalism": {"pre": 0.0, "mains": 5.3}}, "Modern History": {"1. Sources for the History of Modern India": {"pre": 1.1, "mains": 1.0}, "2. Major Approaches to the History of Modern India": {"pre": 1.1, "mains": 1.0}, "3. Advent of the Europeans in India": {"pre": 3.4, "mains": 2.2}, "4. India on the Eve of British Conquest": {"pre": 3.4, "mains": 6.6}, "5. Expansion and Consolidation of British Power in India": {"pre": 3.4, "mains": 2.2}, "6. People's Resistance Against British Before 1857": {"pre": 3.4, "mains": 6.6}, "7. The Revolt of 1857": {"pre": 3.4, "mains": 2.2}, "8. Socio-Religious Reform Movements \u2014 General Features": {"pre": 2.3, "mains": 4.4}, "9. A General Survey of Socio-Cultural Reform Movements & Reformers": {"pre": 5.7, "mains": 8.8}, "10. Beginning of Modern Nationalism in India": {"pre": 2.3, "mains": 4.4}, "11. Indian National Congress \u2014 Foundation and the Moderate Phase": {"pre": 3.4, "mains": 4.4}, "12. Era of Militant Nationalism (1905\u20131909)": {"pre": 3.4, "mains": 1.0}, "13. First Phase of Revolutionary Activities (1907\u20131917)": {"pre": 3.4, "mains": 1.0}, "14. First World War and Nationalist Response": {"pre": 2.3, "mains": 2.2}, "15. Emergence of Gandhi": {"pre": 5.7, "mains": 1.0}, "16. Non-Cooperation Movement and Khilafat Movement": {"pre": 3.4, "mains": 13.0}, "17. Emergence of Swarajists, Socialist Ideas, Revolutionary Activities & Other New Forces": {"pre": 3.4, "mains": 2.2}, "18. Simon Commission and the Civil Disobedience Movement": {"pre": 8.9, "mains": 1.0}, "19. Constitutional Developments (1919\u20131935)": {"pre": 3.4, "mains": 4.4}, "20. Nationalist Response in the Wake of World War II": {"pre": 4.6, "mains": 6.6}, "21. Quit India Movement and Other Events (1940\u20131947)": {"pre": 3.4, "mains": 6.6}, "22. Constitutional, Administrative & Judicial Developments": {"pre": 6.9, "mains": 2.2}, "23. Economic Impact of British Rule in India": {"pre": 2.3, "mains": 8.8}, "24. Development of Education": {"pre": 3.4, "mains": 1.0}, "25. Peasant Movements": {"pre": 3.4, "mains": 1.0}, "26. Tribal Movements": {"pre": 2.3, "mains": 2.2}, "27. Workers' Movements": {"pre": 2.3, "mains": 1.0}, "28. Growth of Press in Modern India": {"pre": 4.6, "mains": 1.0}}, "Post Independent History": {"1. Independence and Partition of India": {"pre": 0.0, "mains": 1.0}, "2. Consolidation as a Nation": {"pre": 0.0, "mains": 10.3}, "3. Growth of Nationalism in the Princely States": {"pre": 0.0, "mains": 1.0}, "4. India's Foreign Policy": {"pre": 0.0, "mains": 20.7}, "5. Integration of Princely States": {"pre": 0.0, "mains": 10.3}, "6. First General Elections": {"pre": 0.0, "mains": 1.0}, "7. Planning and Economic Development": {"pre": 0.0, "mains": 1.0}, "8. Evolution of Party System": {"pre": 0.0, "mains": 1.0}, "9. Panchayati Raj and Local Government": {"pre": 0.0, "mains": 1.0}, "10. Emergency and After": {"pre": 0.0, "mains": 1.0}, "11. India After Independence \u2014 Major Developments": {"pre": 0.0, "mains": 51.7}}, "World History": {"1. The Modern World": {"pre": 0.0, "mains": 1.0}, "2. The Age of Revolutions": {"pre": 0.0, "mains": 1.0}, "3. The American Revolution": {"pre": 0.0, "mains": 9.0}, "4. The French Revolution": {"pre": 0.0, "mains": 9.0}, "5. The Industrial Revolution": {"pre": 0.0, "mains": 13.5}, "6. Nationalism in Europe": {"pre": 0.0, "mains": 1.0}, "7. Unification of Italy": {"pre": 0.0, "mains": 1.0}, "8. Unification of Germany": {"pre": 0.0, "mains": 1.0}, "9. The Russian Revolution": {"pre": 0.0, "mains": 4.5}, "10. The Rise of Socialism": {"pre": 0.0, "mains": 4.5}, "11. The Rise of Fascism": {"pre": 0.0, "mains": 4.5}, "12. The Rise of Nazism": {"pre": 0.0, "mains": 9.0}, "13. Imperialism and Colonialism": {"pre": 0.0, "mains": 4.5}, "14. The First World War": {"pre": 0.0, "mains": 13.5}, "15. The Second World War": {"pre": 0.0, "mains": 4.5}, "16. The Cold War": {"pre": 0.0, "mains": 1.0}, "17. The Chinese Revolution": {"pre": 0.0, "mains": 1.0}, "18. Decolonization in Asia and Africa": {"pre": 0.0, "mains": 13.5}, "19. The United Nations": {"pre": 0.0, "mains": 1.0}, "20. The Disintegration of the Soviet Union": {"pre": 0.0, "mains": 1.0}, "21. The Contemporary World": {"pre": 0.0, "mains": 1.0}}, "Geography": {"W01. Geography as a Discipline": {"pre": 1.2, "mains": 1.0}, "W02. The Origin and Evolution of the Earth": {"pre": 1.2, "mains": 1.0}, "W03. Interior of the Earth": {"pre": 1.2, "mains": 1.8}, "W04. Distribution of Oceans and Continents": {"pre": 3.7, "mains": 4.4}, "W05. Minerals and Rocks": {"pre": 1.2, "mains": 0.9}, "W06. Geomorphic Processes": {"pre": 1.2, "mains": 1.8}, "W07. Landforms and Their Evolution": {"pre": 2.5, "mains": 1.8}, "W08. Composition and Structure of Atmosphere": {"pre": 1.2, "mains": 1.8}, "W09. Solar Radiation, Heat Balance and Temperature": {"pre": 1.2, "mains": 1.8}, "W10. Atmospheric Circulation and Weather Systems": {"pre": 1.2, "mains": 2.6}, "W11. Water in the Atmosphere": {"pre": 1.2, "mains": 0.9}, "W12. World Climate and Climate Change": {"pre": 2.5, "mains": 2.6}, "W13. Water (Oceans)": {"pre": 2.5, "mains": 3.5}, "W14. Movements of Ocean Water": {"pre": 2.5, "mains": 2.6}, "W15. Life on the Earth": {"pre": 1.2, "mains": 1.0}, "W16. Biodiversity and Conservation": {"pre": 1.2, "mains": 0.9}, "W17. Mapping (World)": {"pre": 8.9, "mains": 1.0}, "I01. India \u2014 Location": {"pre": 2.5, "mains": 0.9}, "I02. Structure and Physiography": {"pre": 3.7, "mains": 2.6}, "I03. Drainage System": {"pre": 5.0, "mains": 1.8}, "I04. Climate": {"pre": 2.5, "mains": 2.6}, "I05. Natural Vegetation": {"pre": 1.2, "mains": 1.8}, "I06. Soils": {"pre": 1.2, "mains": 1.0}, "I07. Natural Hazards and Disasters": {"pre": 2.5, "mains": 2.6}, "I08. Mapping (India)": {"pre": 6.2, "mains": 1.0}, "H01. Human Geography \u2014 Nature and Scope": {"pre": 2.5, "mains": 1.8}, "H02. The World Population \u2014 Distribution, Density and Growth": {"pre": 1.0, "mains": 1.0}, "H03. Population Composition": {"pre": 1.0, "mains": 1.0}, "H04. Human Development": {"pre": 1.0, "mains": 1.0}, "H05. Primary Activities": {"pre": 2.5, "mains": 3.5}, "H06. Secondary Activities": {"pre": 2.5, "mains": 3.5}, "H07. Tertiary and Quaternary Activities": {"pre": 5.0, "mains": 4.4}, "H08. Transport and Communication": {"pre": 1.0, "mains": 1.0}, "H09. International Trade": {"pre": 1.0, "mains": 1.0}, "H10. Human Settlements": {"pre": 1.0, "mains": 1.0}, "E01. Population \u2014 Distribution, Density, Growth and Composition": {"pre": 1.2, "mains": 0.9}, "E02. Migration \u2014 Types, Causes and Consequences": {"pre": 1.0, "mains": 1.0}, "E03. Human Development": {"pre": 1.0, "mains": 1.0}, "E04. Human Settlements": {"pre": 1.0, "mains": 1.0}, "E05. Land Resources and Agriculture": {"pre": 2.5, "mains": 3.5}, "E06. Water Resources": {"pre": 2.5, "mains": 8.8}, "E07. Mineral and Energy Resources": {"pre": 3.7, "mains": 6.2}, "E08. Manufacturing Industries": {"pre": 2.5, "mains": 3.5}, "E09. Planning and Sustainable Development in Indian Context": {"pre": 2.5, "mains": 6.2}, "E10. Transport and Communication": {"pre": 1.0, "mains": 1.0}, "E11. International Trade": {"pre": 1.0, "mains": 1.0}, "E12. Geographical Perspective on Selected Issues and Problems": {"pre": 1.0, "mains": 1.0}}, "Indian Polity": {"I-01. Historical Background": {"pre": 1.9, "mains": 0.7}, "I-02. Making of the Constitution": {"pre": 1.0, "mains": 1.0}, "I-03. Concept of the Constitution": {"pre": 2.8, "mains": 2.8}, "I-04. Salient Features of the Constitution": {"pre": 1.0, "mains": 1.0}, "I-05. Preamble of the Constitution": {"pre": 1.0, "mains": 1.0}, "I-06. Union and Its Territory": {"pre": 2.8, "mains": 1.0}, "I-07. Citizenship": {"pre": 1.0, "mains": 1.0}, "I-08. Fundamental Rights": {"pre": 3.7, "mains": 2.1}, "I-09. Directive Principles of State Policy": {"pre": 2.8, "mains": 1.4}, "I-10. Fundamental Duties": {"pre": 1.0, "mains": 1.0}, "I-11. Amendment of the Constitution": {"pre": 2.8, "mains": 2.1}, "I-12. Basic Structure of the Constitution": {"pre": 1.0, "mains": 1.0}, "II-01. Parliamentary System": {"pre": 1.9, "mains": 3.5}, "II-02. Federal System": {"pre": 1.0, "mains": 1.0}, "II-03. Centre\u2013State Relations": {"pre": 2.8, "mains": 6.1}, "II-04. Inter-State Relations": {"pre": 1.0, "mains": 1.0}, "II-05. Emergency Provisions": {"pre": 1.0, "mains": 1.0}, "III-E1. President": {"pre": 3.7, "mains": 2.8}, "III-E2. Vice-President": {"pre": 1.0, "mains": 1.0}, "III-E3. Prime Minister": {"pre": 1.0, "mains": 1.0}, "III-E4. Central Council of Ministers": {"pre": 1.0, "mains": 1.0}, "III-E5. Cabinet Committees": {"pre": 1.0, "mains": 1.0}, "III-L1. Parliament": {"pre": 3.7, "mains": 4.3}, "III-L2. Parliamentary Committees": {"pre": 1.0, "mains": 1.0}, "III-L3. Parliamentary Forums": {"pre": 1.0, "mains": 1.0}, "III-J1. Supreme Court": {"pre": 4.9, "mains": 4.3}, "III-J2. Judicial Review": {"pre": 1.0, "mains": 1.0}, "III-J3. Judicial Activism": {"pre": 1.0, "mains": 1.0}, "III-J4. Public Interest Litigation": {"pre": 1.0, "mains": 1.0}, "IV-01. Governor": {"pre": 2.8, "mains": 1.4}, "IV-02. Chief Minister": {"pre": 1.0, "mains": 1.0}, "IV-03. State Council of Ministers": {"pre": 1.0, "mains": 1.0}, "IV-04. State Legislature": {"pre": 1.0, "mains": 1.0}, "IV-05. High Court": {"pre": 1.0, "mains": 1.0}, "IV-06. Subordinate Courts": {"pre": 1.0, "mains": 1.0}, "V-01. Panchayati Raj": {"pre": 1.9, "mains": 3.5}, "V-02. Municipalities": {"pre": 1.0, "mains": 1.0}, "VI-01. Union Territories": {"pre": 1.9, "mains": 2.8}, "VI-02. Special Status of Jammu and Kashmir": {"pre": 1.0, "mains": 1.0}, "VI-03. Scheduled and Tribal Areas": {"pre": 1.0, "mains": 1.0}, "VII-01. Election Commission": {"pre": 0.9, "mains": 0.7}, "VII-02. Union Public Service Commission": {"pre": 0.9, "mains": 1.0}, "VII-03. State Public Service Commission": {"pre": 1.0, "mains": 1.0}, "VII-04. Finance Commission": {"pre": 0.9, "mains": 1.4}, "VII-05. National Commission for SCs": {"pre": 1.0, "mains": 0.7}, "VII-06. National Commission for STs": {"pre": 1.0, "mains": 1.0}, "VII-07. National Commission for BCs": {"pre": 1.0, "mains": 0.7}, "VII-08. Special Officer for Linguistic Minorities": {"pre": 1.0, "mains": 1.0}, "VII-09. Comptroller and Auditor General": {"pre": 0.9, "mains": 0.7}, "VIII-01. NITI Aayog": {"pre": 1.0, "mains": 1.0}, "VIII-02. National Human Rights Commission": {"pre": 0.9, "mains": 1.4}, "VIII-03. State Human Rights Commission": {"pre": 1.0, "mains": 1.0}, "VIII-04. Central Information Commission": {"pre": 0.9, "mains": 0.7}, "VIII-05. State Information Commission": {"pre": 1.0, "mains": 1.0}, "VIII-06. Central Vigilance Commission": {"pre": 1.0, "mains": 1.0}, "VIII-07. Central Bureau of Investigation": {"pre": 0.9, "mains": 0.7}, "VIII-08. Lokpal and Lokayuktas": {"pre": 0.9, "mains": 0.7}, "IX-01. Tribunals": {"pre": 0.9, "mains": 2.1}, "IX-02. National Company Law Tribunal": {"pre": 1.0, "mains": 0.7}, "IX-03. Goods and Services Tax Council": {"pre": 0.9, "mains": 1.0}, "IX-04. Official Language": {"pre": 1.0, "mains": 1.0}, "IX-05. Public Services": {"pre": 1.0, "mains": 1.0}, "IX-06. Rights and Liabilities of the Government": {"pre": 1.0, "mains": 1.0}, "IX-07. Attorney General of India": {"pre": 0.9, "mains": 0.7}, "IX-08. Advocate General of State": {"pre": 1.0, "mains": 1.0}, "X-01. Political Parties": {"pre": 0.9, "mains": 1.0}, "X-02. Anti-Defection Law": {"pre": 0.9, "mains": 0.7}, "X-03. Elections": {"pre": 1.9, "mains": 0.7}, "X-04. Electoral Reforms": {"pre": 1.0, "mains": 2.1}, "X-05. Voting Behaviour": {"pre": 1.0, "mains": 1.0}, "X-06. Regional Parties": {"pre": 1.0, "mains": 0.7}, "X-07. Coalition Government": {"pre": 1.0, "mains": 1.0}, "X-08. National Integration": {"pre": 1.0, "mains": 1.0}, "XI-01. Comparison of Constitutions": {"pre": 1.0, "mains": 2.8}}, "Governance": {"1. Government Policies and Interventions": {"pre": 0.0, "mains": 9.0}, "2. Policy Formulation and Implementation": {"pre": 0.0, "mains": 9.1}, "3. Development Processes and Role of NGOs": {"pre": 0.0, "mains": 9.1}, "4. Self-Help Groups and Civil Society Organizations": {"pre": 0.0, "mains": 9.1}, "5. Pressure Groups and Informal Associations": {"pre": 0.0, "mains": 9.1}, "6. Governance and Accountability": {"pre": 0.0, "mains": 9.1}, "7. Citizen Charters": {"pre": 0.0, "mains": 9.1}, "8. Transparency and Accountability": {"pre": 0.0, "mains": 9.1}, "9. E-Governance": {"pre": 0.0, "mains": 9.1}, "10. Social Audit": {"pre": 0.0, "mains": 9.1}, "11. Good Governance": {"pre": 0.0, "mains": 9.1}}, "Social Justice": {"1. Welfare Schemes for Vulnerable Sections": {"pre": 0.0, "mains": 12.2}, "2. Mechanisms for Protection of Vulnerable Sections": {"pre": 0.0, "mains": 7.3}, "3. Issues Related to Poverty": {"pre": 0.0, "mains": 12.2}, "4. Issues Related to Hunger and Malnutrition": {"pre": 0.0, "mains": 7.3}, "5. Issues Related to Health": {"pre": 0.0, "mains": 15.0}, "6. Issues Related to Education": {"pre": 0.0, "mains": 12.2}, "7. Issues Related to Human Resources": {"pre": 0.0, "mains": 4.9}, "8. Issues Related to Women": {"pre": 0.0, "mains": 14.7}, "9. Issues Related to Children": {"pre": 0.0, "mains": 7.3}, "10. Issues Related to SC/ST": {"pre": 0.0, "mains": 1.0}, "11. Issues Related to Minorities": {"pre": 0.0, "mains": 1.0}, "12. Issues Related to Elderly and Disabled": {"pre": 0.0, "mains": 4.9}}, "International Relations": {"1. India and Its Neighbourhood": {"pre": 0.0, "mains": 22.1}, "2. India and Superpowers (P5+1)": {"pre": 0.0, "mains": 8.9}, "3. Other Bilateral Relations": {"pre": 0.0, "mains": 8.9}, "4. Regional Groupings and Agreements": {"pre": 0.0, "mains": 15.6}, "5. Global Institutions": {"pre": 0.0, "mains": 15.6}, "6. International Treaties and Agreements": {"pre": 0.0, "mains": 6.7}, "7. Diaspora": {"pre": 0.0, "mains": 4.4}, "8. Effects of Policies and Politics of Developed and Developing Countries": {"pre": 0.0, "mains": 8.9}, "9. Important International Events": {"pre": 0.0, "mains": 8.9}}, "Indian Economy": {"1. National Income": {"pre": 2.9, "mains": 5.2}, "2. Economic Growth versus Economic Development": {"pre": 2.9, "mains": 5.2}, "3. Poverty, Inequality and Unemployment": {"pre": 2.9, "mains": 7.6}, "4. Inflation": {"pre": 2.9, "mains": 7.8}, "5. Population and Demographic Dividend": {"pre": 4.3, "mains": 7.8}, "6. Skill Development": {"pre": 1.0, "mains": 1.0}, "7. Unemployment and Labour Reforms": {"pre": 2.9, "mains": 5.2}, "8. Care Economy and Gender Transformative Approach": {"pre": 1.0, "mains": 1.0}, "9. Sustainable Development and Climate Change": {"pre": 1.0, "mains": 1.0}, "10. Indian Tax Structure": {"pre": 4.3, "mains": 5.2}, "11. Public Finance": {"pre": 5.8, "mains": 7.8}, "12. Economic Planning in India": {"pre": 5.8, "mains": 7.8}, "13. Money Demand and Money Supply": {"pre": 1.0, "mains": 1.0}, "14. Banking Sector in India": {"pre": 1.0, "mains": 1.0}, "15. Financial Market": {"pre": 1.0, "mains": 1.0}, "16. Technology and Finance": {"pre": 5.8, "mains": 1.0}, "17. Co-operative Sector in Indian Economy": {"pre": 1.0, "mains": 1.0}, "18. Insurance Sector of India": {"pre": 1.0, "mains": 1.0}, "19. India's Booming Gig and Platform Economy": {"pre": 1.0, "mains": 1.0}, "20. Indian Industry": {"pre": 4.3, "mains": 2.6}, "21. MSME Sector": {"pre": 4.3, "mains": 2.6}, "22. Food Processing Industry in India": {"pre": 1.0, "mains": 1.0}, "23. Service Sector": {"pre": 1.0, "mains": 1.0}, "24. Infrastructure": {"pre": 7.5, "mains": 5.2}, "25. Power and Energy Sector of India": {"pre": 1.0, "mains": 1.0}, "26. Investment Models": {"pre": 1.0, "mains": 1.0}, "27. Health and Education": {"pre": 1.0, "mains": 1.0}, "28. Balance of Payments": {"pre": 5.8, "mains": 2.6}, "29. India's Foreign Exchange and Foreign Trade": {"pre": 1.0, "mains": 1.0}, "30. International Economic Institutions": {"pre": 1.0, "mains": 1.0}, "31. Agriculture and Allied Sectors in India": {"pre": 7.2, "mains": 2.6}, "32. Food Security and Food Management": {"pre": 5.8, "mains": 2.6}, "33. Land Reforms in India": {"pre": 4.3, "mains": 2.6}, "34. Irrigation in India": {"pre": 4.3, "mains": 2.6}}, "Environment": {"1. Environment, Habitat and Ecosystem": {"pre": 5.6, "mains": 1.0}, "2. Ecology \u2014 Principles and Organizations": {"pre": 1.0, "mains": 1.0}, "3. Functions of an Ecosystem": {"pre": 5.6, "mains": 5.0}, "4. Energy Flow through an Ecosystem": {"pre": 1.0, "mains": 1.0}, "5. Biogeochemical (Nutrient) Cycles": {"pre": 1.0, "mains": 1.0}, "6. Natural Ecosystems": {"pre": 5.6, "mains": 5.0}, "7. Wetland Ecosystem": {"pre": 1.0, "mains": 1.0}, "8. Evolution of the Biosphere": {"pre": 1.0, "mains": 1.0}, "9. Biodiversity and Its Loss": {"pre": 8.8, "mains": 2.5}, "10. Biodiversity Conservation": {"pre": 1.0, "mains": 1.0}, "11. Wildlife Conservation": {"pre": 1.0, "mains": 1.0}, "12. Global Environmental Issues and Environmental Degradation": {"pre": 5.6, "mains": 7.5}, "13. Air Pollution": {"pre": 5.6, "mains": 5.0}, "14. Water Pollution and Marine Pollution": {"pre": 5.6, "mains": 7.5}, "15. Radioactive Pollution": {"pre": 9.3, "mains": 7.5}, "16. Solid Wastes": {"pre": 1.0, "mains": 1.0}, "17. Hazardous Waste": {"pre": 1.0, "mains": 1.0}, "18. E-Waste or Electronic Waste": {"pre": 1.0, "mains": 1.0}, "19. Land Degradation": {"pre": 1.0, "mains": 1.0}, "20. Global Warming and Climate Change": {"pre": 5.6, "mains": 10.3}, "21. International Environmental Conventions, NGOs and Laws": {"pre": 5.6, "mains": 10.1}, "22. National Environmental Legislations": {"pre": 3.7, "mains": 5.0}, "23. Green Revolution, Sustainable and Modern Agricultural Practices": {"pre": 5.6, "mains": 5.0}, "24. Sources of Energy": {"pre": 5.6, "mains": 5.0}, "25. Water Conservation": {"pre": 5.6, "mains": 10.1}, "26. Protected Area Network": {"pre": 5.6, "mains": 2.5}}, "Science and Technology": {"1. Information and Communication Technology (ICT)": {"pre": 8.0, "mains": 10.1}, "2. Artificial Intelligence and Emerging Technologies": {"pre": 10.5, "mains": 8.1}, "3. Robotics and Automation": {"pre": 2.7, "mains": 4.0}, "4. Space Technology": {"pre": 10.7, "mains": 12.1}, "5. Defence Technology": {"pre": 5.4, "mains": 6.1}, "6. Achievements of India in Science and Technology": {"pre": 1.0, "mains": 1.0}, "7. Biotechnology": {"pre": 8.0, "mains": 6.1}, "8. Nanotechnology": {"pre": 5.4, "mains": 6.1}, "9. Health and Medical Technology": {"pre": 10.7, "mains": 12.1}, "10. Agriculture and Food Technology": {"pre": 5.4, "mains": 6.1}, "11. Nuclear Technology": {"pre": 5.4, "mains": 4.0}, "12. Energy Technology": {"pre": 10.7, "mains": 10.1}, "13. Environmental and Climate Technology": {"pre": 5.4, "mains": 4.0}, "14. Intellectual Property Rights (IPR) and Technology Policy": {"pre": 10.7, "mains": 10.1}}, "Internal Security": {"1. Cyber Security and Role of Social Media": {"pre": 0.0, "mains": 19.3}, "2. Security Challenges and Their Management in Border Areas": {"pre": 0.0, "mains": 17.0}, "3. Terrorism \u2014 Role of External State and Non-State Actors": {"pre": 0.0, "mains": 17.0}, "4. Left-Wing Extremism \u2014 A War Upon the State": {"pre": 0.0, "mains": 12.1}, "5. Internal Security": {"pre": 0.0, "mains": 9.7}, "6. Insurgency in the North-East": {"pre": 0.0, "mains": 9.7}, "7. Linkages between Development and Spread of Extremism": {"pre": 0.0, "mains": 2.4}, "8. Organised Crime": {"pre": 0.0, "mains": 4.9}, "9. Contemporary Issues in Internal Security": {"pre": 0.0, "mains": 1.0}, "10. Jammu and Kashmir Militancy": {"pre": 0.0, "mains": 4.9}, "11. Communal Violence": {"pre": 0.0, "mains": 1.0}, "12. Security Forces and Their Mandate": {"pre": 0.0, "mains": 1.0}}, "Disaster Management": {"1. Disaster Mitigation, Response and Recovery": {"pre": 0.0, "mains": 28.5}, "2. Disaster Risk, Vulnerability and Preparedness": {"pre": 0.0, "mains": 28.6}, "3. Disaster Management \u2014 Concepts, Types and Framework": {"pre": 0.0, "mains": 14.3}, "4. Institutional Mechanisms and Governance in Disaster Management": {"pre": 0.0, "mains": 14.3}, "5. Technology, Community Participation and Disaster Risk Reduction": {"pre": 0.0, "mains": 14.3}}, "Ethics Theory": {"1. Contributions of Moral Thinkers and Philosophers": {"pre": 0.0, "mains": 28.8}, "2. Public / Civil Service Values and Ethics in Public Administration": {"pre": 0.0, "mains": 17.8}, "3. Probity in Governance": {"pre": 0.0, "mains": 15.6}, "4. Ethics and Human Interface": {"pre": 0.0, "mains": 13.3}, "5. Emotional Intelligence": {"pre": 0.0, "mains": 8.9}, "6. Attitude": {"pre": 0.0, "mains": 8.9}, "7. Aptitude and Foundational Values for Civil Service": {"pre": 0.0, "mains": 6.7}}, "Ethics Case Studies": {"1. Integrity and Whistleblowing": {"pre": 0.0, "mains": 13.7}, "2. Conflict of Interest and Corruption": {"pre": 0.0, "mains": 14.0}, "3. Crisis Management and Disaster Response": {"pre": 0.0, "mains": 11.6}, "4. Corporate Ethics and Business Dilemmas": {"pre": 0.0, "mains": 9.3}, "5. Environmental Ethics": {"pre": 0.0, "mains": 9.3}, "6. Social Justice and Welfare": {"pre": 0.0, "mains": 9.3}, "7. Law Enforcement and Security Ethics": {"pre": 0.0, "mains": 7.0}, "8. Workplace Harassment and Gender Justice": {"pre": 0.0, "mains": 7.0}, "9. Public Safety and Professional Ethics": {"pre": 0.0, "mains": 4.7}, "10. Civil Service Values and Political Interference": {"pre": 0.0, "mains": 4.7}, "11. Media Ethics and Transparency": {"pre": 0.0, "mains": 4.7}, "12. Healthcare and Research Ethics": {"pre": 0.0, "mains": 4.7}}};
 
 const CHAPTER_SECTIONS = {
   "Geography": {
