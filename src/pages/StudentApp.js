@@ -3541,7 +3541,7 @@ function MicroTopicHeatmap({ subject, chapter, examType }) {
             <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
               {filtered.map((t, i) => {
                 const cfg = priorityConfig[t.pyq_priority] || priorityConfig['Low'];
-                const years = t.pyq_years ? t.pyq_years.match(/\d{4}/g) || [] : [];
+                const years = t.pyq_years ? String(t.pyq_years).match(/\d{4}/g) || [] : [];
                 return (
                   <div key={i} style={{
                     background:`${cfg.bg}12`,
@@ -3560,8 +3560,8 @@ function MicroTopicHeatmap({ subject, chapter, examType }) {
                     </div>
                     {years.length > 0 && (
                       <div style={{ display:'flex', flexWrap:'wrap', gap:3, marginLeft:24 }}>
-                        {years.map(y => (
-                          <span key={y} style={{
+                        {years.map((y, yi) => (
+                          <span key={yi} style={{
                             background: cfg.bg + '20',
                             border: `1px solid ${cfg.bg}60`,
                             color: cfg.bg,
