@@ -3563,7 +3563,7 @@ function MicroTopicHeatmap({ subject, chapter, examType }) {
                   );
                 })
               }
-            </div>            </div>
+            </div>
           )}
         </div>
       )}
