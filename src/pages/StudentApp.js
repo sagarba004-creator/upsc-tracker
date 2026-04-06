@@ -3205,7 +3205,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
                     const exam   = subj.exam_type || 'both';
                     const badge  = EXAM_BADGE[exam] || EXAM_BADGE['both'];
                     const isOpenTrend2 = openTrend === subj.subject;
-                    const hasPYQ = !!((dashboard?.pyq_year_data || {})[subj.subject]);
+                    const hasPYQ = !!((dashboard?.pyq_year_data || {})[subj.subject]) && !['Philosophical','Socio-Politico-Economic'].includes(subj.subject);
                     return (
                       <div key={subj.subject} style={{
                         background:'#fff', borderRadius:12, padding:'12px 14px',
@@ -3307,7 +3307,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
         const badge   = EXAM_BADGE[exam] || EXAM_BADGE['both'];
         const paperLbl = PAPER_LABEL[subj.gs_paper] || subj.gs_paper;
         const isOpen  = openTrend === subj.subject;
-        const hasPYQ  = !!((dashboard?.pyq_year_data || {})[subj.subject]);
+        const hasPYQ  = !!((dashboard?.pyq_year_data || {})[subj.subject]) && !['Philosophical','Socio-Politico-Economic'].includes(subj.subject);
         return (
           <div key={subj.subject} style={{
             background:'#fff', borderRadius:14, padding:'14px 16px',
