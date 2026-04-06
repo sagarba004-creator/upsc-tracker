@@ -419,7 +419,8 @@ function StudentDetail({ student, onBack }) {
     ]).then(([d, cons, ms]) => {
       setDash(d); setCons(cons); setMentors(ms);
       setEditForm({ name:student.name, batch:student.batch,
-        target_year:student.target_year, optional:student.optional });
+        target_year:student.target_year, optional:student.optional,
+        start_date: student.start_date || '' });
       // derive assigned mentors — check if student phone appears in mentor's students list
       // attach mentor_type from the student_types map on each mentor
       const assigned = ms
@@ -501,10 +502,12 @@ function StudentDetail({ student, onBack }) {
             {[
               {key:'name',label:'Name'}, {key:'batch',label:'Batch'},
               {key:'target_year',label:'Target Year'}, {key:'optional',label:'Optional'},
+              {key:'start_date',label:'Start Date (YYYY-MM-DD)'},
             ].map(f => (
               <div key={f.key}>
                 <div style={{ fontSize:10, color:C.sub, marginBottom:2 }}>{f.label}</div>
                 <input className="input-field" style={{ margin:0, fontSize:12, padding:'6px 8px' }}
+                  placeholder={f.key==='start_date' ? 'e.g. 2025-01-15' : ''}
                   value={editForm[f.key]||''} onChange={e => setEditForm(v=>({...v,[f.key]:e.target.value}))} />
               </div>
             ))}
@@ -651,9 +654,10 @@ function StudentDetail({ student, onBack }) {
                   { label:'7-Day Cons.', val:`${dash.consistency_7d||0}%`, color:C.teal },
                   { label:'Days Inactive', val:`${student.days_since_active>=999?'Never':(student.days_since_active||0)+'d'}`, color:C.red },
                   { label:'Weekly Cons.', val:`${dash.consistency?.weekly?.consistency_pct||0}%`, color:C.green },
+                  { label:'Start Date', val: student.start_date || 'Not set', color: student.start_date ? C.navy : C.sub },
                 ].map(s => (
                   <div key={s.label} style={{ background:C.light, borderRadius:10, padding:'10px 4px', textAlign:'center' }}>
-                    <div style={{ fontSize:16, fontWeight:900, color:s.color }}>{s.val}</div>
+                    <div style={{ fontSize:s.label==='Start Date'?11:16, fontWeight:900, color:s.color }}>{s.val}</div>
                     <div style={{ fontSize:9, color:C.sub, marginTop:2 }}>{s.label}</div>
                   </div>
                 ))}
