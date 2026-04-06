@@ -2937,7 +2937,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
                           </div>
                         );
                       })()}
-                      {subj.gs_paper !== 'CSAT' && subj.gs_paper !== 'Essay' && <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} examType={subj.exam_type} gsPaper={subj.gs_paper} />}
+                      {subj.gs_paper !== 'CSAT' && <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} examType={subj.exam_type} gsPaper={subj.gs_paper} />}
                     </div>
                   )}
                 </div>
