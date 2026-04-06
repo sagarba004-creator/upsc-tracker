@@ -2940,7 +2940,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
                           </div>
                         );
                       })()}
-                      {subj.gs_paper !== 'CSAT' && <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} examType={subj.exam_type} />}
+                      {subj.gs_paper !== 'CSAT' && <MicroTopicHeatmap subject={subj.subject} chapter={ch.chapter} examType={subj.exam_type} gsPaper={subj.gs_paper} />}
                     </div>
                   )}
                 </div>
@@ -3460,11 +3460,12 @@ function EssayHeatmap({ subject, chapters }) {
 }
 
 // ── Micro Topic Heatmap ──────────────────────────────────────
-function MicroTopicHeatmap({ subject, chapter, examType }) {
-  const [topics, setTopics]   = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen]       = useState(false);
-  const [mode, setMode]       = useState('pre'); // 'pre' | 'mains' for both subjects
+function MicroTopicHeatmap({ subject, chapter, examType, gsPaper }) {
+  const [topics, setTopics]       = useState(null);
+  const [loading, setLoading]     = useState(true);
+  const [open, setOpen]           = useState(false);
+  const [openTrend, setOpenTrend] = useState(false);
+  const [mode, setMode]           = useState('pre'); // 'pre' | 'mains' for both subjects
 
   useEffect(() => {
     setLoading(true);
@@ -3487,29 +3488,66 @@ function MicroTopicHeatmap({ subject, chapter, examType }) {
   };
 
   const isBoth = examType === 'both';
+  const isOptional = gsPaper === 'Optional';
+
   // For both subjects, filter by exam_type field; for pre/mains only, show all
   const filtered = !topics ? [] : isBoth
     ? topics.filter(t => (t.exam_type || 'pre') === mode)
     : topics;
   const count = filtered.length;
 
+  // Build year-wise counts from topics for the trend chart
+  const yearCounts = React.useMemo(() => {
+    if (!topics) return {};
+    const src = isBoth ? topics.filter(t => (t.exam_type||'pre') === 'mains') : topics;
+    const counts = {};
+    src.forEach(t => {
+      const yr = String(t.pyq_years).match(/\d{4}/);
+      if (yr) counts[yr[0]] = (counts[yr[0]] || 0) + 1;
+    });
+    return counts;
+  }, [topics, isBoth]);
+
+  const trendYears = Object.keys(yearCounts).sort();
+  const maxCount   = trendYears.length ? Math.max(...trendYears.map(y => yearCounts[y])) : 1;
+
   return (
     <div style={{ marginTop:4 }}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        style={{
-          width:'100%', display:'flex', alignItems:'center',
-          justifyContent:'space-between', padding:'8px 10px',
-          background:'#F8F9FA', border:'1.5px solid #E0E6EF',
-          borderRadius: open ? '8px 8px 0 0' : 8,
-          cursor:'pointer', transition:'all 0.2s'
-        }}>
-        <span style={{ fontSize:12, fontWeight:700, color:'#4B5563' }}>
-          🔥 PYQ Heatmap {!loading && count > 0 ? `(${count})` : ''}
-        </span>
-        <span style={{ fontSize:11, color:'#9CA3AF', transform: open ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}>▼</span>
-      </button>
+      {/* Button row: Heatmap + optional Year Trend toggle */}
+      <div style={{ display:'flex', gap:6, alignItems:'stretch' }}>
+        <button
+          onClick={() => { setOpen(o => !o); setOpenTrend(false); }}
+          style={{
+            flex:1, display:'flex', alignItems:'center',
+            justifyContent:'space-between', padding:'8px 10px',
+            background:'#F8F9FA', border:'1.5px solid #E0E6EF',
+            borderRadius: open ? '8px 8px 0 0' : 8,
+            cursor:'pointer', transition:'all 0.2s'
+          }}>
+          <span style={{ fontSize:12, fontWeight:700, color:'#4B5563' }}>
+            🔥 PYQ Heatmap {!loading && count > 0 ? `(${count})` : ''}
+          </span>
+          <span style={{ fontSize:11, color:'#9CA3AF', transform: open ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}>▼</span>
+        </button>
 
+        {/* Year Trend toggle — only for Optional subjects */}
+        {isOptional && trendYears.length > 0 && (
+          <button
+            onClick={() => { setOpenTrend(o => !o); setOpen(false); }}
+            style={{
+              padding:'8px 10px', display:'flex', alignItems:'center', gap:4,
+              background: openTrend ? '#E65100' : '#FFF3E0',
+              border:`1.5px solid ${openTrend ? '#E65100' : '#FFCC80'}`,
+              borderRadius: openTrend ? '8px 8px 0 0' : 8,
+              cursor:'pointer', transition:'all 0.2s', whiteSpace:'nowrap'
+            }}>
+            <span style={{ fontSize:12 }}>📊</span>
+            <span style={{ fontSize:11, fontWeight:700, color: openTrend ? '#fff' : '#E65100' }}>Year Trend</span>
+          </button>
+        )}
+      </div>
+
+      {/* Heatmap panel */}
       {open && (
         <div style={{
           border:'1.5px solid #E0E6EF', borderTop:'none',
@@ -3565,6 +3603,33 @@ function MicroTopicHeatmap({ subject, chapter, examType }) {
               }
             </div>
           )}
+        </div>
+      )}
+
+      {/* Year Trend panel */}
+      {openTrend && trendYears.length > 0 && (
+        <div style={{
+          border:'1.5px solid #FFCC80', borderTop:'none',
+          borderRadius:'0 0 8px 8px', padding:'12px 10px 8px',
+          background:'#FFF8F0'
+        }}>
+          <div style={{ display:'flex', alignItems:'flex-end', gap:4, overflowX:'auto', paddingBottom:4 }}>
+            {trendYears.map(yr => {
+              const val = yearCounts[yr];
+              const barH = Math.max(8, Math.round((val / maxCount) * 60));
+              return (
+                <div key={yr} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, flexShrink:0 }}>
+                  <span style={{ fontSize:9, fontWeight:800, color:'#E65100' }}>{val}</span>
+                  <div style={{ width:20, height:barH, background:'#E65100', borderRadius:'3px 3px 0 0' }} />
+                  <span style={{ fontSize:8, color:'#9CA3AF', transform:'rotate(-45deg)', transformOrigin:'top center',
+                    marginTop:4, whiteSpace:'nowrap' }}>{yr}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ fontSize:9, color:'#BF8040', marginTop:12, textAlign:'center' }}>
+            Questions per year · {chapter}
+          </div>
         </div>
       )}
     </div>
