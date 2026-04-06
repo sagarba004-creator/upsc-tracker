@@ -2839,10 +2839,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
           </div>
         </div>
 
-        {/* Essay subject-level heatmap dropdown */}
-        {subj.gs_paper === 'Essay' && (
-          <EssayHeatmap subject={subj.subject} chapters={subj.chapters} />
-        )}
+
 
         {/* Chapter pills grid */}
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
