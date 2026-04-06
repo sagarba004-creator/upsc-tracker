@@ -496,28 +496,56 @@ function StudentDetail({ student, onBack }) {
       </div>
 
       {/* Edit form inline */}
-      {editing && (
-        <div style={{ background:'#EFF6FF', padding:'12px 16px', borderBottom:`1px solid ${C.border}` }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8 }}>
-            {[
-              {key:'name',label:'Name'}, {key:'batch',label:'Batch'},
-              {key:'target_year',label:'Target Year'}, {key:'optional',label:'Optional'},
-              {key:'start_date',label:'Start Date (YYYY-MM-DD)'},
-            ].map(f => (
-              <div key={f.key}>
-                <div style={{ fontSize:10, color:C.sub, marginBottom:2 }}>{f.label}</div>
+      {editing && (() => {
+        const OPTIONALS = ['None','Psychology','Anthropology','Geography','Public Administration','Sociology','History','Political Science','Philosophy','Economics','Mathematics','Law'];
+        const TARGET_YEARS = ['2025','2026','2027','2028'];
+        return (
+          <div style={{ background:'#EFF6FF', padding:'12px 16px', borderBottom:`1px solid ${C.border}` }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8 }}>
+              {/* Name */}
+              <div>
+                <div style={{ fontSize:10, color:C.sub, marginBottom:2 }}>Name</div>
                 <input className="input-field" style={{ margin:0, fontSize:12, padding:'6px 8px' }}
-                  placeholder={f.key==='start_date' ? 'e.g. 2025-01-15' : ''}
-                  value={editForm[f.key]||''} onChange={e => setEditForm(v=>({...v,[f.key]:e.target.value}))} />
+                  value={editForm.name||''} onChange={e => setEditForm(v=>({...v,name:e.target.value}))} />
               </div>
-            ))}
+              {/* Batch */}
+              <div>
+                <div style={{ fontSize:10, color:C.sub, marginBottom:2 }}>Batch</div>
+                <input className="input-field" style={{ margin:0, fontSize:12, padding:'6px 8px' }}
+                  value={editForm.batch||''} onChange={e => setEditForm(v=>({...v,batch:e.target.value}))} />
+              </div>
+              {/* Target Year dropdown */}
+              <div>
+                <div style={{ fontSize:10, color:C.sub, marginBottom:2 }}>Target Year</div>
+                <select className="input-field" style={{ margin:0, fontSize:12, padding:'6px 8px' }}
+                  value={editForm.target_year||''} onChange={e => setEditForm(v=>({...v,target_year:e.target.value}))}>
+                  <option value="">Select year</option>
+                  {TARGET_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              {/* Optional dropdown */}
+              <div>
+                <div style={{ fontSize:10, color:C.sub, marginBottom:2 }}>Optional Subject</div>
+                <select className="input-field" style={{ margin:0, fontSize:12, padding:'6px 8px' }}
+                  value={editForm.optional||''} onChange={e => setEditForm(v=>({...v,optional:e.target.value}))}>
+                  <option value="">Select optional</option>
+                  {OPTIONALS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              {/* Start Date */}
+              <div style={{ gridColumn:'1 / -1' }}>
+                <div style={{ fontSize:10, color:C.sub, marginBottom:2 }}>Start Date (when student joined)</div>
+                <input type="date" className="input-field" style={{ margin:0, fontSize:12, padding:'6px 8px' }}
+                  value={editForm.start_date||''} onChange={e => setEditForm(v=>({...v,start_date:e.target.value}))} />
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:8 }}>
+              <button className="btn btn-primary btn-sm" onClick={handleSaveEdit}>Save</button>
+              <button className="btn btn-outline btn-sm" onClick={() => setEditing(false)}>Cancel</button>
+            </div>
           </div>
-          <div style={{ display:'flex', gap:8 }}>
-            <button className="btn btn-primary btn-sm" onClick={handleSaveEdit}>Save</button>
-            <button className="btn btn-outline btn-sm" onClick={() => setEditing(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Sub-tabs */}
       <div style={{ display:'flex', background:C.card, borderBottom:`1px solid ${C.border}`,
@@ -1262,7 +1290,7 @@ function AdminTestsTab() {
 // ADD STUDENT FORM
 // ══════════════════════════════════════════════════════════════
 function AddStudentForm({ onDone, onCancel }) {
-  const [form, setForm]     = useState({ phone:'', name:'', batch:'', target_year:'', optional:'' });
+  const [form, setForm]     = useState({ phone:'', name:'', batch:'', target_year:'', optional:'', start_date:'' });
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
 
@@ -1286,11 +1314,9 @@ function AddStudentForm({ onDone, onCancel }) {
             borderRadius:8, fontSize:13, marginBottom:12 }}>{error}</div>}
           <form onSubmit={handleSubmit}>
             {[
-              { key:'phone',       label:'Phone Number',     type:'tel',    req:true  },
-              { key:'name',        label:'Full Name',         type:'text',   req:true  },
-              { key:'batch',       label:'Batch',             type:'text',   req:false },
-              { key:'target_year', label:'Target Year',       type:'number', req:false },
-              { key:'optional',    label:'Optional Subject',  type:'text',   req:false },
+              { key:'phone', label:'Phone Number', type:'tel',  req:true  },
+              { key:'name',  label:'Full Name',    type:'text', req:true  },
+              { key:'batch', label:'Batch',        type:'text', req:false },
             ].map(f => (
               <div key={f.key} className="input-group">
                 <label>{f.label}</label>
@@ -1298,6 +1324,25 @@ function AddStudentForm({ onDone, onCancel }) {
                   value={form[f.key]} onChange={e => setForm(v=>({...v,[f.key]:e.target.value}))} />
               </div>
             ))}
+            <div className="input-group">
+              <label>Target Year</label>
+              <select className="input-field" value={form.target_year} onChange={e => setForm(v=>({...v,target_year:e.target.value}))}>
+                <option value="">Select year</option>
+                {['2025','2026','2027','2028'].map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <div className="input-group">
+              <label>Optional Subject</label>
+              <select className="input-field" value={form.optional} onChange={e => setForm(v=>({...v,optional:e.target.value}))}>
+                <option value="">Select optional</option>
+                {['None','Psychology','Anthropology','Geography','Public Administration','Sociology','History','Political Science','Philosophy','Economics','Mathematics','Law'].map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            <div className="input-group">
+              <label>Start Date (when student joined)</label>
+              <input type="date" className="input-field"
+                value={form.start_date||''} onChange={e => setForm(v=>({...v,start_date:e.target.value}))} />
+            </div>
             <div style={{ display:'flex', gap:10 }}>
               <button type="button" className="btn btn-outline" onClick={onCancel}>Cancel</button>
               <button type="submit" className="btn btn-primary" style={{ flex:1 }} disabled={saving}>
