@@ -181,15 +181,6 @@ export default function MentorApp({ user, onLogout }) {
   ];
   const NAV_COLORS = { dashboard:GREEN, students:BLUE, leaderboard:ORANGE, alerts:RED };
 
-  if (selected) return (
-    <StudentDetail
-      phone={selected}
-      mentorId={mentorId}
-      students={students}
-      onBack={() => setSelected(null)}
-    />
-  );
-
   return (
     <div style={{ background:'#F8FAFC', minHeight:'100vh',
       fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif' }}>
@@ -212,10 +203,11 @@ export default function MentorApp({ user, onLogout }) {
       {/* Content */}
       <div style={{ padding:'12px 12px 90px' }}>
         {loading ? <Spinner /> : <>
-          {tab === 'dashboard'   && <DashboardTab   students={students} alerts={alerts} onSelect={setSelected} />}
-          {tab === 'students'    && <StudentsTab     students={students} onSelect={setSelected} />}
-          {tab === 'leaderboard' && <LeaderboardTab  students={students} onSelect={setSelected} />}
-          {tab === 'alerts'      && <AlertsTab       alerts={alerts}     onSelect={setSelected} onRefresh={load} />}
+          {selected && <StudentDetail phone={selected} mentorId={mentorId} students={students} onBack={() => setSelected(null)} />}
+          {!selected && tab === 'dashboard'   && <DashboardTab   students={students} alerts={alerts} onSelect={setSelected} />}
+          {!selected && tab === 'students'    && <StudentsTab     students={students} onSelect={setSelected} />}
+          {!selected && tab === 'leaderboard' && <LeaderboardTab  students={students} onSelect={setSelected} />}
+          {!selected && tab === 'alerts'      && <AlertsTab       alerts={alerts}     onSelect={setSelected} onRefresh={load} />}
         </>}
       </div>
 
@@ -228,7 +220,7 @@ export default function MentorApp({ user, onLogout }) {
           const isActive = tab === t.key;
           const c = NAV_COLORS[t.key] || NAVY;
           return (
-            <button key={t.key} onClick={() => setTab(t.key)}
+            <button key={t.key} onClick={() => { setSelected(null); setTab(t.key); }}
               style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2,
                 background:'none', border:'none', cursor:'pointer', padding:'4px 12px',
                 color: isActive ? c : '#9CA3AF', position:'relative' }}>

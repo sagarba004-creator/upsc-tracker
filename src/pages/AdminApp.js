@@ -57,19 +57,6 @@ export default function AdminApp({ user, onLogout }) {
   const [tab, setTab]   = useState('students');
   const [view, setView] = useState(null); // { type, data }
 
-  if (view?.type === 'student_detail') return (
-    <StudentDetail student={view.data} onBack={() => setView(null)} />
-  );
-  if (view?.type === 'mentor_detail') return (
-    <MentorDetail mentor={view.data} onBack={() => setView(null)} />
-  );
-  if (view?.type === 'add_student') return (
-    <AddStudentForm onDone={() => setView(null)} onCancel={() => setView(null)} />
-  );
-  if (view?.type === 'add_mentor') return (
-    <AddMentorForm onDone={() => setView(null)} onCancel={() => setView(null)} />
-  );
-
   return (
     <div className="app-shell">
       <div className="topbar">
@@ -82,16 +69,20 @@ export default function AdminApp({ user, onLogout }) {
           Logout
         </button>
       </div>
-      <div className="page" style={{ paddingBottom:120  }}>
-        {tab==='students'    && <StudentsTab    onSelect={s => setView({type:'student_detail',data:s})} onAdd={() => setView({type:'add_student'})} />}
-        {tab==='alerts'      && <AlertsTab      onSelect={s => setView({type:'student_detail',data:s})} />}
-        {tab==='leaderboard' && <LeaderboardTab onSelect={s => setView({type:'student_detail',data:s})} />}
-        {tab==='mentors'     && <MentorsTab     onAdd={() => setView({type:'add_mentor'})} onSelect={m => setView({type:'mentor_detail',data:m})} />}
-        {tab==='tests'       && <AdminTestsTab />}
+      <div className="page" style={{ paddingBottom:120 }}>
+        {view?.type === 'student_detail' && <StudentDetail student={view.data} onBack={() => setView(null)} />}
+        {view?.type === 'mentor_detail'  && <MentorDetail  mentor={view.data}  onBack={() => setView(null)} />}
+        {view?.type === 'add_student'    && <AddStudentForm onDone={() => setView(null)} onCancel={() => setView(null)} />}
+        {view?.type === 'add_mentor'     && <AddMentorForm  onDone={() => setView(null)} onCancel={() => setView(null)} />}
+        {!view && tab==='students'    && <StudentsTab    onSelect={s => setView({type:'student_detail',data:s})} onAdd={() => setView({type:'add_student'})} />}
+        {!view && tab==='alerts'      && <AlertsTab      onSelect={s => setView({type:'student_detail',data:s})} />}
+        {!view && tab==='leaderboard' && <LeaderboardTab onSelect={s => setView({type:'student_detail',data:s})} />}
+        {!view && tab==='mentors'     && <MentorsTab     onAdd={() => setView({type:'add_mentor'})} onSelect={m => setView({type:'mentor_detail',data:m})} />}
+        {!view && tab==='tests'       && <AdminTestsTab />}
       </div>
       <nav className="bottom-nav">
         {TABS.map(t => (
-          <button key={t.key} className={tab===t.key?'active':''} onClick={() => setTab(t.key)}>
+          <button key={t.key} className={tab===t.key?'active':''} onClick={() => { setView(null); setTab(t.key); }}>
             <span style={{ fontSize:18 }}>{t.icon}</span>{t.label}
           </button>
         ))}
