@@ -2797,8 +2797,8 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
     } finally { setSaving(''); }
   }
 
-  // Group by gs_paper
-  const studentOptional = (user?.optional || '').trim().toLowerCase();
+  // Group by gs_paper — use dashboard optional as live source (reflects admin edits without re-login)
+  const studentOptional = ((dashboard?.optional || user?.optional) || '').trim().toLowerCase();
   const grouped = {};
   data.subjects.forEach(s => {
     if (s.gs_paper === 'Optional') {
@@ -2839,7 +2839,10 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
           </div>
         </div>
 
-
+        {/* Essay subject-level heatmap dropdown */}
+        {subj.gs_paper === 'Essay' && (
+          <EssayHeatmap subject={subj.subject} chapters={subj.chapters} />
+        )}
 
         {/* Chapter pills grid */}
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
@@ -3202,7 +3205,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
                     const exam   = subj.exam_type || 'both';
                     const badge  = EXAM_BADGE[exam] || EXAM_BADGE['both'];
                     const isOpenTrend2 = openTrend === subj.subject;
-                    const hasPYQ = !!((dashboard?.pyq_year_data || {})[subj.subject]) && !['Philosophical','Socio-Politico-Economic'].includes(subj.subject);
+                    const hasPYQ = !!((dashboard?.pyq_year_data || {})[subj.subject]);
                     return (
                       <div key={subj.subject} style={{
                         background:'#fff', borderRadius:12, padding:'12px 14px',
@@ -3304,7 +3307,7 @@ function SubjectsTab({ dashboard, user, onUpdate, gsSummary, showWeights=false }
         const badge   = EXAM_BADGE[exam] || EXAM_BADGE['both'];
         const paperLbl = PAPER_LABEL[subj.gs_paper] || subj.gs_paper;
         const isOpen  = openTrend === subj.subject;
-        const hasPYQ  = !!((dashboard?.pyq_year_data || {})[subj.subject]) && !['Philosophical','Socio-Politico-Economic'].includes(subj.subject);
+        const hasPYQ  = !!((dashboard?.pyq_year_data || {})[subj.subject]);
         return (
           <div key={subj.subject} style={{
             background:'#fff', borderRadius:14, padding:'14px 16px',
